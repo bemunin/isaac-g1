@@ -1,0 +1,24 @@
+# oc-add-ext: {{module_path}}/extension.py (py.ext)
+import carb
+import omni.ext
+[if py.ui]
+
+from .ui import {{Name}}Window
+[end]
+
+
+class Extension(omni.ext.IExt):
+    """Kit instantiates this class when {{ext_id}} is enabled."""
+
+    def on_startup(self, ext_id: str):
+        carb.log_info(f"[{ext_id}] startup")
+[if py.ui]
+        self._window = {{Name}}Window()
+[end]
+
+    def on_shutdown(self):
+[if py.ui]
+        self._window.destroy()
+        self._window = None
+[end]
+        carb.log_info("[{{ext_id}}] shutdown")

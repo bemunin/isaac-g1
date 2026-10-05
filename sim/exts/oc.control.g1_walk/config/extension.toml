@@ -1,0 +1,22 @@
+[package]
+version = "0.1.0"
+title = "G1 Walk"
+description = "G1 Walk extension."
+keywords = ["control", "g1_walk"]
+authors = ["bemunin <tw.munin@gmail.com>"]
+readme = "docs/README.md"
+changelog = "docs/CHANGELOG.md"
+
+[core]
+reloadable = true
+
+[dependencies]
+"isaacsim.core.experimental.prims" = {}
+"isaacsim.core.simulation_manager" = {}
+"isaacsim.robot.policy.examples" = {}
+"isaacsim.robot_motion.experimental.motion_generation" = {}
+"omni.timeline" = {}
+"omni.usd" = {}
+
+[[python.module]]
+name = "oc.control.g1_walk"

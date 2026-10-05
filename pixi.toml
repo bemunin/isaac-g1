@@ -1,0 +1,55 @@
+[workspace]
+authors = ["bemunin <tw.munin@gmail.com>"]
+channels = ["conda-forge", "https://prefix.dev/robostack-jazzy"]
+name = "isaac-g1"
+platforms = [{ platform = "linux-64", glibc = "2.35" }, "win-64"]
+version = "0.1.0"
+
+[tasks]
+dds = { cmd = "python scripts/dds.py", description = "Show or select the DDS for new Pixi sessions" }
+shell = { cmd = "pixi shell", cwd = "ros_ws", description = "Open a ROS 2 shell in ros_ws" }
+zenoh = "ros2 run rmw_zenoh_cpp rmw_zenohd"
+foxglove = { cmd = "ros2 launch foxglove_bridge foxglove_bridge_launch.xml use_sim_time:=true", description = "Start the Foxglove WebSocket bridge on sim time (ws://localhost:8765)" }
+lint = "ruff check ."
+
+[target.linux-64.activation]
+scripts = ["scripts/dds/activate.sh"]
+
+[target.win-64.activation]
+scripts = ["scripts/dds/activate.bat"]
+
+[dependencies]
+python = "3.12.*"
+ruff = "==0.16.9"
+ros-jazzy-desktop = "*"
+ros-jazzy-rmw-fastrtps-cpp = "*"
+ros-jazzy-rmw-cyclonedds-cpp = "*"
+ros-jazzy-rmw-zenoh-cpp = "*"
+ros-jazzy-foxglove-bridge = "*"
+
+[feature.sim.dependencies]
+python = "3.12.*"
+
+[feature.sim.target.linux-64.activation]
+scripts = ["scripts/dds/activate.sh"]
+
+[feature.sim.target.win-64.activation]
+scripts = ["scripts/dds/activate.bat"]
+
+[feature.sim.pypi-options]
+extra-index-urls = ["https://pypi.nvidia.com"]
+index-strategy = "unsafe-best-match"
+prerelease-mode = "allow"
+
+[feature.sim.pypi-dependencies]
+torch = { version = "==2.11.0", index = "https://download.pytorch.org/whl/cu128" }
+isaacsim = { version = "==6.1.0.0", extras = ["all", "extscache", "ros2"] }
+
+[feature.sim.tasks]
+sim = "python scripts/sim.py"
+warehouse = { cmd = "python scripts/warehouse.py", description = "Open the warehouse Scenario and play it: [--workflow standalone|ext] [--physics newton|physx] [--dds fast|cyclone|zenoh] [--headless]" }
+benchmark = { cmd = "python scripts/benchmark.py", description = "Run a benchmark: --name dds [--workflow ext|standalone] [--physics newton|physx] [--dds fast|cyclone|zenoh] [--headless]" }
+
+[environments]
+default = { features = [] }
+sim = { features = ["sim"], no-default-feature = true }

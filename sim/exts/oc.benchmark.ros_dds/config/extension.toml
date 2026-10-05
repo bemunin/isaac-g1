@@ -1,0 +1,25 @@
+[package]
+version = "0.2.0"
+title = "ROS DDS Benchmark"
+description = "Opens the G1 Scenario for the DDS Benchmark; its G1 walks the square loop on Play."
+category = "Simulation"
+keywords = ["benchmark", "ros_dds"]
+authors = ["bemunin <tw.munin@gmail.com>"]
+readme = "docs/README.md"
+changelog = "docs/CHANGELOG.md"
+
+[core]
+reloadable = true
+
+[dependencies]
+"isaacsim.core.experimental.utils" = {}
+"oc.control.g1_walk" = {}
+"omni.timeline" = {}
+"omni.ui" = {}
+
+[settings]
+# Open the Scenario and play once the app is ready; pixi run benchmark sets it.
+exts."oc.benchmark.ros_dds".autostart = false
+
+[[python.module]]
+name = "oc.benchmark.ros_dds"

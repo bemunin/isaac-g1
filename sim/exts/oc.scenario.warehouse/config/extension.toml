@@ -1,0 +1,26 @@
+[package]
+version = "0.1.0"
+title = "G1 Warehouse"
+description = "Opens the G1 warehouse Scenario; its G1 walks a loop through the open hall on Play."
+category = "Simulation"
+keywords = ["scenario", "warehouse"]
+authors = ["bemunin <tw.munin@gmail.com>"]
+readme = "docs/README.md"
+changelog = "docs/CHANGELOG.md"
+preview_image = "data/preview.png"
+icon = "data/icon.png"
+
+[core]
+reloadable = true
+
+[dependencies]
+"isaacsim.core.experimental.utils" = {}
+"oc.control.g1_walk" = {}
+"omni.timeline" = {}
+
+[settings]
+# Open the Scenario and play once the app is ready.
+exts."oc.scenario.warehouse".autostart = false
+
+[[python.module]]
+name = "oc.scenario.warehouse"

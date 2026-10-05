@@ -1,0 +1,10 @@
+# oc-add-ext: {{module_path}}/__init__.py (any.py)
+[if py.ext]
+from .extension import Extension as Extension
+[end]
+[if py.api]
+from .api import add as add
+[end]
+[if cpp.pybind]
+from ._{{ext_name}} import *  # noqa: F403
+[end]

@@ -1,0 +1,16 @@
+// oc-add-ext: plugins/nodes/Ogn{{Name}}.ogn (cpp.ogn)
+{
+    "{{Name}}": {
+        "version": 1,
+        "description": "Example node: outputs the sum of two numbers.",
+        "language": "C++",
+        "metadata": { "uiName": "{{title}}" },
+        "inputs": {
+            "a": { "type": "double", "description": "First operand.", "default": 0.0 },
+            "b": { "type": "double", "description": "Second operand.", "default": 0.0 }
+        },
+        "outputs": {
+            "sum": { "type": "double", "description": "a + b." }
+        }
+    }
+}

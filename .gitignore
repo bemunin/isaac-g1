@@ -1,0 +1,19 @@
+.claude/
+
+# Pixi environments
+.pixi/*
+!.pixi/config.toml
+/_isaacsim
+
+# Python
+__pycache__/
+.ruff_cache/
+
+# ROS 2 / colcon workspace outputs
+/ros_ws/build/
+/ros_ws/install/
+/ros_ws/log/
+
+# Workspace
+.obsidian/
+research/

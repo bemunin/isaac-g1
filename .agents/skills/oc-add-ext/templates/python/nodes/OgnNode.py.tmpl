@@ -1,0 +1,8 @@
+# oc-add-ext: {{module_path}}/nodes/Ogn{{Name}}.py (py.ogn)
+class Ogn{{Name}}:
+    """Compute for the node defined in Ogn{{Name}}.ogn (registered as {{ext_id}}.{{Name}})."""
+
+    @staticmethod
+    def compute(db) -> bool:
+        db.outputs.sum = db.inputs.a + db.inputs.b
+        return True

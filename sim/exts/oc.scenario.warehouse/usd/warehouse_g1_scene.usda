@@ -1,0 +1,1604 @@
+#usda 1.0
+(
+    customLayerData = {
+        dictionary cameraSettings = {
+            dictionary Front = {
+                double3 position = (5, 0, 0)
+                double radius = 5
+            }
+            dictionary Perspective = {
+                double3 position = (-7.6697209161754093, 13.2558434155837475, 1.6987939071147091)
+                double3 target = (-8.0000011294328273, 9.504634158671634747, 0.9882071755328468)
+            }
+            dictionary Right = {
+                double3 position = (0, -5, 0)
+                double radius = 5
+            }
+            dictionary Top = {
+                double3 position = (0, 0, 5)
+                double radius = 5
+            }
+            string boundCamera = "/OmniverseKit_Persp"
+        }
+        dictionary omni_layer = {
+            string authoring_layer = "./warehouse_g1_scene.usda"
+            dictionary locked = {
+            }
+            dictionary muteness = {
+            }
+        }
+        dictionary renderSettings = {
+        }
+    }
+    defaultPrim = "World"
+    endTimeCode = 1000000
+    metersPerUnit = 1
+    startTimeCode = 0
+    timeCodesPerSecond = 60
+    upAxis = "Z"
+)
+
+def Xform "World"
+{
+    custom string isaac:nameOverride = "world"
+
+    def "G1" (
+        prepend references = @https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.1/Isaac/Samples/ROS2/Robots/G1_ROS.usd@
+    )
+    {
+        # Start in aisle 4 (BOXES J-L), 0.75 m inside its south end, facing +y up the aisle.
+        quatd xformOp:orient = (0.7071067811865476, 0, 0, 0.7071067811865476)
+        double3 xformOp:translate = (-8, 9.5, 0.7922728583216667)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+
+        over "torso_link"
+        {
+            over "d435_link"
+            {
+                def Camera "camera" (
+                    prepend apiSchemas = ["OmniSensorAPI"]
+                )
+                {
+                    float2 clippingRange = (0.1, 20)
+                    float focalLength = 152.4
+                    float horizontalAperture = 209.55
+                    custom string isaac:nameOverride = "camera_color_optical_frame"
+                    float omni:sensor:tickRate = 30
+                    float verticalAperture = 117.87
+                    quatd xformOp:orient = (-0.5, -0.5, 0.5, 0.5)
+                    double3 xformOp:scale = (1, 1, 1)
+                    double3 xformOp:translate = (-5.960464477539063e-8, -1.862645149230957e-9, 5.960464477539063e-8)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                }
+            }
+
+            over "mid360_link"
+            {
+                def OmniLidar "lidar" (
+                    prepend apiSchemas = ["OmniSensorGenericLidarCoreAPI"]
+                )
+                {
+                    custom string isaac:nameOverride = "livox_frame"
+                    bool omni:sensor:Core:accumulateOutputs = 1
+                    float omni:sensor:Core:azimuthErrorMean = 0
+                    float omni:sensor:Core:azimuthErrorStd = 0.015
+                    float omni:sensor:Core:elevationErrorMean = 0
+                    float omni:sensor:Core:elevationErrorStd = 0
+                    float[] omni:sensor:Core:emitterState:s001:azimuthDeg = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                    uint[] omni:sensor:Core:emitterState:s001:channelId = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40]
+                    float[] omni:sensor:Core:emitterState:s001:distanceCorrectionM = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                    float[] omni:sensor:Core:emitterState:s001:elevationDeg = [-7, -5.487, -3.974, -2.462, -0.949, 0.564, 2.077, 3.59, 5.103, 6.615, 8.128, 9.641, 11.154, 12.667, 14.179, 15.692, 17.205, 18.718, 20.231, 21.744, 23.256, 24.769, 26.282, 27.795, 29.308, 30.821, 32.333, 33.846, 35.359, 36.872, 38.385, 39.897, 41.41, 42.923, 44.436, 45.949, 47.462, 48.974, 50.487, 52]
+                    float[] omni:sensor:Core:emitterState:s001:emitterPeakPowerW = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                    uint[] omni:sensor:Core:emitterState:s001:fireTimeNs = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                    float[] omni:sensor:Core:emitterState:s001:focalDistM = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                    float[] omni:sensor:Core:emitterState:s001:focalSlope = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                    float[] omni:sensor:Core:emitterState:s001:horOffsetM = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                    float[] omni:sensor:Core:emitterState:s001:vertOffsetM = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                    float omni:sensor:Core:farRangeM = 40
+                    token omni:sensor:Core:intensityMappingType = "LINEAR"
+                    token omni:sensor:Core:intensityProcessing = "NORMALIZATION"
+                    uint omni:sensor:Core:maxReturns = 1
+                    float omni:sensor:Core:minReflectance = 0.1
+                    float omni:sensor:Core:nearRangeM = 0.1
+                    uint omni:sensor:Core:numberOfChannels = 40
+                    uint omni:sensor:Core:numberOfEmitters = 40
+                    uint omni:sensor:Core:patternFiringRateHz = 5000
+                    float omni:sensor:Core:peakPowerW = 0.002
+                    uint omni:sensor:Core:pulseTimeNs = 6
+                    float omni:sensor:Core:rangeAccuracyM = 0.02
+                    float omni:sensor:Core:rangeResolutionM = 0.004
+                    token omni:sensor:Core:rayType = "IDEALIZED"
+                    token omni:sensor:Core:rotationDirection = "CW"
+                    uint omni:sensor:Core:scanRateBaseHz = 10
+                    token omni:sensor:Core:scanType = "ROTARY"
+                    bool omni:sensor:Core:skipDroppingInvalidPoints = 0
+                    float omni:sensor:Core:startAzimuthOffsetDeg = 0
+                    string omni:sensor:modelName = "Livox_MID360"
+                    float omni:sensor:tickRate = 10
+                    quatd xformOp:orient = (0, 1, 0, 0)
+                    float3 xformOp:scale = (1, 1, 1)
+                    double3 xformOp:translate = (0, 0, 0)
+                    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+                }
+            }
+        }
+
+        over "Graph"
+        {
+            def OmniGraph "ROS2_Camera"
+            {
+                token evaluationMode = "Automatic"
+                token evaluator:type = "execution"
+                token fabricCacheBacking = "StageWithoutHistory"
+                int2 fileFormatVersion = (1, 9)
+                token pipelineStage = "pipelineStageSimulation"
+
+                def OmniGraphNode "OnPlaybackTick"
+                {
+                    token node:type = "omni.graph.action.OnPlaybackTick"
+                    int node:typeVersion = 2
+                    custom double outputs:deltaSeconds
+                    custom double outputs:frame
+                    custom uint outputs:tick (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    custom double outputs:time
+                }
+
+                def OmniGraphNode "Context"
+                {
+                    custom uchar inputs:domain_id
+                    custom bool inputs:useDomainIDEnvVar
+                    token node:type = "isaacsim.ros2.bridge.ROS2Context"
+                    int node:typeVersion = 2
+                    custom uint64 outputs:context
+                }
+
+                def OmniGraphNode "RunOnce"
+                {
+                    custom uint inputs:execIn (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    prepend uint inputs:execIn.connect = </World/G1/Graph/ROS2_Camera/OnPlaybackTick.outputs:tick>
+                    token node:type = "isaacsim.core.nodes.OgnIsaacRunOneSimulationFrame"
+                    int node:typeVersion = 1
+                    custom uint outputs:step (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                }
+
+                def OmniGraphNode "RenderProduct"
+                {
+                    custom rel inputs:cameraPrim = </World/G1/torso_link/d435_link/camera> (
+                        customData = {
+                            dictionary omni = {
+                                dictionary graph = {
+                                    string relType = "target"
+                                }
+                            }
+                        }
+                    )
+                    custom bool inputs:enabled
+                    custom uint inputs:execIn (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    prepend uint inputs:execIn.connect = </World/G1/Graph/ROS2_Camera/RunOnce.outputs:step>
+                    custom uint inputs:height = 720
+                    custom rel inputs:renderProductPrim (
+                        customData = {
+                            dictionary omni = {
+                                dictionary graph = {
+                                    string relType = "target"
+                                }
+                            }
+                        }
+                    )
+                    custom uint inputs:width = 1280
+                    token node:type = "isaacsim.core.nodes.IsaacCreateRenderProduct"
+                    int node:typeVersion = 3
+                    custom uint outputs:execOut (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    custom token outputs:renderProductPath
+                }
+
+                def OmniGraphNode "CameraInfoPublish"
+                {
+                    custom uint64 inputs:context
+                    prepend uint64 inputs:context.connect = </World/G1/Graph/ROS2_Camera/Context.outputs:context>
+                    custom bool inputs:enabled
+                    custom uint inputs:execIn (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    prepend uint inputs:execIn.connect = </World/G1/Graph/ROS2_Camera/RenderProduct.outputs:execOut>
+                    custom string inputs:frameId = "camera_color_optical_frame"
+                    custom string inputs:frameIdRight
+                    custom uint inputs:frameSkipCount
+                    custom string inputs:nodeNamespace = ""
+                    custom string inputs:qosProfile
+                    custom uint64 inputs:queueSize
+                    custom token inputs:renderProductPath
+                    prepend token inputs:renderProductPath.connect = </World/G1/Graph/ROS2_Camera/RenderProduct.outputs:renderProductPath>
+                    custom token inputs:renderProductPathRight
+                    custom bool inputs:resetSimulationTimeOnStop = 1
+                    custom string inputs:topicName = "/camera/camera/color/camera_info"
+                    custom string inputs:topicNameRight
+                    custom bool inputs:useSystemTime
+                    token node:type = "isaacsim.ros2.bridge.ROS2CameraInfoHelper"
+                    int node:typeVersion = 1
+                }
+
+                def OmniGraphNode "DepthCameraInfoPublish"
+                {
+                    custom uint64 inputs:context
+                    prepend uint64 inputs:context.connect = </World/G1/Graph/ROS2_Camera/Context.outputs:context>
+                    custom bool inputs:enabled
+                    custom uint inputs:execIn (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    prepend uint inputs:execIn.connect = </World/G1/Graph/ROS2_Camera/RenderProduct.outputs:execOut>
+                    custom string inputs:frameId = "camera_color_optical_frame"
+                    custom string inputs:frameIdRight
+                    custom uint inputs:frameSkipCount
+                    custom string inputs:nodeNamespace = ""
+                    custom string inputs:qosProfile
+                    custom uint64 inputs:queueSize
+                    custom token inputs:renderProductPath
+                    prepend token inputs:renderProductPath.connect = </World/G1/Graph/ROS2_Camera/RenderProduct.outputs:renderProductPath>
+                    custom token inputs:renderProductPathRight
+                    custom bool inputs:resetSimulationTimeOnStop = 1
+                    custom string inputs:topicName = "/camera/camera/aligned_depth_to_color/camera_info"
+                    custom string inputs:topicNameRight
+                    custom bool inputs:useSystemTime
+                    token node:type = "isaacsim.ros2.bridge.ROS2CameraInfoHelper"
+                    int node:typeVersion = 1
+                }
+
+                def OmniGraphNode "RGBPublish"
+                {
+                    custom uint64 inputs:context
+                    prepend uint64 inputs:context.connect = </World/G1/Graph/ROS2_Camera/Context.outputs:context>
+                    custom bool inputs:enabled
+                    custom bool inputs:enableSemanticLabels
+                    custom uint inputs:execIn (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    prepend uint inputs:execIn.connect = </World/G1/Graph/ROS2_Camera/RenderProduct.outputs:execOut>
+                    custom string inputs:frameId = "camera_color_optical_frame"
+                    custom uint inputs:frameSkipCount
+                    custom string inputs:nodeNamespace = ""
+                    custom string inputs:qosProfile
+                    custom uint64 inputs:queueSize
+                    custom token inputs:renderProductPath
+                    prepend token inputs:renderProductPath.connect = </World/G1/Graph/ROS2_Camera/RenderProduct.outputs:renderProductPath>
+                    custom bool inputs:resetSimulationTimeOnStop = 1
+                    custom string inputs:semanticLabelsTopicName
+                    custom string inputs:srtxCompressionType
+                    custom float2 inputs:stereoOffset
+                    custom string inputs:topicName = "/camera/camera/color/image_raw"
+                    custom token inputs:type = "rgb" (
+                        allowedTokens = ["rgb", "rgb_h264", "rgb_hevc", "depth", "depth_pcl", "instance_segmentation", "semantic_segmentation", "bbox_2d_tight", "bbox_2d_loose", "bbox_3d"]
+                    )
+                    custom bool inputs:useSystemTime
+                    token node:type = "isaacsim.ros2.bridge.ROS2CameraHelper"
+                    int node:typeVersion = 4
+                }
+
+                def OmniGraphNode "DepthPublish"
+                {
+                    custom uint64 inputs:context
+                    prepend uint64 inputs:context.connect = </World/G1/Graph/ROS2_Camera/Context.outputs:context>
+                    custom bool inputs:enabled
+                    custom bool inputs:enableSemanticLabels
+                    custom uint inputs:execIn (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    prepend uint inputs:execIn.connect = </World/G1/Graph/ROS2_Camera/RenderProduct.outputs:execOut>
+                    custom string inputs:frameId = "camera_color_optical_frame"
+                    custom uint inputs:frameSkipCount
+                    custom string inputs:nodeNamespace = ""
+                    custom string inputs:qosProfile
+                    custom uint64 inputs:queueSize
+                    custom token inputs:renderProductPath
+                    prepend token inputs:renderProductPath.connect = </World/G1/Graph/ROS2_Camera/RenderProduct.outputs:renderProductPath>
+                    custom bool inputs:resetSimulationTimeOnStop = 1
+                    custom string inputs:semanticLabelsTopicName
+                    custom string inputs:srtxCompressionType
+                    custom float2 inputs:stereoOffset
+                    custom string inputs:topicName = "/camera/camera/aligned_depth_to_color/image_raw"
+                    custom token inputs:type = "depth" (
+                        allowedTokens = ["rgb", "rgb_h264", "rgb_hevc", "depth", "depth_pcl", "instance_segmentation", "semantic_segmentation", "bbox_2d_tight", "bbox_2d_loose", "bbox_3d"]
+                    )
+                    custom bool inputs:useSystemTime
+                    token node:type = "isaacsim.ros2.bridge.ROS2CameraHelper"
+                    int node:typeVersion = 4
+                }
+            }
+
+            def OmniGraph "ROS2_Lidar"
+            {
+                token evaluationMode = "Automatic"
+                token evaluator:type = "execution"
+                token fabricCacheBacking = "StageWithoutHistory"
+                int2 fileFormatVersion = (1, 9)
+                token pipelineStage = "pipelineStageSimulation"
+
+                def OmniGraphNode "OnPlaybackTick"
+                {
+                    token node:type = "omni.graph.action.OnPlaybackTick"
+                    int node:typeVersion = 2
+                    custom double outputs:deltaSeconds
+                    custom double outputs:frame
+                    custom uint outputs:tick (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    custom double outputs:time
+                }
+
+                def OmniGraphNode "Context"
+                {
+                    custom uchar inputs:domain_id
+                    custom bool inputs:useDomainIDEnvVar
+                    token node:type = "isaacsim.ros2.bridge.ROS2Context"
+                    int node:typeVersion = 2
+                    custom uint64 outputs:context
+                }
+
+                def OmniGraphNode "RunOnce"
+                {
+                    custom uint inputs:execIn (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    prepend uint inputs:execIn.connect = </World/G1/Graph/ROS2_Lidar/OnPlaybackTick.outputs:tick>
+                    token node:type = "isaacsim.core.nodes.OgnIsaacRunOneSimulationFrame"
+                    int node:typeVersion = 1
+                    custom uint outputs:step (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                }
+
+                def OmniGraphNode "RenderProduct"
+                {
+                    custom rel inputs:cameraPrim = </World/G1/torso_link/mid360_link/lidar> (
+                        customData = {
+                            dictionary omni = {
+                                dictionary graph = {
+                                    string relType = "target"
+                                }
+                            }
+                        }
+                    )
+                    custom bool inputs:enabled
+                    custom uint inputs:execIn (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    prepend uint inputs:execIn.connect = </World/G1/Graph/ROS2_Lidar/RunOnce.outputs:step>
+                    custom uint inputs:height
+                    custom rel inputs:renderProductPrim (
+                        customData = {
+                            dictionary omni = {
+                                dictionary graph = {
+                                    string relType = "target"
+                                }
+                            }
+                        }
+                    )
+                    custom uint inputs:width
+                    token node:type = "isaacsim.core.nodes.IsaacCreateRenderProduct"
+                    int node:typeVersion = 3
+                    custom uint outputs:execOut (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    custom token outputs:renderProductPath
+                }
+
+                def OmniGraphNode "PointCloudConfig"
+                {
+                    custom bool inputs:outputChannelId
+                    custom bool inputs:outputEchoId
+                    custom bool inputs:outputEmitterId
+                    custom bool inputs:outputHitNormal
+                    custom bool inputs:outputIntensity = 1
+                    custom bool inputs:outputMaterialId
+                    custom bool inputs:outputObjectId
+                    custom bool inputs:outputTickId
+                    custom bool inputs:outputTickState
+                    custom bool inputs:outputTimestamp
+                    custom bool inputs:outputVelocity
+                    token node:type = "isaacsim.ros2.bridge.ROS2RtxLidarPointCloudConfig"
+                    int node:typeVersion = 1
+                    custom token[] outputs:selectedMetadata
+                }
+
+                def OmniGraphNode "PointCloudPublish"
+                {
+                    custom uint64 inputs:context
+                    prepend uint64 inputs:context.connect = </World/G1/Graph/ROS2_Lidar/Context.outputs:context>
+                    custom bool inputs:enabled
+                    custom bool inputs:enableObjectIdMap
+                    custom uint inputs:execIn (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    prepend uint inputs:execIn.connect = </World/G1/Graph/ROS2_Lidar/RenderProduct.outputs:execOut>
+                    custom string inputs:frameId = "livox_frame"
+                    custom uint inputs:frameSkipCount
+                    custom bool inputs:fullScan
+                    custom string inputs:nodeNamespace = ""
+                    custom string inputs:objectIdMapTopicName
+                    custom string inputs:qosProfile
+                    custom uint64 inputs:queueSize
+                    custom token inputs:renderProductPath
+                    prepend token inputs:renderProductPath.connect = </World/G1/Graph/ROS2_Lidar/RenderProduct.outputs:renderProductPath>
+                    custom bool inputs:resetSimulationTimeOnStop
+                    custom token[] inputs:selectedMetadata
+                    prepend token[] inputs:selectedMetadata.connect = </World/G1/Graph/ROS2_Lidar/PointCloudConfig.outputs:selectedMetadata>
+                    custom bool inputs:showDebugView
+                    custom string inputs:topicName = "/livox/lidar"
+                    custom token inputs:type = "point_cloud" (
+                        allowedTokens = ["laser_scan", "point_cloud"]
+                    )
+                    custom bool inputs:useSystemTime
+                    token node:type = "isaacsim.ros2.bridge.ROS2RtxLidarHelper"
+                    int node:typeVersion = 3
+                }
+            }
+
+            def OmniGraph "ROS2_TF"
+            {
+                token evaluationMode = "Automatic"
+                token evaluator:type = "execution"
+                token fabricCacheBacking = "StageWithoutHistory"
+                int2 fileFormatVersion = (1, 9)
+                token pipelineStage = "pipelineStageSimulation"
+
+                def OmniGraphNode "OnPlaybackTick"
+                {
+                    token node:type = "omni.graph.action.OnPlaybackTick"
+                    int node:typeVersion = 2
+                    custom double outputs:deltaSeconds
+                    custom double outputs:frame
+                    custom uint outputs:tick (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    custom double outputs:time
+                }
+
+                def OmniGraphNode "Context"
+                {
+                    custom uchar inputs:domain_id
+                    custom bool inputs:useDomainIDEnvVar
+                    token node:type = "isaacsim.ros2.bridge.ROS2Context"
+                    int node:typeVersion = 2
+                    custom uint64 outputs:context
+                }
+
+                def OmniGraphNode "ReadSimTime"
+                {
+                    custom uint64 inputs:referenceTimeDenominator
+                    custom int64 inputs:referenceTimeNumerator
+                    custom bool inputs:resetOnStop = 1
+                    token node:type = "isaacsim.core.nodes.IsaacReadSimulationTime"
+                    int node:typeVersion = 1
+                    custom double outputs:simulationTime
+                }
+
+                def OmniGraphNode "ComputeTF"
+                {
+                    custom uint inputs:execIn (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    prepend uint inputs:execIn.connect = </World/G1/Graph/ROS2_TF/OnPlaybackTick.outputs:tick>
+                    custom rel inputs:parentPrim = </World/G1/pelvis> (
+                        customData = {
+                            dictionary omni = {
+                                dictionary graph = {
+                                    string relType = "target"
+                                }
+                            }
+                        }
+                    )
+                    custom rel inputs:targetPrims = [
+                        </World/G1/torso_link/d435_link/camera>,
+                        </World/G1/torso_link/mid360_link/lidar>,
+                        </World/G1/pelvis/imu_sensor>,
+                    ] (
+                        customData = {
+                            dictionary omni = {
+                                dictionary graph = {
+                                    string relType = "target"
+                                }
+                            }
+                        }
+                    )
+                    token node:type = "isaacsim.core.nodes.IsaacComputeTransformTree"
+                    int node:typeVersion = 1
+                    custom token[] outputs:childFrames
+                    custom uint outputs:execOut (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    custom double4[] outputs:orientations
+                    custom token[] outputs:parentFrames
+                    custom double3[] outputs:translations
+                }
+
+                def OmniGraphNode "PublishTF"
+                {
+                    custom token[] inputs:childFrames
+                    prepend token[] inputs:childFrames.connect = </World/G1/Graph/ROS2_TF/ComputeTF.outputs:childFrames>
+                    custom uint64 inputs:context
+                    prepend uint64 inputs:context.connect = </World/G1/Graph/ROS2_TF/Context.outputs:context>
+                    custom uint inputs:execIn (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    prepend uint inputs:execIn.connect = </World/G1/Graph/ROS2_TF/ComputeTF.outputs:execOut>
+                    custom string inputs:nodeNamespace = ""
+                    custom double4[] inputs:orientations
+                    prepend double4[] inputs:orientations.connect = </World/G1/Graph/ROS2_TF/ComputeTF.outputs:orientations>
+                    custom token[] inputs:parentFrames
+                    prepend token[] inputs:parentFrames.connect = </World/G1/Graph/ROS2_TF/ComputeTF.outputs:parentFrames>
+                    custom rel inputs:parentPrim (
+                        customData = {
+                            dictionary omni = {
+                                dictionary graph = {
+                                    string relType = "target"
+                                }
+                            }
+                        }
+                    )
+                    custom string inputs:qosProfile
+                    custom uint64 inputs:queueSize
+                    custom bool inputs:staticPublisher
+                    custom rel inputs:targetPrims (
+                        customData = {
+                            dictionary omni = {
+                                dictionary graph = {
+                                    string relType = "target"
+                                }
+                            }
+                        }
+                    )
+                    custom double inputs:timeStamp
+                    prepend double inputs:timeStamp.connect = </World/G1/Graph/ROS2_TF/ReadSimTime.outputs:simulationTime>
+                    custom string inputs:topicName = "/tf"
+                    custom double3[] inputs:translations
+                    prepend double3[] inputs:translations.connect = </World/G1/Graph/ROS2_TF/ComputeTF.outputs:translations>
+                    token node:type = "isaacsim.ros2.bridge.ROS2PublishTransformTree"
+                    int node:typeVersion = 1
+                }
+
+                def OmniGraphNode "ComputeStaticTF"
+                {
+                    custom uint inputs:execIn (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    prepend uint inputs:execIn.connect = </World/G1/Graph/ROS2_TF/OnPlaybackTick.outputs:tick>
+                    custom rel inputs:parentPrim = </World> (
+                        customData = {
+                            dictionary omni = {
+                                dictionary graph = {
+                                    string relType = "target"
+                                }
+                            }
+                        }
+                    )
+                    custom rel inputs:targetPrims = </World/G1/odom> (
+                        customData = {
+                            dictionary omni = {
+                                dictionary graph = {
+                                    string relType = "target"
+                                }
+                            }
+                        }
+                    )
+                    token node:type = "isaacsim.core.nodes.IsaacComputeTransformTree"
+                    int node:typeVersion = 1
+                    custom token[] outputs:childFrames
+                    custom uint outputs:execOut (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    custom double4[] outputs:orientations
+                    custom token[] outputs:parentFrames
+                    custom double3[] outputs:translations
+                }
+
+                def OmniGraphNode "PublishStaticTF"
+                {
+                    custom token[] inputs:childFrames
+                    prepend token[] inputs:childFrames.connect = </World/G1/Graph/ROS2_TF/ComputeStaticTF.outputs:childFrames>
+                    custom uint64 inputs:context
+                    prepend uint64 inputs:context.connect = </World/G1/Graph/ROS2_TF/Context.outputs:context>
+                    custom uint inputs:execIn (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    prepend uint inputs:execIn.connect = </World/G1/Graph/ROS2_TF/ComputeStaticTF.outputs:execOut>
+                    custom string inputs:nodeNamespace = ""
+                    custom double4[] inputs:orientations
+                    prepend double4[] inputs:orientations.connect = </World/G1/Graph/ROS2_TF/ComputeStaticTF.outputs:orientations>
+                    custom token[] inputs:parentFrames
+                    prepend token[] inputs:parentFrames.connect = </World/G1/Graph/ROS2_TF/ComputeStaticTF.outputs:parentFrames>
+                    custom rel inputs:parentPrim (
+                        customData = {
+                            dictionary omni = {
+                                dictionary graph = {
+                                    string relType = "target"
+                                }
+                            }
+                        }
+                    )
+                    custom string inputs:qosProfile
+                    custom uint64 inputs:queueSize
+                    custom bool inputs:staticPublisher = 1
+                    custom rel inputs:targetPrims (
+                        customData = {
+                            dictionary omni = {
+                                dictionary graph = {
+                                    string relType = "target"
+                                }
+                            }
+                        }
+                    )
+                    custom double inputs:timeStamp
+                    prepend double inputs:timeStamp.connect = </World/G1/Graph/ROS2_TF/ReadSimTime.outputs:simulationTime>
+                    custom string inputs:topicName = "/tf_static"
+                    custom double3[] inputs:translations
+                    prepend double3[] inputs:translations.connect = </World/G1/Graph/ROS2_TF/ComputeStaticTF.outputs:translations>
+                    token node:type = "isaacsim.ros2.bridge.ROS2PublishTransformTree"
+                    int node:typeVersion = 1
+                }
+            }
+
+            over "ROS2_JointStates"
+            {
+                over "PublishJointState"
+                {
+                    custom string inputs:topicName = "/joint_states"
+                }
+            }
+
+            over "ROS2_JointCommands"
+            {
+                over "SubscribeJointCommand"
+                {
+                    custom string inputs:topicName = "/joint_commands"
+                }
+            }
+
+            over "ROS2_IMU"
+            {
+                over "PublishIMU"
+                {
+                    custom string inputs:topicName = "/imu/data"
+                }
+            }
+
+            over "OdometryGraph"
+            {
+                def OmniGraphNode "OdomOffset"
+                {
+                    custom token inputs:a
+                    prepend token inputs:a.connect = </World/G1/Graph/OdometryGraph/ComputeOdom.outputs:position>
+                    custom token inputs:b (
+                        customData = {
+                            dictionary omni = {
+                                dictionary graph = {
+                                    double3 attrValue = (0, 0, 0.7928634881973267)
+                                    string resolvedType = "vectord[3]"
+                                }
+                            }
+                        }
+                    )
+                    token node:type = "omni.graph.nodes.Add"
+                    int node:typeVersion = 2
+                    custom token outputs:sum
+                }
+
+                over "PublishOdom"
+                {
+                    custom vector3d inputs:position
+                    delete vector3d inputs:position.connect = </World/G1/Graph/OdometryGraph/ComputeOdom.outputs:position>
+                    prepend vector3d inputs:position.connect = </World/G1/Graph/OdometryGraph/OdomOffset.outputs:sum>
+                }
+
+                over "PublishTF"
+                {
+                    custom vector3d inputs:translation
+                    delete vector3d inputs:translation.connect = </World/G1/Graph/OdometryGraph/ComputeOdom.outputs:position>
+                    prepend vector3d inputs:translation.connect = </World/G1/Graph/OdometryGraph/OdomOffset.outputs:sum>
+                }
+            }
+        }
+
+        def Xform "odom"
+        {
+            quatd xformOp:orient = (0.9999999999959704, 0, 0, 0.000002838856976978195)
+            double3 xformOp:translate = (-0.00009003054583445191, 0.0000010660644420568133, -0.7922728583216667)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
+        }
+
+        over "pelvis"
+        {
+            over "imu_sensor"
+            {
+                custom string isaac:nameOverride = "imu"
+            }
+        }
+
+        over "left_hip_pitch_link"
+        {
+        }
+
+        over "left_hip_roll_link"
+        {
+        }
+
+        over "left_hip_yaw_link"
+        {
+        }
+
+        over "left_knee_link"
+        {
+        }
+
+        over "left_ankle_pitch_link"
+        {
+        }
+
+        over "left_ankle_roll_link"
+        {
+        }
+
+        over "right_hip_pitch_link"
+        {
+        }
+
+        over "right_hip_roll_link"
+        {
+        }
+
+        over "right_hip_yaw_link"
+        {
+        }
+
+        over "right_knee_link"
+        {
+        }
+
+        over "right_ankle_pitch_link"
+        {
+        }
+
+        over "right_ankle_roll_link"
+        {
+        }
+
+        over "waist_yaw_link"
+        {
+        }
+
+        over "waist_roll_link"
+        {
+        }
+
+        over "left_shoulder_pitch_link"
+        {
+        }
+
+        over "left_shoulder_roll_link"
+        {
+        }
+
+        over "left_shoulder_yaw_link"
+        {
+        }
+
+        over "left_elbow_link"
+        {
+        }
+
+        over "left_wrist_roll_link"
+        {
+        }
+
+        over "left_wrist_pitch_link"
+        {
+        }
+
+        over "left_wrist_yaw_link"
+        {
+        }
+
+        over "left_hand"
+        {
+            over "left_hand_palm_link"
+            {
+            }
+
+            over "left_hand_index_0_link"
+            {
+            }
+
+            over "left_hand_index_1_link"
+            {
+            }
+
+            over "left_hand_middle_0_link"
+            {
+            }
+
+            over "left_hand_middle_1_link"
+            {
+            }
+
+            over "left_hand_thumb_0_link"
+            {
+            }
+
+            over "left_hand_thumb_1_link"
+            {
+            }
+
+            over "left_hand_thumb_2_link"
+            {
+            }
+
+            over "joints"
+            {
+                over "left_hand_index_0_joint"
+                {
+                    float state:angular:physics:position = 0.000048130853
+                    float state:angular:physics:velocity = 0.5775852
+                }
+
+                over "left_hand_middle_0_joint"
+                {
+                    float state:angular:physics:position = 0.0005496832
+                    float state:angular:physics:velocity = 1.1415777
+                }
+
+                over "left_hand_thumb_0_joint"
+                {
+                    float state:angular:physics:position = 0.0015526931
+                    float state:angular:physics:velocity = 6.489716
+                }
+
+                over "left_hand_index_1_joint"
+                {
+                    float state:angular:physics:position = 0.00019426465
+                    float state:angular:physics:velocity = 3.8852656
+                }
+
+                over "left_hand_middle_1_joint"
+                {
+                    float state:angular:physics:position = 0.0004012594
+                    float state:angular:physics:velocity = 0.254627
+                }
+
+                over "left_hand_thumb_1_joint"
+                {
+                    float state:angular:physics:position = -0.09040615
+                    float state:angular:physics:velocity = -24.457245
+                }
+
+                over "left_hand_thumb_2_joint"
+                {
+                    float state:angular:physics:position = 0.00030482127
+                    float state:angular:physics:velocity = -0.011819051
+                }
+            }
+        }
+
+        over "right_shoulder_pitch_link"
+        {
+        }
+
+        over "right_shoulder_roll_link"
+        {
+        }
+
+        over "right_shoulder_yaw_link"
+        {
+        }
+
+        over "right_elbow_link"
+        {
+        }
+
+        over "right_wrist_roll_link"
+        {
+        }
+
+        over "right_wrist_pitch_link"
+        {
+        }
+
+        over "right_wrist_yaw_link"
+        {
+        }
+
+        over "right_hand"
+        {
+            over "right_hand_palm_link"
+            {
+            }
+
+            over "right_hand_index_0_link"
+            {
+            }
+
+            over "right_hand_index_1_link"
+            {
+            }
+
+            over "right_hand_middle_0_link"
+            {
+            }
+
+            over "right_hand_middle_1_link"
+            {
+            }
+
+            over "right_hand_thumb_0_link"
+            {
+            }
+
+            over "right_hand_thumb_1_link"
+            {
+            }
+
+            over "right_hand_thumb_2_link"
+            {
+            }
+
+            over "joints"
+            {
+                over "right_hand_index_0_joint"
+                {
+                    float state:angular:physics:position = -0.0010423274
+                    float state:angular:physics:velocity = -0.4941754
+                }
+
+                over "right_hand_middle_0_joint"
+                {
+                    float state:angular:physics:position = -0.00091996184
+                    float state:angular:physics:velocity = -0.73101896
+                }
+
+                over "right_hand_thumb_0_joint"
+                {
+                    float state:angular:physics:position = 0.0017287321
+                    float state:angular:physics:velocity = 6.502921
+                }
+
+                over "right_hand_index_1_joint"
+                {
+                    float state:angular:physics:position = 0.0005039001
+                    float state:angular:physics:velocity = -0.80148983
+                }
+
+                over "right_hand_middle_1_joint"
+                {
+                    float state:angular:physics:position = 0.0003468136
+                    float state:angular:physics:velocity = -0.548597
+                }
+
+                over "right_hand_thumb_1_joint"
+                {
+                    float state:angular:physics:position = 0.08224371
+                    float state:angular:physics:velocity = 24.322998
+                }
+
+                over "right_hand_thumb_2_joint"
+                {
+                    float state:angular:physics:position = -0.000064516746
+                    float state:angular:physics:velocity = 0.023647374
+                }
+            }
+        }
+
+        over "joints"
+        {
+            over "left_hip_pitch_joint"
+            {
+                float state:angular:physics:position = -0.007061671
+                float state:angular:physics:velocity = -4.9249353
+            }
+
+            over "right_hip_pitch_joint"
+            {
+                float state:angular:physics:position = -0.0070628184
+                float state:angular:physics:velocity = -5.0670033
+            }
+
+            over "waist_yaw_joint"
+            {
+                float state:angular:physics:position = 0.0011348744
+                float state:angular:physics:velocity = 0.13484912
+            }
+
+            over "left_hip_roll_joint"
+            {
+                float state:angular:physics:position = -0.00021123531
+                float state:angular:physics:velocity = -0.0016517997
+            }
+
+            over "right_hip_roll_joint"
+            {
+                float state:angular:physics:position = -0.0002589352
+                float state:angular:physics:velocity = 0.033250127
+            }
+
+            over "waist_roll_joint"
+            {
+                float state:angular:physics:position = 0.00017236725
+                float state:angular:physics:velocity = 0.1076305
+            }
+
+            over "left_hip_yaw_joint"
+            {
+                float state:angular:physics:position = -0.0002794758
+                float state:angular:physics:velocity = 0.08223609
+            }
+
+            over "right_hip_yaw_joint"
+            {
+                float state:angular:physics:position = -0.00042633532
+                float state:angular:physics:velocity = 0.25360394
+            }
+
+            over "waist_pitch_joint"
+            {
+                float state:angular:physics:position = 0.0801466
+                float state:angular:physics:velocity = 0.4935276
+            }
+
+            over "left_knee_joint"
+            {
+                float state:angular:physics:position = 0.009036108
+                float state:angular:physics:velocity = -2.5287282
+            }
+
+            over "right_knee_joint"
+            {
+                float state:angular:physics:position = 0.009260944
+                float state:angular:physics:velocity = -2.2847605
+            }
+
+            over "left_shoulder_pitch_joint"
+            {
+                float state:angular:physics:position = 0.019883329
+                float state:angular:physics:velocity = -4.393992
+            }
+
+            over "right_shoulder_pitch_joint"
+            {
+                float state:angular:physics:position = 0.0231302
+                float state:angular:physics:velocity = -3.8274724
+            }
+
+            over "left_ankle_pitch_joint"
+            {
+                float state:angular:physics:position = 0.0026470514
+                float state:angular:physics:velocity = 2.8042183
+            }
+
+            over "right_ankle_pitch_joint"
+            {
+                float state:angular:physics:position = 0.0024119874
+                float state:angular:physics:velocity = 2.6986303
+            }
+
+            over "left_shoulder_roll_joint"
+            {
+                float state:angular:physics:position = 0.0012521081
+                float state:angular:physics:velocity = 0.87786573
+            }
+
+            over "right_shoulder_roll_joint"
+            {
+                float state:angular:physics:position = -0.0009865935
+                float state:angular:physics:velocity = -0.8437121
+            }
+
+            over "left_ankle_roll_joint"
+            {
+                float state:angular:physics:position = 0.000031559266
+                float state:angular:physics:velocity = 0.07602793
+            }
+
+            over "right_ankle_roll_joint"
+            {
+                float state:angular:physics:position = 0.000047031233
+                float state:angular:physics:velocity = 0.0626055
+            }
+
+            over "left_shoulder_yaw_joint"
+            {
+                float state:angular:physics:position = 0.0017579062
+                float state:angular:physics:velocity = 1.4571118
+            }
+
+            over "right_shoulder_yaw_joint"
+            {
+                float state:angular:physics:position = -0.0018834132
+                float state:angular:physics:velocity = -1.2828901
+            }
+
+            over "left_elbow_joint"
+            {
+                float state:angular:physics:position = 0.00063308625
+                float state:angular:physics:velocity = -0.10349355
+            }
+
+            over "right_elbow_joint"
+            {
+                float state:angular:physics:position = 0.005621535
+                float state:angular:physics:velocity = 0.4446992
+            }
+
+            over "left_wrist_roll_joint"
+            {
+                float state:angular:physics:position = -0.0003258152
+                float state:angular:physics:velocity = -0.013234022
+            }
+
+            over "right_wrist_roll_joint"
+            {
+                float state:angular:physics:position = 0.00044145857
+                float state:angular:physics:velocity = -0.061193347
+            }
+
+            over "left_wrist_pitch_joint"
+            {
+                float state:angular:physics:position = 0.06510618
+                float state:angular:physics:velocity = -3.293405
+            }
+
+            over "right_wrist_pitch_joint"
+            {
+                float state:angular:physics:position = 0.07540443
+                float state:angular:physics:velocity = -1.9122585
+            }
+
+            over "left_wrist_yaw_joint"
+            {
+                float state:angular:physics:position = -0.0026163657
+                float state:angular:physics:velocity = 0.038748894
+            }
+
+            over "right_wrist_yaw_joint"
+            {
+                float state:angular:physics:position = 0.0024141422
+                float state:angular:physics:velocity = -0.06421169
+            }
+        }
+    }
+
+    def Scope "Graph"
+    {
+        def OmniGraph "ROS2_Clock"
+        {
+            token evaluationMode = "Automatic"
+            token evaluator:type = "execution"
+            token fabricCacheBacking = "StageWithoutHistory"
+            int2 fileFormatVersion = (1, 9)
+            token pipelineStage = "pipelineStageSimulation"
+
+            def OmniGraphNode "OnPlaybackTick"
+            {
+                token node:type = "omni.graph.action.OnPlaybackTick"
+                int node:typeVersion = 2
+                custom double outputs:deltaSeconds
+                custom double outputs:frame
+                custom uint outputs:tick (
+                    customData = {
+                        bool isExecution = 1
+                    }
+                )
+                custom double outputs:time
+            }
+
+            def OmniGraphNode "Context"
+            {
+                custom uchar inputs:domain_id
+                custom bool inputs:useDomainIDEnvVar
+                token node:type = "isaacsim.ros2.bridge.ROS2Context"
+                int node:typeVersion = 2
+                custom uint64 outputs:context
+            }
+
+            def OmniGraphNode "ReadSimTime"
+            {
+                custom uint64 inputs:referenceTimeDenominator
+                custom int64 inputs:referenceTimeNumerator
+                custom bool inputs:resetOnStop
+                token node:type = "isaacsim.core.nodes.IsaacReadSimulationTime"
+                int node:typeVersion = 1
+                custom double outputs:simulationTime
+            }
+
+            def OmniGraphNode "PublishClock"
+            {
+                custom uint64 inputs:context
+                prepend uint64 inputs:context.connect = </World/Graph/ROS2_Clock/Context.outputs:context>
+                custom uint inputs:execIn (
+                    customData = {
+                        bool isExecution = 1
+                    }
+                )
+                prepend uint inputs:execIn.connect = </World/Graph/ROS2_Clock/OnPlaybackTick.outputs:tick>
+                custom string inputs:nodeNamespace
+                custom string inputs:qosProfile
+                custom uint64 inputs:queueSize
+                custom double inputs:timeStamp
+                prepend double inputs:timeStamp.connect = </World/Graph/ROS2_Clock/ReadSimTime.outputs:simulationTime>
+                custom string inputs:topicName = "/clock"
+                token node:type = "isaacsim.ros2.bridge.ROS2PublishClock"
+                int node:typeVersion = 1
+            }
+        }
+    }
+}
+
+def Xform "Environment"
+{
+    quatd xformOp:orient = (1, 0, 0, 0)
+    double3 xformOp:scale = (1, 1, 1)
+    double3 xformOp:translate = (0, 0, 0)
+    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+    def DistantLight "defaultLight" (
+        prepend apiSchemas = ["ShapingAPI"]
+    )
+    {
+        float inputs:angle = 1
+        float inputs:exposure = 1.5
+        float inputs:intensity = 500
+        bool inputs:normalize = 1
+        float inputs:shaping:cone:angle = 180
+        float inputs:shaping:cone:softness
+        float inputs:shaping:focus
+        color3f inputs:shaping:focusTint
+        asset inputs:shaping:ies:file
+        custom int omni:rtx:usdluxVersion = 2505
+        token visibility = "invisible"
+        quatd xformOp:orient = (0.6532814824381883, 0.2705980500730985, 0.27059805007309845, 0.6532814824381882)
+        double3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (0, 0, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+    }
+
+    def "full_warehouse" (
+        prepend payload = @https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.1/Isaac/Environments/Simple_Warehouse/full_warehouse.usd@
+    )
+    {
+        # Newton's MuJoCo solver rejects these mirrored (scale -0.01) wall-wire colliders:
+        # "Only plane shapes are allowed to have a size of zero".
+        over "SM_WallWire_51"
+        {
+            over "SM_WallWire_09"
+            {
+                bool physics:collisionEnabled = 0
+            }
+        }
+
+        over "SM_WallWire_52"
+        {
+            over "SM_WallWire_09"
+            {
+                bool physics:collisionEnabled = 0
+            }
+        }
+
+        over "SM_WallWire_53"
+        {
+            over "SM_WallWire_09"
+            {
+                bool physics:collisionEnabled = 0
+            }
+        }
+
+        over "SM_WallWire_54"
+        {
+            over "SM_WallWire_09"
+            {
+                bool physics:collisionEnabled = 0
+            }
+        }
+
+        over "SM_WallWire_55"
+        {
+            over "SM_WallWire_09"
+            {
+                bool physics:collisionEnabled = 0
+            }
+        }
+
+        over "SM_WallWire_56"
+        {
+            over "SM_WallWire_09"
+            {
+                bool physics:collisionEnabled = 0
+            }
+        }
+    }
+}
+
+def PhysicsScene "PhysicsScene" (
+    prepend apiSchemas = ["NewtonSceneAPI", "MjcSceneAPI", "PhysxSceneAPI"]
+)
+{
+    uniform int newton:timeStepsPerSecond = 100
+    uniform token physxScene:broadphaseType = "MBP"
+    bool physxScene:enableGPUDynamics = 0
+    uint physxScene:timeStepsPerSecond = 100
+}
+
+def "Render" (
+    hide_in_stage_window = true
+    no_delete = true
+)
+{
+    def "OmniverseKit"
+    {
+        def "HydraTextures" (
+            hide_in_stage_window = true
+            no_delete = true
+        )
+        {
+            def RenderProduct "omni_kit_widget_viewport_ViewportTexture_0" (
+                prepend apiSchemas = ["OmniRtxSettingsCommonAdvancedAPI_1", "OmniRtxSettingsRtAdvancedAPI_1", "OmniRtxSettingsPtAdvancedAPI_1", "OmniRtxSettingsParticleFieldAPI_1", "OmniRtxPostColorGradingAPI_1", "OmniRtxPostChromaticAberrationAPI_1", "OmniRtxPostBloomPhysicalAPI_1", "OmniRtxPostMatteObjectAPI_1", "OmniRtxPostCompositingAPI_1", "OmniRtxPostDofAPI_1", "OmniRtxPostMotionBlurAPI_1", "OmniRtxPostTvNoiseAPI_1", "OmniRtxPostTonemapIrayReinhardAPI_1", "OmniRtxPostDebugSettingsAPI_1", "OmniRtxDebugSettingsAPI_1"]
+                hide_in_stage_window = true
+                no_delete = true
+            )
+            {
+                rel camera = </OmniverseKit_Persp>
+                token omni:rtx:ambientOcclusion:denoiserMode = "none"
+                token omni:rtx:background:source:texture:textureMode = "repeatMirrored"
+                token omni:rtx:background:source:type = "domeLight"
+                bool omni:rtx:debug:view:pixelDebug:enableFixedTextPos = 1
+                token omni:rtx:directLighting:sampledLighting:denoisingTechnique = "None"
+                bool omni:rtx:dlss:frameGeneration = 0
+                bool omni:rtx:indirectDiffuse:denoiser:enabled = 0
+                bool omni:rtx:material:db:syncLoads = 1
+                token omni:rtx:post:dlss:execMode = "performance"
+                bool omni:rtx:post:registeredCompositing:invertColorCorrection = 1
+                bool omni:rtx:post:registeredCompositing:invertToneMap = 1
+                bool omni:rtx:pt:adaptiveSampling:filterError = 0
+                uint omni:rtx:pt:adaptiveSampling:fixedSppIterations = 2
+                int omni:rtx:pt:clampSpp
+                uint omni:rtx:pt:limits:maxBounces = 3
+                uint omni:rtx:pt:limits:maxGlossyBounces = 3
+                uint omni:rtx:pt:maxSamplesPerLaunch = 2073600
+                uint omni:rtx:pt:mgpu:maxPixelsPerRegionExponent = 12
+                int omni:rtx:pt:samplesPerIteration
+                uint omni:rtx:pt:samplesPerPixel
+                bool omni:rtx:reflections:denoiser:enabled = 0
+                token omni:rtx:rendermode = "RealTimePathTracing"
+                color3f omni:rtx:rt:ambientLight:color = (0.1, 0.1, 0.1)
+                bool omni:rtx:rt:demoire = 0
+                bool omni:rtx:rt:ecoMode:enabled
+                bool omni:rtx:rt:lightcache:spatialCache:dontResolveConflicts = 1
+                int omni:rtx:rt:sss:samples = 1
+                uint omni:rtx:rtpt:maxVolumeBounces = 15
+                float omni:rtx:rtpt:modulatingRoughnessThreshold = 0.08
+                bool omni:rtx:scene:hydra:materialSyncLoads = 1
+                bool omni:rtx:scene:hydra:mdlMaterialWarmup = 1
+                rel orderedVars = </Render/Vars/LdrColor>
+                custom bool overrideClipRange = 0
+                uniform int2 resolution = (1280, 720)
+            }
+
+            def RenderProduct "Replicator" (
+                prepend apiSchemas = ["OmniRtxSettingsCommonAdvancedAPI_1", "OmniRtxSettingsRtAdvancedAPI_1", "OmniRtxSettingsPtAdvancedAPI_1", "OmniRtxSettingsParticleFieldAPI_1", "OmniRtxPostColorGradingAPI_1", "OmniRtxPostChromaticAberrationAPI_1", "OmniRtxPostBloomPhysicalAPI_1", "OmniRtxPostMatteObjectAPI_1", "OmniRtxPostCompositingAPI_1", "OmniRtxPostDofAPI_1", "OmniRtxPostMotionBlurAPI_1", "OmniRtxPostTvNoiseAPI_1", "OmniRtxPostTonemapIrayReinhardAPI_1", "OmniRtxPostDebugSettingsAPI_1", "OmniRtxDebugSettingsAPI_1"]
+                hide_in_stage_window = true
+                no_delete = true
+            )
+            {
+                rel camera = </World/G1/torso_link/d435_link/camera>
+                bool omni:rtx:material:db:syncLoads = 1
+                bool omni:rtx:rt:ecoMode:enabled
+                bool omni:rtx:scene:hydra:materialSyncLoads = 1
+                rel orderedVars = </Render/Vars/LdrColor>
+                custom bool overrideClipRange = 0
+                uniform int2 resolution = (1280, 720)
+            }
+
+            def RenderProduct "Replicator_01" (
+                prepend apiSchemas = ["OmniRtxSettingsCommonAdvancedAPI_1", "OmniRtxSettingsRtAdvancedAPI_1", "OmniRtxSettingsPtAdvancedAPI_1", "OmniRtxSettingsParticleFieldAPI_1", "OmniRtxPostColorGradingAPI_1", "OmniRtxPostChromaticAberrationAPI_1", "OmniRtxPostBloomPhysicalAPI_1", "OmniRtxPostMatteObjectAPI_1", "OmniRtxPostCompositingAPI_1", "OmniRtxPostDofAPI_1", "OmniRtxPostMotionBlurAPI_1", "OmniRtxPostTvNoiseAPI_1", "OmniRtxPostTonemapIrayReinhardAPI_1", "OmniRtxPostDebugSettingsAPI_1", "OmniRtxDebugSettingsAPI_1"]
+                hide_in_stage_window = true
+                no_delete = true
+            )
+            {
+                rel camera = </World/G1/torso_link/mid360_link/lidar>
+                bool omni:rtx:material:db:syncLoads = 1
+                bool omni:rtx:rt:ecoMode:enabled
+                bool omni:rtx:scene:hydra:materialSyncLoads = 1
+                rel orderedVars = </Render/Vars/GenericModelOutput>
+                custom bool overrideClipRange = 0
+                uniform int2 resolution = (1280, 720)
+            }
+        }
+    }
+
+    def RenderSettings "OmniverseGlobalRenderSettings" (
+        prepend apiSchemas = ["OmniRtxSettingsGlobalRtAdvancedAPI_1", "OmniRtxSettingsGlobalPtAdvancedAPI_1"]
+        no_delete = true
+    )
+    {
+        rel products = [
+            </Render/OmniverseKit/HydraTextures/omni_kit_widget_viewport_ViewportTexture_0>,
+            </Render/OmniverseKit/HydraTextures/Replicator>,
+            </Render/OmniverseKit/HydraTextures/Replicator_01>,
+        ]
+    }
+
+    def "Vars" (
+        hide_in_stage_window = true
+        no_delete = true
+    )
+    {
+        def RenderVar "LdrColor" (
+            hide_in_stage_window = true
+            no_delete = true
+        )
+        {
+            uniform string sourceName = "LdrColor"
+            uniform token sourceType = "raw"
+        }
+
+        def RenderVar "GenericModelOutput" (
+            prepend apiSchemas = ["RenderVarChannelsAPI"]
+        )
+        {
+            uniform string sourceName = "GenericModelOutput"
+        }
+    }
+}
+
+over "OmniverseKit_Persp" (
+    prepend apiSchemas = ["OmniRtxCameraAutoExposureAPI_1", "OmniRtxCameraExposureAPI_1"]
+    customData = {
+        dictionary omni = {
+            dictionary kit = {
+                bool hide_in_stage_window = 1
+                bool no_delete = 1
+            }
+        }
+    }
+    hide_in_stage_window = true
+    kind = "component"
+    no_delete = true
+)
+{
+    float2 clippingRange = (0.01, 10000000)
+    float exposure:fStop = 5
+    float exposure:responsivity = 1.1026709
+    float exposure:time = 0.02
+    float focalLength = 18.147562
+    float focusDistance = 400
+    custom uniform vector3d omni:kit:centerOfInterest = (0, 0, -3.8321781549808813)
+    float3 xformOp:rotateXYZ = (79.31401, -7.315276e-14, 174.96829)
+    float3 xformOp:scale = (1, 1, 1)
+    double3 xformOp:translate = (-7.6697209161754093, 13.2558434155837475, 1.6987939071147091)
+    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+}
+
+over "OmniverseKit_Front" (
+    customData = {
+        dictionary omni = {
+            dictionary kit = {
+                bool hide_in_stage_window = 1
+                bool no_delete = 1
+            }
+        }
+    }
+    hide_in_stage_window = true
+    kind = "component"
+    no_delete = true
+)
+{
+    float2 clippingRange = (1, 10000000)
+    float horizontalAperture = 50
+    custom uniform vector3d omni:kit:centerOfInterest = (0, 0, -5)
+    token projection = "orthographic"
+    float verticalAperture = 50
+    float3 xformOp:rotateXYZ = (90, -1.2722219e-14, 90)
+    float3 xformOp:scale = (1, 1, 1)
+    double3 xformOp:translate = (5, 0, 0)
+    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+}
+
+over "OmniverseKit_Right" (
+    customData = {
+        dictionary omni = {
+            dictionary kit = {
+                bool hide_in_stage_window = 1
+                bool no_delete = 1
+            }
+        }
+    }
+    hide_in_stage_window = true
+    kind = "component"
+    no_delete = true
+)
+{
+    float2 clippingRange = (1, 10000000)
+    float horizontalAperture = 50
+    custom uniform vector3d omni:kit:centerOfInterest = (0, 0, -5)
+    token projection = "orthographic"
+    float verticalAperture = 50
+    float3 xformOp:rotateXYZ = (90, -1.41245e-30, 1.2722219e-14)
+    float3 xformOp:scale = (1, 1, 1)
+    double3 xformOp:translate = (0, -5, 0)
+    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+}
+
+over "OmniverseKit_Top" (
+    customData = {
+        dictionary omni = {
+            dictionary kit = {
+                bool hide_in_stage_window = 1
+                bool no_delete = 1
+            }
+        }
+    }
+    hide_in_stage_window = true
+    kind = "component"
+    no_delete = true
+)
+{
+    float2 clippingRange = (1, 10000000)
+    float horizontalAperture = 50
+    custom uniform vector3d omni:kit:centerOfInterest = (0, 0, -5)
+    token projection = "orthographic"
+    float verticalAperture = 50
+    float3 xformOp:rotateXYZ = (-1.2722219e-14, -7.016709e-15, -90)
+    float3 xformOp:scale = (1, 1, 1)
+    double3 xformOp:translate = (0, 0, 5)
+    uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+}
+

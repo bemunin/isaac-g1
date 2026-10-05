@@ -1,0 +1,49 @@
+# oc-add-ext: config/extension.toml (always)
+# oc-add-ext: omit each [package] line whose form field is empty.
+[package]
+version = "0.1.0"
+title = "{{title}}"
+description = "{{description}}"
+category = "{{category}}"
+keywords = {{keywords}}
+authors = {{authors}}
+repository = "{{repository}}"
+readme = "docs/README.md"
+changelog = "docs/CHANGELOG.md"
+preview_image = "data/preview.png"
+icon = "data/icon.png"
+
+[core]
+reloadable = true
+
+[dependencies]
+[if any.ogn]
+"omni.graph" = {}
+"omni.graph.tools" = {}
+[end]
+[if py.ui]
+"omni.ui" = {}
+[end]
+[if any.py]
+
+[[python.module]]
+name = "{{ext_id}}"
+[end]
+[if py.tests]
+
+[[python.module]]
+name = "{{ext_id}}.tests"
+[end]
+[if any.cpp]
+
+[[native.plugin]]
+path = "bin/*.plugin"
+[end]
+[if any.tests]
+
+[[test]]
+dependencies = ["omni.kit.test"]
+[end]
+[if cpp.tests]
+cppTests.libraries = ["bin/${lib_prefix}{{ext_id}}.tests${lib_ext}"]
+[end]

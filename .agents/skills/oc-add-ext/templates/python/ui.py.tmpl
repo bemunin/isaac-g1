@@ -1,0 +1,17 @@
+# oc-add-ext: {{module_path}}/ui.py (py.ui)
+from omni import ui
+
+
+class {{Name}}Window(ui.Window):
+    """Example window with a click counter."""
+
+    def __init__(self):
+        super().__init__("{{title}}", width=300, height=120)
+        self._count = 0
+        with self.frame, ui.VStack(spacing=4):
+            self._label = ui.Label("Clicked 0 times")
+            ui.Button("Click", clicked_fn=self._on_click)
+
+    def _on_click(self):
+        self._count += 1
+        self._label.text = f"Clicked {self._count} times"
