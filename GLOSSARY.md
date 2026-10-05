@@ -15,12 +15,16 @@ _Avoid_: RMW (except when naming the `RMW_IMPLEMENTATION` value)
 **Omnicraft**:
 The organization that owns this project and its agent skills; abbreviated "oc" in skill names.
 
+**Coding agent**:
+An AI assistant that works in this repo by following `AGENTS.md` and its skills, e.g. Claude Code or Codex.
+_Avoid_: LLM, AI, bot
+
 **Extension**:
 An Isaac Sim / Omniverse Kit extension: a folder with a `config/extension.toml` that Kit loads.
 _Avoid_: plugin, add-on, ext (in prose)
 
 **Extension ID**:
-An Extension's name, `<organization>.<group>.<ext_name>`, e.g. `omnicraft.bench.ros_pub`.
+An Extension's name, `<organization>.<group>.<ext_name>`, e.g. `oc.benchmark.ros_dds`.
 _Avoid_: brand.category.name
 
 **Organization**:

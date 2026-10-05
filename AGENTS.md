@@ -8,8 +8,8 @@ Before any coding work, read and follow these skills:
 - `.agents/skills/isaac-sim-sensor/SKILL.md`
 - `.agents/skills/oc-g1-ros/SKILL.md`
 
-Claude Code: read them from `.claude/skills/` instead. If that symlink is
-missing, create it first: `mkdir -p .claude && ln -s ../.agents/skills .claude/skills`
+## Init
+On `/init`, follow `.agents/skills/oc-init-proj/SKILL.md`.
 
 ## Commits
 - Commit only when the user says to. Don't offer or ask to commit.
