@@ -1,13 +1,13 @@
 ---
 name: oc-init-proj
-description: Initialize this repo for agents: install all Pixi envs and create the `.claude/skills` and `_isaacsim` symlinks; never create CLAUDE.md. Use when running `/init`, or when either symlink is missing.
+description: Initialize this repo for agents: install all Pixi envs and create the `.claude/skills` and `_isaacsim` symlinks; never create CLAUDE.md. Use when the user says `init` or `run init`, or when either symlink is missing.
 ---
 
 # oc-init-proj
 
 ## Rules
 
-- Do not create `CLAUDE.md`. `AGENTS.md` is the project's agent instructions.
+- Do not create `CLAUDE.md` or `GEMINI.md`. `AGENTS.md` is the project's agent instructions.
 - Create each symlink below only if it is missing.
 - Link targets must be relative (to the link's own folder), so the links survive moving the checkout.
 - Run every command from the project root.

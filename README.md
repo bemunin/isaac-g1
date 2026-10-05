@@ -13,10 +13,14 @@ A Unitree G1 in Isaac Sim 6.1 talking ROS 2 Jazzy over a selectable DDS.
 ## Setup
 
 1. Install Pixi and clone this repo.
-2. Open a coding agent in the repo root and run `/init`.
+2. Open a coding agent in the repo root and type `run init`.
 
-`/init` installs the Pixi environments and links the agent skills and the Isaac Sim package
+This installs the Pixi environments and links the agent skills and the Isaac Sim package
 (`.agents/skills/oc-init-proj/SKILL.md`).
+
+> [!NOTE]
+> - Type `run init`, not the `/init` command: built-in `/init` generates a `CLAUDE.md`,
+>   `AGENTS.md` or `GEMINI.md` instead of setting up the project.
 
 ## DDS
 
@@ -53,7 +57,7 @@ starts a `G1Walker` with its own sequence, built from a `WalkPlan`; the warehous
 
 Ask your coding agent to use these (in Claude Code, `/<name>`):
 
-- `oc-init-proj`: set up the repo (what `/init` runs).
+- `oc-init-proj`: set up the repo (what `run init` runs).
 - `oc-add-ext`: scaffold a new Isaac Sim extension.
 - `oc-g1-ros`: add the G1 to a stage, work with its ROS 2 graphs, or add sensors.
 
