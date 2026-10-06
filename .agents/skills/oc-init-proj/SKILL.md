@@ -16,6 +16,7 @@ description: Initialize this repo for agents: install all Pixi envs and create t
 - Both links are gitignored (`.claude/`, `/_isaacsim`); don't commit them.
 - The project's `pixi.toml` lists `linux-64` and `win-64` platforms; `pixi install --all` installs
   the envs for the current OS.
+- think before create .claude or .gemini: only do if you actually use Claude Code or Gemini Code, respectively.
 
 ## 1. Install all Pixi envs
 
@@ -39,32 +40,7 @@ Windows (PowerShell):
 pixi install --all
 ```
 
-## 2. `.claude/skills` → `.agents/skills`
-
-Skills live in `.agents/skills/`. Claude Code reads them from `.claude/skills/` instead, so create
-this link first.
-
-Linux / macOS:
-
-```sh
-mkdir -p .claude && ln -s ../.agents/skills .claude/skills
-```
-
-Windows (cmd):
-
-```bat
-if not exist .claude mkdir .claude
-mklink /D .claude\skills ..\.agents\skills
-```
-
-Windows (PowerShell):
-
-```powershell
-New-Item -ItemType Directory -Force .claude | Out-Null
-cmd /c mklink /D .claude\skills ..\.agents\skills
-```
-
-## 3. `_isaacsim` → Isaac Sim package
+## 2. `_isaacsim` → Isaac Sim package
 
 The target lives in the Pixi `sim` env (installed in step 1).
 The site-packages path differs by OS.
