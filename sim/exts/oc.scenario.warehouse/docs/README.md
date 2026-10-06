@@ -27,14 +27,15 @@ Newton's MuJoCo solver rejects their negative scale as a zero-size shape and fai
 
 Don't enable it together with `oc.benchmark.ros_dds`: both start a walker on `/World/G1`.
 
-## Walk sequence
+## Walk trajectory
 
-On every Play, the G1 at `/World/G1` walks `WAREHOUSE_WALK_SEQUENCE`
-(`warehouse_walk_sequence.py`) through `oc.control.g1_walk`'s `G1Walker`. The G1 starts in aisle 4
+On every Play, the G1 at `/World/G1` walks `WAREHOUSE_WALK_TRAJECTORY`
+(`warehouse_walk_trajectory.py`) through `oc.control.g1_walk`'s `G1Walker`. The G1 starts in aisle 4
 (BOXES J-L) at (-8, 9.5), facing north (+y). It stands 2 s, then walks a rectangle loop: 17 m up
 aisle 4, left 5 m across to aisle 3, 19.5 m down aisle 3, left 5 m back to aisle 4, and 2.5 m up to
 the start. It keeps 1.75 m from the racks on each side and turns 1.5 m past their north ends and
-1.75 m below their south ends. A lap takes 108 s at 0.5 m/s and 45°/s, and the loop repeats forever.
+1.75 m below their south ends. A lap takes about 108 s at 0.5 m/s and 45°/s, and the loop repeats forever. Each lap is measured
+from the start pose, so the loop closes instead of drifting.
 
 ## API
 
@@ -42,5 +43,5 @@ the start. It keeps 1.75 m from the racks on each side and turns 1.5 m past thei
 import oc.scenario.warehouse
 
 oc.scenario.warehouse.open_scenario()  # opens SCENARIO as the stage; raises RuntimeError if it can't
-oc.scenario.warehouse.WAREHOUSE_WALK_SEQUENCE  # ((seconds, vx, vy, wz), ...)
+oc.scenario.warehouse.WAREHOUSE_WALK_TRAJECTORY  # a looping WalkTrajectory
 ```

@@ -1,5 +1,5 @@
 [package]
-version = "0.1.0"
+version = "0.2.0"
 title = "G1 Walk"
 description = "G1 Walk extension."
 keywords = ["control", "g1_walk"]
@@ -15,8 +15,15 @@ reloadable = true
 "isaacsim.core.simulation_manager" = {}
 "isaacsim.robot.policy.examples" = {}
 "isaacsim.robot_motion.experimental.motion_generation" = {}
+"isaacsim.sensors.experimental.physics" = {}
 "omni.timeline" = {}
 "omni.usd" = {}
 
 [[python.module]]
 name = "oc.control.g1_walk"
+
+[[python.module]]
+name = "oc.control.g1_walk.tests"
+
+[[test]]
+dependencies = ["omni.kit.test"]

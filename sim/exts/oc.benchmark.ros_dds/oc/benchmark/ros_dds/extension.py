@@ -7,7 +7,7 @@ from carb.eventdispatcher import get_eventdispatcher
 from oc.control.g1_walk import G1Walker
 
 from .api import open_scenario
-from .simple_walk_sequence import SIMPLE_WALK_SEQUENCE
+from .simple_walk_trajectory import SIMPLE_WALK_TRAJECTORY
 from .ui import RosDdsWindow
 
 
@@ -15,13 +15,14 @@ class Extension(omni.ext.IExt):
     """Kit instantiates this class when oc.benchmark.ros_dds is enabled.
 
     With the autostart setting on, opens the Scenario and plays once the app is ready.
-    Makes /World/G1 walk SIMPLE_WALK_SEQUENCE whenever the simulation plays.
+    Makes /World/G1 walk SIMPLE_WALK_TRAJECTORY whenever the simulation plays.
     """
 
     def on_startup(self, ext_id: str):
         carb.log_info(f"[{ext_id}] startup")
         self._window = RosDdsWindow()
-        self._walker = G1Walker("/World/G1", SIMPLE_WALK_SEQUENCE)
+        self._walker = G1Walker("/World/G1")
+        self._walker.execute(SIMPLE_WALK_TRAJECTORY)
         self._walker.start()
         self._app_ready_sub = None
         if carb.settings.get_settings().get("/exts/oc.benchmark.ros_dds/autostart"):

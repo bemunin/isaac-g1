@@ -1,5 +1,5 @@
 [package]
-version = "0.2.0"
+version = "0.3.0"
 title = "ROS DDS Benchmark"
 description = "Opens the G1 Scenario for the DDS Benchmark; its G1 walks the square loop on Play."
 category = "Simulation"

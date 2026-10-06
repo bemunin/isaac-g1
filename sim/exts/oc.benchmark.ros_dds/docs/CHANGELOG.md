@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.3.0] - 2026-10-06
+### Changed
+- `SIMPLE_WALK_SEQUENCE` is now `SIMPLE_WALK_TRAJECTORY`, a looping Walk trajectory the G1 follows with feedback.
+
 ## [0.2.0] - 2026-10-02
 ### Added
 - `open_scenario()` opens the G1 Scenario.

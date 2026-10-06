@@ -1,4 +1,4 @@
-"""MotionGen controller running Unitree's pretrained G1 walking policy (unitree_rl_gym motion.pt).
+"""Unitree's pretrained G1 walking policy (unitree_rl_gym motion.pt).
 
 Constants come from unitree_rl_gym deploy/deploy_real/configs/g1.yaml and legged_gym/envs/g1/g1_config.py.
 """
@@ -43,34 +43,30 @@ CMD_SCALE = np.array([2.0, 2.0, 0.25], dtype=np.float32)
 GAIT_PERIOD = 0.8  # seconds
 
 
-def _to_body_frame(wxyz: np.ndarray, vector: np.ndarray) -> np.ndarray:
+def to_body_frame(wxyz: np.ndarray, vector: np.ndarray) -> np.ndarray:
     """Rotate a world-frame vector into the frame of the body with orientation wxyz."""
     w, u = wxyz[0], -wxyz[1:]
     t = 2.0 * np.cross(u, vector)
     return vector + w * t + np.cross(u, t)
 
 
-class G1WalkController(mg.BaseController):
-    """Turns the estimated G1 state and a [vx, vy, wz] command into joint position targets.
+class _Policy:
+    """Turns the estimated G1 state and a [vx, vy, wz] command into joint position targets. Call act at 50 Hz.
 
-    Call forward at 50 Hz. The setpoint carries the command as root linear velocity (vx, vy)
-    and root angular velocity (wz), in the robot's base frame.
+    The estimated state's root orientation is world-frame wxyz; its angular velocity is body-frame (IMU gyro).
     """
 
     def __init__(self, policy_path: Path = POLICY_PATH) -> None:
         self._policy = torch.jit.load(str(policy_path), map_location="cpu").eval()
         self._last_action = np.zeros(len(LEG_JOINTS), dtype=np.float32)
 
-    def reset(self, estimated_state: mg.RobotState, setpoint_state: mg.RobotState | None, t: float, **kwargs) -> bool:
+    def reset(self) -> None:
         self._last_action[:] = 0.0
         self._policy.hidden_state.zero_()
         self._policy.cell_state.zero_()
-        return True
 
-    def forward(
-        self, estimated_state: mg.RobotState, setpoint_state: mg.RobotState | None, t: float, **kwargs
-    ) -> mg.RobotState:
-        observation = self.observation(estimated_state, setpoint_state, t)
+    def act(self, estimated_state: mg.RobotState, command, t: float) -> mg.RobotState:
+        observation = self.observation(estimated_state, command, t)
         with torch.inference_mode():
             action = self._policy(torch.from_numpy(observation).unsqueeze(0)).numpy().reshape(-1)
         if action.shape != self._last_action.shape or not np.isfinite(action).all():
@@ -85,7 +81,7 @@ class G1WalkController(mg.BaseController):
         )
         return mg.RobotState(joints=joints)
 
-    def observation(self, estimated_state: mg.RobotState, setpoint_state: mg.RobotState | None, t: float) -> np.ndarray:
+    def observation(self, estimated_state: mg.RobotState, command, t: float) -> np.ndarray:
         """Build the 47-wide policy input."""
         joints, root = estimated_state.joints, estimated_state.root
         dof_names = joints.robot_joint_space
@@ -94,20 +90,15 @@ class G1WalkController(mg.BaseController):
         dq = joints.velocities.numpy().reshape(-1)[legs]
 
         orientation = root.orientation.numpy().astype(np.float32)
-        angular_velocity = _to_body_frame(orientation, root.angular_velocity.numpy())
-        gravity = _to_body_frame(orientation, np.array([0.0, 0.0, -1.0], dtype=np.float32))
-
-        command = np.zeros(3, dtype=np.float32)
-        if setpoint_state is not None:
-            command[:2] = setpoint_state.root.linear_velocity.numpy()[:2]
-            command[2] = setpoint_state.root.angular_velocity.numpy()[2]
+        angular_velocity = root.angular_velocity.numpy().astype(np.float32)
+        gravity = to_body_frame(orientation, np.array([0.0, 0.0, -1.0], dtype=np.float32))
 
         phase = 2.0 * np.pi * (t % GAIT_PERIOD) / GAIT_PERIOD
         return np.concatenate(
             [
                 angular_velocity * ANG_VEL_SCALE,
                 gravity,
-                command * CMD_SCALE,
+                np.asarray(command, dtype=np.float32) * CMD_SCALE,
                 q - LEG_DEFAULT,
                 dq * DOF_VEL_SCALE,
                 self._last_action,

@@ -7,19 +7,20 @@ from carb.eventdispatcher import get_eventdispatcher
 from oc.control.g1_walk import G1Walker
 
 from .api import open_scenario
-from .warehouse_walk_sequence import WAREHOUSE_WALK_SEQUENCE
+from .warehouse_walk_trajectory import WAREHOUSE_WALK_TRAJECTORY
 
 
 class Extension(omni.ext.IExt):
     """Kit instantiates this class when oc.scenario.warehouse is enabled.
 
     With the autostart setting on, opens the Scenario and plays once the app is ready.
-    Makes /World/G1 walk WAREHOUSE_WALK_SEQUENCE whenever the simulation plays.
+    Makes /World/G1 walk WAREHOUSE_WALK_TRAJECTORY whenever the simulation plays.
     """
 
     def on_startup(self, ext_id: str):
         carb.log_info(f"[{ext_id}] startup")
-        self._walker = G1Walker("/World/G1", WAREHOUSE_WALK_SEQUENCE)
+        self._walker = G1Walker("/World/G1")
+        self._walker.execute(WAREHOUSE_WALK_TRAJECTORY)
         self._walker.start()
         self._app_ready_sub = None
         if carb.settings.get_settings().get("/exts/oc.scenario.warehouse/autostart"):

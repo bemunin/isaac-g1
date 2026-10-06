@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.2.0] - 2026-10-06
+### Changed
+- `WAREHOUSE_WALK_SEQUENCE` is now `WAREHOUSE_WALK_TRAJECTORY`, a looping Walk trajectory the G1 follows with feedback.
+
 ## [0.1.0] - 2026-10-05
 ### Added
 - Initial version: `open_scenario()` opens `usd/warehouse_g1_scene.usda`, and the G1 walks

@@ -1,9 +1,9 @@
 # ROS DDS Benchmark
 
 Opens the DDS Benchmark's Scenario, `usd/simple_g1_scenario.usda`, and plays it. The Scenario's
-G1 at `/World/G1` walks `SIMPLE_WALK_SEQUENCE` (`simple_walk_sequence.py`) on every Play, through
-`oc.control.g1_walk`'s `G1Walker`. Its `WalkPlan` stands 2 s, then four times walks 2 m forward at
-0.5 m/s and turns left 90° at 45°/s.
+G1 at `/World/G1` walks `SIMPLE_WALK_TRAJECTORY` (`simple_walk_trajectory.py`) on every Play, through
+`oc.control.g1_walk`'s `G1Walker`. Its looping `WalkPlan` stands 2 s, then four times walks 2 m
+forward at 0.5 m/s and turns left 90° at 45°/s, correcting its heading and position as it goes.
 
 Extension ID: `oc.benchmark.ros_dds`
 
@@ -31,5 +31,5 @@ Benchmark window, docked next to Property. Open the Scenario from the Script Edi
 import oc.benchmark.ros_dds
 
 oc.benchmark.ros_dds.open_scenario()  # opens SCENARIO as the stage; raises RuntimeError if it can't
-oc.benchmark.ros_dds.SIMPLE_WALK_SEQUENCE  # ((seconds, vx, vy, wz), ...)
+oc.benchmark.ros_dds.SIMPLE_WALK_TRAJECTORY  # a looping WalkTrajectory
 ```

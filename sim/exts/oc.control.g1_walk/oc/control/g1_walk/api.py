@@ -1,4 +1,4 @@
-"""Public API: make the G1 at a prim path walk a repeating Walk sequence while the simulation plays."""
+"""Public API: make the G1 at a prim path follow a Walk trajectory, with IMU and pose feedback, while the simulation plays."""
 
 import carb
 import isaacsim.robot_motion.experimental.motion_generation as mg
@@ -12,12 +12,13 @@ from isaacsim.robot.policy.examples.application import (
     apply_robot_state,
     read_robot_state,
 )
+from isaacsim.sensors.experimental.physics import IMUSensor
 
-from .controller import DEFAULT_POSE, JOINTS, KD, KP, G1WalkController
-from .sequence import command_at
-from .walk_plan import WalkPlan
+from .policy import DEFAULT_POSE, JOINTS, KD, KP, to_body_frame
+from .walk_controller import G1WalkController, WalkStatus
+from .walk_plan import WalkGoal, WalkPlan, WalkTrajectory
 
-__all__ = ["G1WalkController", "G1Walker", "WalkPlan", "command_at"]
+__all__ = ["G1WalkController", "G1Walker", "WalkGoal", "WalkPlan", "WalkStatus", "WalkTrajectory"]
 
 DECIMATION = 2  # physics steps per policy step: 100 Hz physics, 50 Hz policy
 
@@ -25,19 +26,31 @@ DECIMATION = 2  # physics steps per policy step: 100 Hz physics, 50 Hz policy
 class G1Walker:
     """Steps a G1WalkController on every physics step while the simulation plays, once start() is called.
 
-    Binds to the robot on the first physics step after Play, and unbinds on Stop, so the
-    robot restarts the sequence from the beginning on each Play.
+    Binds to the robot on the first physics step after Play, and unbinds on Stop, so the robot
+    restarts its Walk trajectory from the beginning on each Play. Without one the robot stands.
+    Orientation and angular velocity come from the IMU at imu_path, position and joints from the articulation.
     """
 
-    def __init__(self, prim_path: str, sequence) -> None:
+    def __init__(self, prim_path: str, imu_path: str | None = None, on_done=None) -> None:
         self.prim_path = prim_path
-        self.sequence = sequence
-        self._controller = G1WalkController()
+        self.imu_path = imu_path or f"{prim_path}/pelvis/imu_sensor"
+        self.on_done = on_done  # called with the WalkStatus when a trajectory ends (DONE or FAILED)
+        self._walk = G1WalkController()
         self._articulation = None
+        self._imu = None
+        self._pending_reset = False
         self._tick = 0
         self._failed = False
         self._timeline_subscriptions = []
         self._step_callback_id = None
+
+    @property
+    def status(self) -> WalkStatus:
+        return self._walk.status
+
+    def execute(self, trajectory: WalkTrajectory) -> None:
+        """Follow trajectory from the robot's current pose, replacing the current one."""
+        self._walk.set_trajectory(trajectory)
 
     def start(self) -> None:
         # Timeline subscriptions survive stage loads; SimulationManager callbacks are cleared on each one.
@@ -66,12 +79,14 @@ class G1Walker:
             SimulationManager.deregister_callback(self._step_callback_id)
             self._step_callback_id = None
         self._articulation = None
+        self._imu = None
         self._failed = False
 
     def _bind(self) -> bool:
         if not omni.usd.get_context().get_stage().GetPrimAtPath(self.prim_path).IsValid():
             return False
         self._articulation = Articulation(self.prim_path)
+        self._imu = IMUSensor(self.imu_path)
         dof_names = list(self._articulation.dof_names)
         dof_indices = [dof_names.index(name) for name in JOINTS]
         self._articulation.set_dof_gains(np.array([KP]), np.array([KD]), dof_indices=dof_indices)
@@ -81,8 +96,25 @@ class G1Walker:
         self._articulation.set_dof_velocities(np.zeros((1, len(dof_names))))
         self._articulation.set_velocities(np.zeros((1, 3)), np.zeros((1, 3)))
         self._tick = 0
-        self._controller.reset(None, None, 0.0)
+        self._pending_reset = True  # reset the policy and restart the trajectory on the first tick
         return True
+
+    def _estimated_state(self, state: mg.RobotState) -> mg.RobotState:
+        """Joints and root position from the articulation; orientation and body angular velocity from the IMU."""
+        imu = self._imu.get_data()
+        orientation, angular_velocity = imu["orientation"], imu["angular_velocity"]
+        if not np.linalg.norm(orientation) > 0.5:  # no valid IMU reading yet
+            orientation = state.root.orientation.numpy()
+            angular_velocity = to_body_frame(orientation, state.root.angular_velocity.numpy())
+        with wp.ScopedDevice("cpu"):
+            return mg.RobotState(
+                joints=state.joints,
+                root=mg.RootState(
+                    position=wp.array(state.root.position.numpy(), dtype=wp.float32),
+                    orientation=wp.array(orientation, dtype=wp.float32),
+                    angular_velocity=wp.array(angular_velocity, dtype=wp.float32),
+                ),
+            )
 
     def _on_physics_step(self, dt: float, context) -> None:
         if self._failed:
@@ -92,15 +124,14 @@ class G1Walker:
                 return
             if self._tick % DECIMATION == 0:
                 t = self._tick * dt
-                vx, vy, wz = command_at(t, self.sequence)
-                with wp.ScopedDevice("cpu"):
-                    setpoint = mg.RobotState(
-                        root=mg.RootState(
-                            linear_velocity=wp.array([vx, vy, 0.0], dtype=wp.float32),
-                            angular_velocity=wp.array([0.0, 0.0, wz], dtype=wp.float32),
-                        )
-                    )
-                target = self._controller.forward(read_robot_state(self._articulation), setpoint, t)
+                state = self._estimated_state(read_robot_state(self._articulation))
+                if self._pending_reset:
+                    self._pending_reset = False
+                    self._walk.reset(state, None, t)
+                status = self._walk.status
+                target = self._walk.forward(state, None, t)
+                if status == WalkStatus.RUNNING and self._walk.status != WalkStatus.RUNNING and self.on_done:
+                    self.on_done(self._walk.status)
                 apply_robot_state(self._articulation, target)
             self._tick += 1
         except Exception as error:  # noqa: BLE001 - a physics callback must not raise

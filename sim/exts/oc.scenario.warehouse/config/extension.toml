@@ -1,5 +1,5 @@
 [package]
-version = "0.1.0"
+version = "0.2.0"
 title = "G1 Warehouse"
 description = "Opens the G1 warehouse Scenario; its G1 walks a loop through the open hall on Play."
 category = "Simulation"
