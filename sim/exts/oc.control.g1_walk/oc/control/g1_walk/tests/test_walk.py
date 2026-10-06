@@ -5,8 +5,8 @@ import numpy as np
 import omni.kit.test
 import warp as wp
 from oc.control.g1_walk import G1WalkController, WalkGoal, WalkPlan, WalkStatus
-from oc.control.g1_walk.policy import DEFAULT_POSE, JOINTS
-from oc.control.g1_walk.walk_controller import velocity_command, wrap
+from oc.control.g1_walk.controllers.policy import DEFAULT_POSE, JOINTS
+from oc.control.g1_walk.controllers.walk_controller import velocity_command, wrap
 from oc.control.g1_walk.walk_plan import SPEED
 
 
@@ -119,6 +119,34 @@ class TestVelocityCommand(omni.kit.test.AsyncTestCase):
 
 
 class TestG1WalkController(omni.kit.test.AsyncTestCase):
+    async def test_cancels_sideways_drift(self):
+        controller = G1WalkController()
+        controller.set_trajectory(WalkPlan().move_forward(10).to_trajectory())
+        controller.reset(_state(0, 0, 0), None, 0.0)
+        x = y = 0.0
+        drift, dt = -0.1, 0.02  # m/s to the robot's right, as the policy drifts
+        for i in range(500):  # 10 s
+            vx, vy, _ = controller.step((x, y, 0.0), i * dt)
+            x, y = x + vx * dt, y + (vy + drift) * dt
+        self.assertLess(abs(y), 0.02)  # without cross-track control it ends about 0.6 m off the line
+
+    async def test_world_path(self):
+        controller = G1WalkController()
+        controller.set_trajectory(WalkPlan().move_forward(1).turn_left(90).to_trajectory())
+        self.assertEqual(controller.world_path(), ())  # not started yet
+        controller.reset(_state(3, 4, 0), None, 0.0)
+        path = controller.world_path()
+        self.assertEqual(len(path), 3)
+        np.testing.assert_allclose(path[0], (3, 4, 0), atol=1e-6)
+        np.testing.assert_allclose(path[1], (4, 4, 0), atol=1e-6)
+        np.testing.assert_allclose(path[2], (4, 4, math.pi / 2), atol=1e-6)
+
+    async def test_world_path_in_world_frame(self):
+        controller = G1WalkController()
+        controller.set_trajectory(WalkPlan().walk_to(1.0, 2.0, 0.5).to_trajectory())
+        controller.reset(_state(3, 4, 0), None, 0.0)
+        np.testing.assert_allclose(controller.world_path()[1], (1.0, 2.0, 0.5), atol=1e-6)
+
     async def test_advances_and_finishes(self):
         controller = G1WalkController()
         controller.set_trajectory(WalkPlan().move_forward(1).to_trajectory())

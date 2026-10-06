@@ -10,7 +10,7 @@ import numpy as np
 import torch
 import warp as wp
 
-POLICY_PATH = Path(__file__).parents[3] / "data" / "motion.pt"
+POLICY_PATH = Path(__file__).parents[4] / "data" / "motion.pt"
 
 LEG_JOINTS = tuple(
     f"{side}_{joint}_joint"

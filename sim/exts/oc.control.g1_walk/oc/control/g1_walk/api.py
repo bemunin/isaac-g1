@@ -14,13 +14,20 @@ from isaacsim.robot.policy.examples.application import (
 )
 from isaacsim.sensors.experimental.physics import IMUSensor
 
-from .policy import DEFAULT_POSE, JOINTS, KD, KP, to_body_frame
-from .walk_controller import G1WalkController, WalkStatus
+from .controllers import G1WalkController, WalkStatus
+from .controllers.policy import DEFAULT_POSE, JOINTS, KD, KP, to_body_frame
 from .walk_plan import WalkGoal, WalkPlan, WalkTrajectory
 
-__all__ = ["G1WalkController", "G1Walker", "WalkGoal", "WalkPlan", "WalkStatus", "WalkTrajectory"]
+__all__ = ["G1WalkController", "G1Walker", "WalkGoal", "WalkPlan", "WalkStatus", "WalkTrajectory", "walkers"]
 
 DECIMATION = 2  # physics steps per policy step: 100 Hz physics, 50 Hz policy
+
+_walkers: list["G1Walker"] = []
+
+
+def walkers() -> tuple["G1Walker", ...]:
+    """The started G1Walkers, in start order."""
+    return tuple(_walkers)
 
 
 class G1Walker:
@@ -48,11 +55,23 @@ class G1Walker:
     def status(self) -> WalkStatus:
         return self._walk.status
 
+    @property
+    def trajectory(self) -> WalkTrajectory | None:
+        return self._walk.trajectory
+
+    def world_path(self) -> tuple[tuple[float, float, float], ...]:
+        """World poses (x, y, yaw) of the trajectory's start pose and Walk goals; empty unless playing with a trajectory."""
+        if self._articulation is None or self._pending_reset:
+            return ()
+        return self._walk.world_path()
+
     def execute(self, trajectory: WalkTrajectory) -> None:
         """Follow trajectory from the robot's current pose, replacing the current one."""
         self._walk.set_trajectory(trajectory)
 
     def start(self) -> None:
+        if self not in _walkers:
+            _walkers.append(self)
         # Timeline subscriptions survive stage loads; SimulationManager callbacks are cleared on each one.
         if not self._timeline_subscriptions:
             timeline = omni.timeline.get_timeline_interface()
@@ -65,6 +84,8 @@ class G1Walker:
                 self._on_play(None)
 
     def stop(self) -> None:
+        if self in _walkers:
+            _walkers.remove(self)
         self._timeline_subscriptions = []
         self._on_stop(None)
 

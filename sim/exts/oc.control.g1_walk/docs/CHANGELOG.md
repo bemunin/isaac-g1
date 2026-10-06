@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.0] - 2026-10-06
+### Added
+- G1 Walk window (Window > G1 Walk), tabbed next to Property: Visualizer > Show Walk Trajectory draws every started `G1Walker`'s Walk trajectory with `isaacsim.util.debug_draw` while the simulation plays.
+- Built with `isaacsim.gui.components` (`ScrollingWindow`, `CollapsableFrame`, `CheckBox`).
+- `G1Walker.world_path()` and `G1WalkController.world_path()`: world poses of the start pose and Walk goals; `walkers()` lists the started `G1Walker`s.
+
+### Changed
+- The Walk controller corrects the G1's distance from the current segment of its Walk trajectory (PI, up to 0.2 m/s, after the speed cap), so it walks on the line instead of drifting up to about 8 cm to its right.
+
 ## [0.2.0] - 2026-10-06
 ### Added
 - `G1WalkController`: MotionGen controller that follows a Walk trajectory and runs the walking policy, with orientation and angular velocity from the IMU and position from the articulation root.

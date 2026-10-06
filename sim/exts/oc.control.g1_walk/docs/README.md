@@ -39,7 +39,9 @@ velocity from the IMU at `<prim>/pelvis/imu_sensor`, x, y and joints from the ar
 ground truth). It steers
 toward the current Walk goal: position error becomes body-frame `vx`, `vy` (so a goal beside the
 robot is reached by stepping sideways), and heading error becomes `wz`. Each is capped at the
-goal's speed. A goal is reached within 0.10 m and 3°, then held for its `hold` seconds. A goal not
+goal's speed. On top of that, a PI correction on the robot's distance from the current segment of
+the Walk trajectory (previous goal to current goal) pushes it back onto the line at up to 0.2 m/s;
+its integral cancels the policy's sideways drift. A goal is reached within 0.10 m and 3°, then held for its `hold` seconds. A goal not
 reached within 2 × its nominal time + 2 s fails the trajectory, and the robot stands.
 The walking policy then turns the command into joint targets; it reads gravity and body rates from the
 same IMU.
@@ -86,6 +88,13 @@ end where it started.
 `G1WalkController` (Walk trajectory + robot state → joint targets) is a MotionGen controller
 (`isaacsim.robot_motion.experimental.motion_generation.BaseController`) and can be stepped directly:
 `set_trajectory(trajectory)`, then `reset(state, None, t)` and `forward(state, None, t)` at 50 Hz.
+
+## Window
+
+Window > G1 Walk opens a window tabbed next to Property. Under Visualizer, Show Walk Trajectory
+(off by default) draws each started `G1Walker`'s Walk trajectory on the ground: a line from the start
+pose through each Walk goal (back to the first goal if it loops), with a tick for each goal's heading.
+It appears once the robot starts walking after Play and clears on Stop.
 
 ## Tests
 

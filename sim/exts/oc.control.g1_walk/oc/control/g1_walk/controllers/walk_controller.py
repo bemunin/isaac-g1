@@ -6,11 +6,14 @@ import math
 import isaacsim.robot_motion.experimental.motion_generation as mg
 import numpy as np
 
+from ..walk_plan import WalkGoal, WalkTrajectory
 from .policy import POLICY_PATH, _Policy
-from .walk_plan import WalkGoal, WalkTrajectory
 
 KP_POSITION = 1.5  # 1/s: position error [m] -> speed [m/s]
 KP_YAW = 2.0  # 1/s: yaw error [rad] -> turn speed [rad/s]
+KP_CROSS_TRACK = 1.5  # 1/s: distance from the Walk trajectory's segment [m] -> speed back to it [m/s]
+KI_CROSS_TRACK = 1.0  # 1/s^2: integrated distance [m s] -> speed [m/s]; cancels the policy's sideways drift
+MAX_CROSS_TRACK_SPEED = 0.2  # m/s
 POSITION_TOLERANCE = 0.10  # m
 YAW_TOLERANCE = math.radians(3.0)  # rad
 TIMEOUT_FACTOR = 2.0  # a goal fails after TIMEOUT_FACTOR x its nominal duration + TIMEOUT_MARGIN
@@ -42,11 +45,23 @@ def to_world(goal: WalkGoal, anchor: tuple[float, float, float]) -> tuple[float,
     return ax + c * goal.x - s * goal.y, ay + s * goal.x + c * goal.y, ayaw + goal.yaw
 
 
-def velocity_command(pose, goal: WalkGoal, anchor) -> tuple[float, float, float]:
+def cross_track(pose, start, end) -> tuple[float, tuple[float, float]] | None:
+    """Signed distance [m] of pose (x, y, yaw) from the line start -> end (positive to its left) and
+    the line's unit left normal; None for a segment shorter than POSITION_TOLERANCE, e.g. a turn."""
+    dx, dy = end[0] - start[0], end[1] - start[1]
+    length = math.hypot(dx, dy)
+    if length < POSITION_TOLERANCE:
+        return None
+    normal = (-dy / length, dx / length)
+    return (pose[0] - start[0]) * normal[0] + (pose[1] - start[1]) * normal[1], normal
+
+
+def velocity_command(pose, goal: WalkGoal, anchor, correction=(0.0, 0.0)) -> tuple[float, float, float]:
     """Body-frame [vx, vy, wz] that drives the robot at pose (x, y, yaw) toward the goal.
 
     Position and heading are corrected independently, so a goal beside the robot is reached by
-    stepping sideways and a goal at the same position by turning in place.
+    stepping sideways and a goal at the same position by turning in place. correction, a world-frame
+    velocity [m/s], is added after the speed cap.
     """
     x, y, yaw = pose
     gx, gy, gyaw = to_world(goal, anchor)
@@ -56,6 +71,7 @@ def velocity_command(pose, goal: WalkGoal, anchor) -> tuple[float, float, float]
     norm = math.hypot(vx, vy)
     if norm > goal.speed:
         vx, vy = vx * goal.speed / norm, vy * goal.speed / norm
+    vx, vy = vx + c * correction[0] + s * correction[1], vy - s * correction[0] + c * correction[1]
     wz = max(-goal.turn_speed, min(goal.turn_speed, KP_YAW * wrap(gyaw - yaw)))
     return vx, vy, wz
 
@@ -73,9 +89,13 @@ class G1WalkController(mg.BaseController):
         self._trajectory = None
         self._trajectory_pending = False
         self._anchor = (0.0, 0.0, 0.0)
+        self._start_pose = None
         self._index = 0
         self._goal_deadline = math.inf
         self._arrived_at = None
+        self._segment_start = (0.0, 0.0)  # where the current goal's segment of the trajectory starts
+        self._cross_track_integral = 0.0  # m s
+        self._last_t = None
         self.status = WalkStatus.IDLE
 
     def set_trajectory(self, trajectory: WalkTrajectory | None) -> None:
@@ -113,12 +133,36 @@ class G1WalkController(mg.BaseController):
                     self.status = WalkStatus.DONE
                     return 0.0, 0.0, 0.0
                 index = 0
-            self._start_goal(index, pose, t)
+            self._start_goal(index, pose, t, (gx, gy))
             goal = self._trajectory.goals[index]
         elif t > self._goal_deadline:
             self.status = WalkStatus.FAILED
             return 0.0, 0.0, 0.0
-        return velocity_command(pose, goal, self._anchor)
+        return velocity_command(pose, goal, self._anchor, self._cross_track_correction(pose, goal, t))
+
+    def _cross_track_correction(self, pose, goal: WalkGoal, t: float) -> tuple[float, float]:
+        """World-frame velocity [m/s] that brings the robot back onto its segment, PI on the distance from it."""
+        dt = 0.0 if self._last_t is None else t - self._last_t
+        self._last_t = t
+        line = cross_track(pose, self._segment_start, to_world(goal, self._anchor))
+        if line is None:
+            return 0.0, 0.0
+        distance, (nx, ny) = line
+        limit = MAX_CROSS_TRACK_SPEED / KI_CROSS_TRACK
+        self._cross_track_integral = max(-limit, min(limit, self._cross_track_integral + distance * dt))
+        speed = -(KP_CROSS_TRACK * distance + KI_CROSS_TRACK * self._cross_track_integral)
+        speed = max(-MAX_CROSS_TRACK_SPEED, min(MAX_CROSS_TRACK_SPEED, speed))
+        return speed * nx, speed * ny
+
+    @property
+    def trajectory(self) -> WalkTrajectory | None:
+        return self._trajectory
+
+    def world_path(self) -> tuple[tuple[float, float, float], ...]:
+        """World poses (x, y, yaw) of the start pose and each Walk goal; empty until the trajectory starts."""
+        if self._trajectory is None or self._trajectory_pending or self._start_pose is None:
+            return ()
+        return (self._start_pose, *(to_world(goal, self._anchor) for goal in self._trajectory.goals))
 
     @staticmethod
     def pose(estimated_state: mg.RobotState) -> tuple[float, float, float]:
@@ -133,12 +177,16 @@ class G1WalkController(mg.BaseController):
             self.status = WalkStatus.IDLE
             return
         self._anchor = pose if self._trajectory.frame == "start" else (0.0, 0.0, 0.0)
+        self._start_pose = pose
         self.status = WalkStatus.RUNNING
-        self._start_goal(0, pose, t)
+        self._start_goal(0, pose, t, pose[:2])
 
-    def _start_goal(self, index: int, pose, t: float) -> None:
+    def _start_goal(self, index: int, pose, t: float, segment_start) -> None:
         self._index = index
         self._arrived_at = None
+        self._segment_start = segment_start
+        self._cross_track_integral = 0.0
+        self._last_t = None
         goal = self._trajectory.goals[index]
         gx, gy, gyaw = to_world(goal, self._anchor)
         nominal = (
