@@ -1,7 +1,7 @@
 # isaac-g1
 
-A Unitree G1 in Isaac Sim 6.1, connected to ROS 2 Jazzy over a selectable DDS.
-Built for agentic AI workflows, with cross-platform support (Ubuntu, Windows) via Pixi.
+A Pixi-based Isaac Sim 6.1 project for the Unitree G1, built for agentic AI workflows.
+Connects to ROS 2 Jazzy over the DDS implementation of your choice.
 
 ![G1 walking in the Isaac Sim warehouse](docs/images/isaac_g1_walk.gif)
 
