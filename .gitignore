@@ -18,3 +18,12 @@ __pycache__/
 # Workspace
 .obsidian/
 research/
+
+# Isaac Sim skill links, created per OS by oc-init-proj
+/.agents/skills/isaac-camera
+/.agents/skills/isaac-sim-orchestrator
+/.agents/skills/isaac-sim-ros-workspaces
+/.agents/skills/isaac-sim-ros2-bridge
+/.agents/skills/isaac-sim-sensor
+/.agents/skills/physics-simulation
+/.agents/skills/profile-isaac-sim

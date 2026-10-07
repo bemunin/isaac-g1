@@ -1,6 +1,6 @@
 ---
 name: oc-init-proj
-description: Initialize this repo for agents: install all Pixi envs and create the `.claude/skills` and `_isaacsim` symlinks; never create CLAUDE.md. Use when the user says `init` or `run init`, or when either symlink is missing.
+description: Initialize this repo for agents: install all Pixi envs and create the `.claude/skills`, `_isaacsim` and Isaac Sim skill symlinks; never create CLAUDE.md. Use when the user says `init` or `run init`, or when any of these symlinks is missing or broken (e.g. a fresh clone).
 ---
 
 # oc-init-proj
@@ -13,7 +13,8 @@ description: Initialize this repo for agents: install all Pixi envs and create t
 - Run every command from the project root.
 - On Windows, symlinks need Developer Mode or an admin shell. In PowerShell, use `cmd /c mklink`
   as shown: `New-Item -ItemType SymbolicLink` in Windows PowerShell 5.1 stores an absolute target.
-- Both links are gitignored (`.claude/`, `/_isaacsim`); don't commit them.
+- All links are gitignored (`.claude/`, `/_isaacsim`, the Isaac Sim skill links in `.agents/skills/`);
+  don't commit them. Their targets differ by OS, so a committed link breaks on other OSes.
 - The project's `pixi.toml` lists `linux-64` and `win-64` platforms; `pixi install --all` installs
   the envs for the current OS.
 - think before create .claude or .gemini: only do if you actually use Claude Code or Gemini Code, respectively.
@@ -40,28 +41,34 @@ Windows (PowerShell):
 pixi install --all
 ```
 
-## 2. `_isaacsim` → Isaac Sim package
+## 2. `.claude/skills` → `.agents/skills`
 
-The target lives in the Pixi `sim` env (installed in step 1).
-The site-packages path differs by OS.
+Only if you are Claude Code. Link `.claude/skills` to `.agents/skills`, creating `.claude/` first if needed.
+Work out the symlink command for the current OS yourself, following the Rules above
+(relative target from `.claude/`, directory link, only if missing).
 
-Linux / macOS:
+## 3. `_isaacsim` → Isaac Sim package
 
-```sh
-ln -s .pixi/envs/sim/lib/python3.12/site-packages/isaacsim _isaacsim
-```
+Link `_isaacsim` at the project root to the `isaacsim` package inside the Pixi `sim` env's
+site-packages (installed in step 1). The site-packages path differs by OS; find it in the installed env.
+Work out the symlink command for the current OS yourself, following the Rules above
+(relative target from the project root, directory link, only if missing).
 
-Windows (cmd):
+## 4. Isaac Sim skills → `.agents/skills/<name>`
 
-```bat
-mklink /D _isaacsim .pixi\envs\sim\Lib\site-packages\isaacsim
-```
+Link each skill below from the `isaacsim` package (installed in step 1) into `.agents/skills/<name>`:
 
-Windows (PowerShell):
+- isaac-camera
+- isaac-sim-orchestrator
+- isaac-sim-ros-workspaces
+- isaac-sim-ros2-bridge
+- isaac-sim-sensor
+- physics-simulation
+- profile-isaac-sim
 
-```powershell
-cmd /c mklink /D _isaacsim .pixi\envs\sim\Lib\site-packages\isaacsim
-```
+The source is `isaacsim/skills/<name>` inside the `sim` env's site-packages; the same folder `_isaacsim` points to (step 3).
+Work out the symlink command for the current OS yourself, following the Rules above
+(relative target from `.agents/skills/`, directory link, only if missing).
 
 ## Verify
 
@@ -70,3 +77,4 @@ cmd /c mklink /D _isaacsim .pixi\envs\sim\Lib\site-packages\isaacsim
   `_isaacsim -> .pixi/envs/sim/lib/python3.12/site-packages/isaacsim`.
 - Windows: `dir .claude` and `dir` show `<SYMLINKD>` entries with those relative targets.
 - `.claude/skills/` lists the skill folders; `_isaacsim/` lists the package (`apps`, `exts`, `extscache`, ...).
+- Each Isaac Sim skill resolves: `.agents/skills/isaac-sim-sensor/SKILL.md` (and the other six) opens.
