@@ -6,7 +6,7 @@
 
 ## [0.3.0] - 2026-10-08
 ### Added
-- Setting `exts."oc.scenario.warehouse".controller` (`walk` or `wbc`) and `controller()`. With `wbc`, the G1 follows `WAREHOUSE_MOVEMENT_PLAN` with SONIC whole-body control (`oc.control.g1_wbc_sonic`): it walks the warehouse loop and side-moves into aisle 4.
+- Setting `exts."oc.scenario.warehouse".controller` (`walk` or `wbc`) and `controller()`. With `wbc`, the G1 follows `WAREHOUSE_SEQUENCE` with SONIC whole-body control (`oc.control.g1_wbc_sonic`): it walks the warehouse loop and side-steps into aisle 4.
 - `open_scenario()` sets the physics rate the controller needs (100 Hz walk, 200 Hz wbc).
 
 ## [0.2.0] - 2026-10-06

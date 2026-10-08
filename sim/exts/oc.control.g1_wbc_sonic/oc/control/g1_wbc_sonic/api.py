@@ -1,4 +1,4 @@
-"""Public API: move the G1 at a prim path with NVIDIA SONIC whole-body control, by a Movement plan or Real-time
+"""Public API: move the G1 at a prim path with NVIDIA SONIC whole-body control, by a Behavior sequence or Real-time
 control, with IMU and pose feedback, while the simulation plays."""
 
 import carb
@@ -15,6 +15,7 @@ from isaacsim.robot.policy.examples.application import (
 )
 from isaacsim.sensors.experimental.physics import IMUSensor
 
+from .behavior_sequence import BehaviorSequence, Segment, check_positive
 from .controllers import G1WbcController, MovementStatus
 from .controllers.sonic import (
     ARMATURE,
@@ -28,16 +29,15 @@ from .controllers.sonic import (
     quat_rotate,
 )
 from .locomotion_command import Gait, LocomotionCommand
-from .movement_plan import MovementPlan, Segment
-from .plan_executor import MovementFailure
+from .sequence_executor import MovementFailure
 
 __all__ = [
+    "BehaviorSequence",
     "G1Wbc",
     "G1WbcController",
     "Gait",
     "LocomotionCommand",
     "MovementFailure",
-    "MovementPlan",
     "MovementStatus",
     "Segment",
 ]
@@ -49,13 +49,13 @@ class G1Wbc:
     """Steps a G1WbcController on every physics step while the simulation plays, once start() is called.
 
     Binds to the robot on the first physics step after Play and unbinds on Stop; each Play starts standing and
-    restarts the current Movement plan. Orientation and angular velocity come from the IMU at imu_path, position and
+    restarts the current Behavior sequence. Orientation and angular velocity come from the IMU at imu_path, position and
     joints from the articulation.
 
-    Commands: execute(plan) follows a Movement plan; command(LocomotionCommand), and its shortcuts slow_walk(cmd_vel),
-    walk(cmd_vel) and run(cmd_vel), move at a body-frame (vx, vy, wz) until commands stop arriving for 0.5 s;
-    side_move_left/right(meters) and turn_left/right(degrees) run to completion; halt() stands. Each command cancels
-    the one before.
+    Commands: execute(sequence) follows a Behavior sequence; command(LocomotionCommand), and its shortcuts
+    slow_walk(cmd_vel), walk(cmd_vel) and run(cmd_vel), move at a body-frame (vx, vy, wz) until commands stop
+    arriving for 0.5 s, no faster than set_speed_limit(); side_move_left/right(meters) and turn_left/right(degrees)
+    run to completion; halt() stands. Each command cancels the one before.
     """
 
     def __init__(self, prim_path: str, imu_path: str | None = None, on_done=None) -> None:
@@ -77,16 +77,16 @@ class G1Wbc:
 
     @property
     def failure(self) -> MovementFailure | None:
-        """Why the last Movement plan failed (reason, segment index), if it did."""
+        """Why the last Behavior sequence was aborted (reason, segment index), if it was."""
         return self._controller.failure
 
     @property
-    def plan(self) -> MovementPlan | None:
-        return self._controller.plan
+    def sequence(self) -> BehaviorSequence | None:
+        return self._controller.sequence
 
-    def execute(self, plan: MovementPlan) -> None:
-        """Follow plan from the robot's current pose, replacing the current command."""
-        self._controller.execute(plan)
+    def execute(self, sequence: BehaviorSequence) -> None:
+        """Follow sequence from the robot's current pose, replacing the current command."""
+        self._controller.execute(sequence)
 
     def command(self, command: LocomotionCommand) -> None:
         """Move at command's body-frame velocity, no faster than its gait (None: any, chosen from the speed); limited
@@ -106,20 +106,28 @@ class G1Wbc:
         """command() at cmd_vel = (vx, vy, wz), running from 1.5 m/s (vx up to 3.0)."""
         self._controller.command(LocomotionCommand(*cmd_vel, gait=Gait.RUN))
 
+    def set_speed_limit(self, speed_limit: float | None) -> None:
+        """Cap real-time commands' linear speed [m/s], and so their gait, like Nav2's SpeedLimit; None removes it."""
+        self._controller.set_speed_limit(speed_limit)
+
     def side_move_left(self, meters: float) -> None:
-        self._controller.execute(MovementPlan().side_move_left(meters))
+        check_positive("meters", meters)
+        self._controller.execute(BehaviorSequence().side_step(meters))
 
     def side_move_right(self, meters: float) -> None:
-        self._controller.execute(MovementPlan().side_move_right(meters))
+        check_positive("meters", meters)
+        self._controller.execute(BehaviorSequence().side_step(-meters))
 
     def turn_left(self, degrees: float) -> None:
-        self._controller.execute(MovementPlan().turn_left(degrees))
+        check_positive("degrees", degrees)
+        self._controller.execute(BehaviorSequence().spin(degrees))
 
     def turn_right(self, degrees: float) -> None:
-        self._controller.execute(MovementPlan().turn_right(degrees))
+        check_positive("degrees", degrees)
+        self._controller.execute(BehaviorSequence().spin(-degrees))
 
     def halt(self) -> None:
-        """Slow down and stand, cancelling the running command (also a looping Movement plan)."""
+        """Slow down and stand, cancelling the running command (also a looping Behavior sequence)."""
         self._controller.halt()
 
     def start(self) -> None:

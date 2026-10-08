@@ -62,7 +62,7 @@ class Motion:
         )
 
 
-class Planner:
+class KinematicPlanner:
     """Keeps the reference motion SonicPolicy tracks, replanning it from the latest command.
 
     Call reset() once, then each control step: command() (any time), reference() for the policy, then step().
@@ -170,7 +170,7 @@ class Planner:
         )
         qpos = qpos[0, : int(count[0])].astype(float)
         if len(qpos) < 2 or not np.isfinite(qpos).all():
-            raise ValueError("Planner: the planner returned an invalid motion")
+            raise ValueError("KinematicPlanner: the planner returned an invalid motion")
         return _resample(qpos)
 
     def _blend(self, new: Motion, start: int) -> Motion:
