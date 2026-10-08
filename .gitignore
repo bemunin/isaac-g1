@@ -15,6 +15,10 @@ __pycache__/
 /ros_ws/install/
 /ros_ws/log/
 
+# Downloaded SONIC weights (pixi run sonic-download)
+/sim/exts/oc.control.g1_wbc_sonic/data/sonic/
+*.onnx
+
 # Workspace
 .obsidian/
 research/

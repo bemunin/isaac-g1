@@ -1,5 +1,5 @@
 [package]
-version = "0.2.0"
+version = "0.4.0"
 title = "G1 Warehouse"
 description = "Opens the G1 warehouse Scenario; its G1 walks a loop through the open hall on Play."
 category = "Simulation"
@@ -16,11 +16,16 @@ reloadable = true
 [dependencies]
 "isaacsim.core.experimental.utils" = {}
 "oc.control.g1_walk" = {}
+"oc.control.g1_wbc_sonic" = {}
 "omni.timeline" = {}
 
 [settings]
 # Open the Scenario and play once the app is ready.
 exts."oc.scenario.warehouse".autostart = false
+# The G1's controller: "walk" (oc.control.g1_walk) or "wbc" (oc.control.g1_wbc_sonic, SONIC whole-body control).
+exts."oc.scenario.warehouse".controller = "walk"
+# Publish the G1's ROS 2 topics (camera, lidar, TF, IMU, joint states, odometry); off deactivates /World/G1/Graph.
+exts."oc.scenario.warehouse".ros = false
 
 [[python.module]]
 name = "oc.scenario.warehouse"

@@ -1,0 +1,31 @@
+[package]
+version = "0.1.0"
+title = "G1 WBC SONIC"
+description = "Moves a Unitree G1 with NVIDIA SONIC whole-body control: Movement plans and real-time Movement primitives."
+keywords = ["control", "g1_wbc_sonic", "sonic", "whole-body"]
+authors = ["bemunin <tw.munin@gmail.com>"]
+readme = "docs/README.md"
+changelog = "docs/CHANGELOG.md"
+preview_image = "data/preview.png"
+icon = "data/icon.png"
+
+[core]
+reloadable = true
+
+[dependencies]
+"isaacsim.core.experimental.prims" = {}
+"isaacsim.core.simulation_manager" = {}
+"isaacsim.robot.policy.examples" = {}
+"isaacsim.robot_motion.experimental.motion_generation" = {}
+"isaacsim.sensors.experimental.physics" = {}
+"omni.timeline" = {}
+"omni.usd" = {}
+
+[[python.module]]
+name = "oc.control.g1_wbc_sonic"
+
+[[python.module]]
+name = "oc.control.g1_wbc_sonic.tests"
+
+[[test]]
+dependencies = ["omni.kit.test"]

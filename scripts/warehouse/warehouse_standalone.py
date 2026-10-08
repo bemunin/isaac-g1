@@ -1,5 +1,5 @@
 """Warehouse (Standalone workflow): open the warehouse Scenario (oc.scenario.warehouse), whose G1 walks a
-loop through the open hall, and play until the app closes."""
+loop through the open hall (with the controller chosen by --controller), and play until the app closes."""
 
 import argparse
 import os
@@ -12,12 +12,18 @@ from sim import PHYSICS_EXPERIENCE
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--physics", choices=PHYSICS_EXPERIENCE, default="newton", help="physics engine (default: newton)")
+parser.add_argument("--controller", choices=("walk", "wbc"), default="walk", help="G1 controller (default: walk)")
+parser.add_argument("--ros", action="store_true", help="publish the G1's ROS 2 topics")
 parser.add_argument("--headless", action="store_true", help="run without a window")
 args = parser.parse_args()
 
 from isaacsim import SimulationApp
 
-extensions = ["--ext-folder", str(ROOT / "sim" / "exts"), "--enable", "oc.scenario.warehouse"]
+extensions = [
+    *("--ext-folder", str(ROOT / "sim" / "exts"), "--enable", "oc.scenario.warehouse"),
+    f"--/exts/oc.scenario.warehouse/controller={args.controller}",
+    f"--/exts/oc.scenario.warehouse/ros={str(args.ros).lower()}",
+]
 simulation_app = SimulationApp(
     {"headless": args.headless, "extra_args": extensions},
     experience=f"{os.environ['EXP_PATH']}/{PHYSICS_EXPERIENCE[args.physics]}.kit",

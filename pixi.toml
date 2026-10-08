@@ -11,6 +11,7 @@ shell = { cmd = "pixi shell", cwd = "ros_ws", description = "Open a ROS 2 shell 
 zenoh = "ros2 run rmw_zenoh_cpp rmw_zenohd"
 foxglove = { cmd = "ros2 launch foxglove_bridge foxglove_bridge_launch.xml use_sim_time:=true", description = "Start the Foxglove WebSocket bridge on sim time (ws://localhost:8765)" }
 lint = "ruff check ."
+sonic-download = { cmd = "python scripts/sonic_download.py", description = "Download NVIDIA's default SONIC weights for oc.control.g1_wbc_sonic (~865 MB)" }
 
 [target.linux-64.activation]
 scripts = ["scripts/dds/activate.sh"]
@@ -47,7 +48,7 @@ isaacsim = { version = "==6.1.0.0", extras = ["all", "extscache", "ros2"] }
 
 [feature.sim.tasks]
 sim = "python scripts/sim.py"
-warehouse = { cmd = "python scripts/warehouse.py", description = "Open the warehouse Scenario and play it: [--workflow standalone|ext] [--physics newton|physx] [--dds fast|cyclone|zenoh] [--headless]" }
+warehouse = { cmd = "python scripts/warehouse.py", description = "Open the warehouse Scenario and play it: [--workflow standalone|ext] [--physics newton|physx] [--dds fast|cyclone|zenoh] [--controller walk|wbc] [--ros] [--headless]" }
 benchmark = { cmd = "python scripts/benchmark.py", description = "Run a benchmark: --name dds [--workflow ext|standalone] [--physics newton|physx] [--dds fast|cyclone|zenoh] [--headless]" }
 
 [environments]
