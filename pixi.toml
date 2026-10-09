@@ -9,9 +9,15 @@ version = "0.1.0"
 dds = { cmd = "python scripts/dds.py", description = "Show or select the DDS for new Pixi sessions" }
 shell = { cmd = "pixi shell", cwd = "ros_ws", description = "Open a ROS 2 shell in ros_ws" }
 zenoh = "ros2 run rmw_zenoh_cpp rmw_zenohd"
-foxglove = { cmd = "ros2 launch foxglove_bridge foxglove_bridge_launch.xml use_sim_time:=true", description = "Start the Foxglove WebSocket bridge on sim time (ws://localhost:8765)" }
+build = { cmd = "colcon build --symlink-install --merge-install", cwd = "ros_ws", description = "Build the ROS 2 packages in ros_ws" }
 lint = "ruff check ."
 sonic-download = { cmd = "python scripts/sonic_download.py", description = "Download NVIDIA's default SONIC weights for oc.control.g1_wbc_sonic (~865 MB)" }
+
+[target.linux-64.tasks]
+foxglove = { cmd = "ros2 launch oc_foxglove_bridge foxglove_bridge.launch.py", env = { AMENT_PREFIX_PATH = "$PIXI_PROJECT_ROOT/ros_ws/install:$AMENT_PREFIX_PATH" }, description = "Start the Foxglove WebSocket bridge with the G1 robot description on sim time (ws://localhost:8765); run build first" }
+
+[target.win-64.tasks]
+foxglove = { cmd = "ros2 launch oc_foxglove_bridge foxglove_bridge.launch.py", env = { AMENT_PREFIX_PATH = "$PIXI_PROJECT_ROOT/ros_ws/install;$AMENT_PREFIX_PATH" }, description = "Start the Foxglove WebSocket bridge with the G1 robot description on sim time (ws://localhost:8765); run build first" }
 
 [target.linux-64.activation]
 scripts = ["scripts/dds/activate.sh"]
@@ -27,6 +33,7 @@ ros-jazzy-rmw-fastrtps-cpp = "*"
 ros-jazzy-rmw-cyclonedds-cpp = "*"
 ros-jazzy-rmw-zenoh-cpp = "*"
 ros-jazzy-foxglove-bridge = "*"
+colcon-common-extensions = ">=0.3.0,<0.4"
 
 [feature.sim.dependencies]
 python = "3.12.*"

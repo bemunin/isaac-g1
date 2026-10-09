@@ -37,14 +37,16 @@ Run the warehouse example to watch the G1 walk a loop through the hall, and insp
    pixi run warehouse --ros
    ```
 
-2. In a second terminal, start the Foxglove bridge:
+2. In a second terminal, build `ros_ws` (once, and after changing its packages) and start the
+   Foxglove bridge with the G1's robot description:
 
    ```bash
+   pixi run build
    pixi run foxglove
    ```
 
-3. In Foxglove, open a connection to `ws://localhost:8765` to see the lidar, camera, TF and IMU
-   topics.
+3. In Foxglove, open a connection to `ws://localhost:8765` to see the G1 model, lidar, camera, TF
+   and IMU topics.
 
 The sim uses the session's DDS (`pixi run dds` shows it). If it is `zenoh`, start the router with
 `pixi run zenoh` before steps 1 and 2. See [DDS](#dds) and [Warehouse](#warehouse) for the options.
@@ -58,7 +60,8 @@ Pick the ROS 2 middleware once; new Pixi sessions use it.
 | `pixi run dds [fast\|cyclone\|zenoh]` | Select the DDS (no argument shows the current one) |
 | `pixi run zenoh` | Start the Zenoh router (needed for `zenoh`) |
 | `pixi run shell` | Open a ROS 2 shell in `ros_ws` |
-| `pixi run foxglove` | Start the Foxglove bridge on `ws://localhost:8765` |
+| `pixi run build` | Build the ROS 2 packages in `ros_ws` |
+| `pixi run foxglove` | Start the Foxglove bridge and the G1 robot description on `ws://localhost:8765` (`oc_foxglove_bridge`) |
 
 ![Foxglove showing the G1 lidar, camera, TF and IMU topics](docs/images/showcase_foxglove_panel.png)
 
