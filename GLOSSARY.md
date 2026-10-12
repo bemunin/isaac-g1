@@ -24,7 +24,7 @@ An Isaac Sim / Omniverse Kit extension: a folder with a `config/extension.toml` 
 _Avoid_: plugin, add-on, ext (in prose)
 
 **Extension ID**:
-An Extension's name, `<organization>.<group>.<ext_name>`, e.g. `oc.benchmark.ros_dds`.
+An Extension's name, `<organization>.<group>.<ext_name>`, e.g. `oc.scenario.warehouse`.
 _Avoid_: brand.category.name
 
 **Organization**:
@@ -125,7 +125,7 @@ _Avoid_: multi tick sensor, sensor rate
 ### Benchmarks
 
 **Benchmark**:
-A named, repeatable run selected by name (e.g. `dds`) that opens a Scenario under one Physics engine and DDS.
+A named, repeatable run selected by name that opens a Scenario under one Physics engine and DDS.
 _Avoid_: test, experiment
 
 **Scenario**:

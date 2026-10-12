@@ -39,7 +39,7 @@ signatures (`RtxCamera`, `create_ros2_camera_graph`), and the node attributes in
 | Remote (what stages reference) | `https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.1/Isaac/Samples/ROS2/Robots/G1_ROS.usd` |
 | Local mirror (read-only, for inspection) | `~/mnt/vault/nvsim/isaacsim_assets/Assets/Isaac/6.1/Isaac/Samples/ROS2/Robots/G1_ROS.usd` |
 
-Reference the remote URL in committed layers, matching `sim/exts/oc.benchmark.ros_dds/usd/simple_g1_scenario.usda`. The file
+Reference the remote URL in committed layers, matching `sim/exts/oc.scenario.warehouse/usd/warehouse_g1_scene.usda`. The file
 is binary; to read it, export text with
 `Sdf.Layer.FindOrOpen(path).ExportToString()` into the scratchpad.
 
@@ -67,7 +67,7 @@ prim.GetReferences().AddReference(G1_ROS_URL)
 
 The stage also needs a `PhysicsScene` stepping at 100 Hz for both engines
 (`newton:timeStepsPerSecond` and `physxScene:timeStepsPerSecond`), since three graphs tick on
-`OnPhysicsStep`. Copy the `PhysicsScene` prim from `simple_g1_scenario.usda`. The asset already
+`OnPhysicsStep`. Copy the `PhysicsScene` prim from `warehouse_g1_scene.usda`. The asset already
 lifts the robot to standing height (root translate z ≈ 0.792 m), so leave `/World/G1` at the origin
 unless placing it elsewhere.
 
@@ -113,7 +113,7 @@ is in no TF tree). The `Sensor = "sensors"` variant is an empty payload and adds
 Parent each new sensor under its asset mount frame (§1, "What the reference gives you") so it rides
 the right link with Unitree's URDF offsets. Author sensors and their graphs while the timeline is
 **stopped**, then save the stage so they land as `over`/`def` opinions in the scenario layer
-(`sim/exts/oc.benchmark.ros_dds/usd/simple_g1_scenario.usda`). Put each sensor's graph beside the asset's, at
+(`sim/exts/oc.scenario.warehouse/usd/warehouse_g1_scene.usda`). Put each sensor's graph beside the asset's, at
 `/World/G1/Graph/ROS2_<Sensor>`.
 
 ### Multi-tick sensors

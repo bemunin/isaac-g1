@@ -33,8 +33,6 @@ the Script Editor with `open_scenario()`.
 The Scenario turns off collision on six mirrored wall wires (`SM_WallWire_51`-`56`, scale -0.01):
 Newton's MuJoCo solver rejects their negative scale as a zero-size shape and fails to start physics.
 
-Don't enable it together with `oc.benchmark.ros_dds`: both start a walker on `/World/G1`.
-
 ## Walk trajectory
 
 On every Play, the G1 at `/World/G1` walks `WAREHOUSE_WALK_TRAJECTORY`

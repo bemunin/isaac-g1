@@ -5,7 +5,7 @@ primitives (move forward, step left, turn right, ...) or a planner's poses into 
 them with Unitree's walking policy, correcting heading from the pelvis IMU and position from the
 articulation root.
 Enabling the extension does not make any robot walk; a caller starts a `G1Walker` and hands it a
-trajectory (e.g. `oc.benchmark.ros_dds`).
+trajectory (e.g. `oc.scenario.warehouse`).
 
 Extension ID: `oc.control.g1_walk`
 
@@ -14,20 +14,18 @@ Extension ID: `oc.control.g1_walk`
 From the repository root:
 
 1. Install the environments once: `pixi install` (ROS 2) and `pixi install -e sim` (Isaac Sim, torch).
-2. Launch Isaac Sim with an extension that starts a walker, e.g. `oc.benchmark.ros_dds`, which
-   enables this one:
+2. Run the warehouse Scenario (`oc.scenario.warehouse`), whose default controller, `walk`, uses this
+   extension:
 
    ```bash
-   pixi run -e sim sim --ext-folder sim/exts --enable oc.benchmark.ros_dds
+   pixi run warehouse                   # Standalone workflow, Newton
+   pixi run warehouse --workflow ext    # Extension workflow
+   pixi run warehouse --physics physx   # PhysX instead of Newton
    ```
 
-   `scripts/sim.py` launches PhysX by default (`isaacsim.exp.full`). Put `--physics newton` first
-   to launch the Newton app instead (`isaacsim.exp.full.newton`, PhysX disabled; the scenario's
-   PhysicsScene is set up for Newton's MuJoCo solver), and `--dds fast|cyclone|zenoh` to pick the RMW. Or, in a running
-   Isaac Sim, open Window > Extensions, add `sim/exts` as a search path, and enable "ROS DDS Benchmark".
-3. File > Open `sim/exts/oc.benchmark.ros_dds/usd/simple_g1_scenario.usda`; its G1 is at `/World/G1`.
-4. Press Play. The G1 walks `oc.benchmark.ros_dds`'s `SIMPLE_WALK_TRAJECTORY`. Stop resets it; the
-   next Play starts the trajectory again.
+   It opens `sim/exts/oc.scenario.warehouse/usd/warehouse_g1_scene.usda` (G1 at `/World/G1`) and plays.
+3. The G1 walks `oc.scenario.warehouse`'s `WAREHOUSE_WALK_TRAJECTORY`. Stop resets it; the next Play
+   starts the trajectory again.
 
 If the robot does not move, check that it is at `/World/G1`. Errors are logged to the console as
 `G1Walker(/World/G1): stopped after error: ...`, and walking stays off until the next Play.
@@ -48,7 +46,7 @@ same IMU.
 
 Once started, every Play restarts the current trajectory from its first goal, measured from the robot's
 pose at that moment. Pressing Stop on the timeline ends the walk. Falls are not handled. Physics
-should run at 100 Hz (set in `sim/exts/oc.benchmark.ros_dds/usd/simple_g1_scenario.usda`); the
+should run at 100 Hz (set in `sim/exts/oc.scenario.warehouse/usd/warehouse_g1_scene.usda`); the
 policy runs every 2nd physics step (50 Hz).
 
 ## API
