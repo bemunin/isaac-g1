@@ -1,6 +1,6 @@
 ---
 name: oc-init-proj
-description: Initialize this repo for agents: install all Pixi envs and create the `.claude/skills`, `_isaacsim` and Isaac Sim skill symlinks; never create CLAUDE.md. Use when the user says `init` or `run init`, or when any of these symlinks is missing or broken (e.g. a fresh clone).
+description: Initialize this repo for agents: install all Pixi envs, download the SONIC weights and create the `.claude/skills`, `_isaacsim` and Isaac Sim skill symlinks; never create CLAUDE.md. Use when the user says `init` or `run init`, or when any of these symlinks is missing or broken (e.g. a fresh clone).
 ---
 
 # oc-init-proj
@@ -41,20 +41,29 @@ Windows (PowerShell):
 pixi install --all
 ```
 
-## 2. `.claude/skills` → `.agents/skills`
+## 2. Download the SONIC weights
+
+The warehouse's default controller (`oc.control.g1_sonic`) needs NVIDIA's SONIC weights. Run the
+Pixi task; it skips files already downloaded, so rerunning is safe:
+
+```sh
+pixi run sonic-download
+```
+
+## 3. `.claude/skills` → `.agents/skills`
 
 Only if you are Claude Code. Link `.claude/skills` to `.agents/skills`, creating `.claude/` first if needed.
 Work out the symlink command for the current OS yourself, following the Rules above
 (relative target from `.claude/`, directory link, only if missing).
 
-## 3. `_isaacsim` → Isaac Sim package
+## 4. `_isaacsim` → Isaac Sim package
 
 Link `_isaacsim` at the project root to the `isaacsim` package inside the Pixi `sim` env's
 site-packages (installed in step 1). The site-packages path differs by OS; find it in the installed env.
 Work out the symlink command for the current OS yourself, following the Rules above
 (relative target from the project root, directory link, only if missing).
 
-## 4. Isaac Sim skills → `.agents/skills/<name>`
+## 5. Isaac Sim skills → `.agents/skills/<name>`
 
 Link each skill below from the `isaacsim` package (installed in step 1) into `.agents/skills/<name>`:
 
@@ -66,7 +75,7 @@ Link each skill below from the `isaacsim` package (installed in step 1) into `.a
 - physics-simulation
 - profile-isaac-sim
 
-The source is `isaacsim/skills/<name>` inside the `sim` env's site-packages; the same folder `_isaacsim` points to (step 3).
+The source is `isaacsim/skills/<name>` inside the `sim` env's site-packages; the same folder `_isaacsim` points to (step 4).
 Work out the symlink command for the current OS yourself, following the Rules above
 (relative target from `.agents/skills/`, directory link, only if missing).
 
@@ -77,4 +86,5 @@ Work out the symlink command for the current OS yourself, following the Rules ab
   `_isaacsim -> .pixi/envs/sim/lib/python3.12/site-packages/isaacsim`.
 - Windows: `dir .claude` and `dir` show `<SYMLINKD>` entries with those relative targets.
 - `.claude/skills/` lists the skill folders; `_isaacsim/` lists the package (`apps`, `exts`, `extscache`, ...).
+- `pixi run sonic-download` reports every file as `present`.
 - Each Isaac Sim skill resolves: `.agents/skills/isaac-sim-sensor/SKILL.md` (and the other six) opens.

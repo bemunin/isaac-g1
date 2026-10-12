@@ -20,7 +20,7 @@ Connects to ROS 2 Jazzy over the DDS implementation of your choice.
    - Claude Code: type `/init`.
    - Codex: type `$oc-init-proj`.
 
-This installs the Pixi environments, links the Isaac Sim package (`_isaacsim`), and loads the project's required skills from Isaac Sim Skills.
+This installs the Pixi environments, downloads the SONIC weights, links the Isaac Sim package (`_isaacsim`), and loads the project's required skills from Isaac Sim Skills.
 
 > [!NOTE]
 > - In Claude Code, `/init` follows `AGENTS.md`'s Init section: it sets up the project without 
