@@ -1,5 +1,5 @@
 [package]
-version = "0.5.0"
+version = "0.6.0"
 title = "G1 Warehouse"
 description = "Opens the G1 warehouse Scenario; its G1 walks a loop through the open hall on Play."
 category = "Simulation"
@@ -22,8 +22,8 @@ reloadable = true
 [settings]
 # Open the Scenario and play once the app is ready.
 exts."oc.scenario.warehouse".autostart = false
-# The G1's controller: "walk" (oc.control.g1_walk) or "sonic" (oc.control.g1_sonic, SONIC whole-body control).
-exts."oc.scenario.warehouse".controller = "walk"
+# The G1's controller: "sonic" (oc.control.g1_sonic, SONIC whole-body control) or "walk" (oc.control.g1_walk).
+exts."oc.scenario.warehouse".controller = "sonic"
 # Publish the G1's ROS 2 topics (camera, lidar, TF, IMU, joint states, odometry); off deactivates /World/G1/Graph.
 exts."oc.scenario.warehouse".ros = false
 

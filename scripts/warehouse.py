@@ -31,8 +31,8 @@ def main() -> int:
     parser.add_argument(
         "--controller",
         choices=("walk", "sonic"),
-        default="walk",
-        help="G1 controller: walk (Unitree walking policy) or sonic (SONIC whole-body control) (default: walk)",
+        default="sonic",
+        help="G1 controller: walk (Unitree walking policy) or sonic (SONIC whole-body control) (default: sonic)",
     )
     parser.add_argument(
         "--ros",

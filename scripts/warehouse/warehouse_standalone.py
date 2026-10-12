@@ -16,7 +16,7 @@ from sim import PHYSICS_EXPERIENCE
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--physics", choices=PHYSICS_EXPERIENCE, default="newton", help="physics engine (default: newton)")
-parser.add_argument("--controller", choices=("walk", "sonic"), default="walk", help="G1 controller (default: walk)")
+parser.add_argument("--controller", choices=("walk", "sonic"), default="sonic", help="G1 controller (default: sonic)")
 parser.add_argument("--ros", action="store_true", help="publish the G1's ROS 2 topics")
 parser.add_argument("--headless", action="store_true", help="run without a window")
 parser.add_argument("--benchmark", type=float, metavar="SECONDS", help="record KPIs for SECONDS of play, then exit")

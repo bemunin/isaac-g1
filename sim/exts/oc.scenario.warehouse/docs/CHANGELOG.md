@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.6.0] - 2026-10-12
+### Changed
+- The default controller is now `sonic` (SONIC whole-body control); `exts."oc.scenario.warehouse".controller = "walk"` (`pixi run warehouse --controller walk`) selects the walking policy.
+
 ## [0.5.0] - 2026-10-12
 ### Changed
 - The controller value `wbc` is renamed `sonic`: `exts."oc.scenario.warehouse".controller = "sonic"` (`pixi run warehouse --controller sonic`) selects SONIC whole-body control.

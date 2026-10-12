@@ -16,8 +16,8 @@ class Extension(omni.ext.IExt):
     """Kit instantiates this class when oc.scenario.warehouse is enabled.
 
     With the autostart setting on, opens the Scenario and plays once the app is ready.
-    Whenever the simulation plays, /World/G1 walks WAREHOUSE_WALK_TRAJECTORY (controller "walk", default), or
-    follows WAREHOUSE_SEQUENCE with SONIC whole-body control (controller "sonic").
+    Whenever the simulation plays, /World/G1 follows WAREHOUSE_SEQUENCE with SONIC whole-body control (controller "sonic",
+    default), or walks WAREHOUSE_WALK_TRAJECTORY (controller "walk").
     """
 
     def on_startup(self, ext_id: str):
