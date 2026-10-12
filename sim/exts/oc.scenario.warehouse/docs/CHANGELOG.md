@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.5.0] - 2026-10-12
+### Changed
+- The controller value `wbc` is renamed `sonic`: `exts."oc.scenario.warehouse".controller = "sonic"` (`pixi run warehouse --controller sonic`) selects SONIC whole-body control.
+
 ## [0.4.0] - 2026-10-08
 ### Changed
 - The G1's ROS 2 topics are off by default: `open_scenario()` deactivates `/World/G1/Graph` (camera, lidar, TF, IMU, joint states, odometry, joint commands) unless the setting `exts."oc.scenario.warehouse".ros` is true (`pixi run warehouse --ros`). `ros()` reads it.

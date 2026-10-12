@@ -24,11 +24,11 @@ It fetches `model_encoder.onnx`, `model_decoder.onnx`, `observation_config.yaml`
 ## Run
 
 ```bash
-pixi run warehouse --controller wbc --physics physx
+pixi run warehouse --controller sonic --physics physx
 ```
 
 The warehouse G1 then follows `WAREHOUSE_SEQUENCE` (see `oc.scenario.warehouse`). Physics should
-run at 200 Hz, as SONIC was trained; the warehouse sets this for `wbc`, and `G1Wbc` warns otherwise. (A
+run at 200 Hz, as SONIC was trained; the warehouse sets this for `sonic`, and `G1Wbc` warns otherwise. (A
 lap also completed at 100 Hz.)
 
 ## API

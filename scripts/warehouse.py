@@ -30,9 +30,9 @@ def main() -> int:
     parser.add_argument("--dds", choices=DDS_RMW, help="ROS 2 middleware (default: the session's)")
     parser.add_argument(
         "--controller",
-        choices=("walk", "wbc"),
+        choices=("walk", "sonic"),
         default="walk",
-        help="G1 controller: walk (Unitree walking policy) or wbc (SONIC whole-body control) (default: walk)",
+        help="G1 controller: walk (Unitree walking policy) or sonic (SONIC whole-body control) (default: walk)",
     )
     parser.add_argument(
         "--ros",
@@ -40,7 +40,22 @@ def main() -> int:
         help="publish the G1's ROS 2 topics (camera, lidar, TF, IMU, joint states, odometry); off by default",
     )
     parser.add_argument("--headless", action="store_true", help="run without a window")
+    parser.add_argument(
+        "--benchmark",
+        type=float,
+        metavar="SECONDS",
+        help="record isaacsim.benchmark.services KPIs for SECONDS of wall-clock play, then exit (standalone only)",
+    )
+    parser.add_argument(
+        "--benchmark-output",
+        type=Path,
+        default=ROOT / "research" / "benchmark_output",
+        metavar="DIR",
+        help="folder for the benchmark's KPI file (default: research/benchmark_output)",
+    )
     args = parser.parse_args()
+    if args.benchmark is not None and args.workflow == "ext":
+        parser.error("--benchmark needs --workflow standalone")
 
     dds = args.dds or session_dds()
     if dds is None:
@@ -60,6 +75,11 @@ def main() -> int:
             *(sys.executable, str(STANDALONE_SCRIPT), "--physics", args.physics, "--controller", args.controller),
             *(["--ros"] if args.ros else []),
             *(["--headless"] if args.headless else []),
+            *(
+                ["--benchmark", str(args.benchmark), "--benchmark-output", str(args.benchmark_output.resolve())]
+                if args.benchmark is not None
+                else []
+            ),
         ]
     try:
         os.execvpe(sys.executable, command, launch_environment(dds))

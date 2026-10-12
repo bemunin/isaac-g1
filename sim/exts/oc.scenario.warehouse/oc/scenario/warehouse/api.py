@@ -9,7 +9,7 @@ import omni.kit.app
 __all__ = ["CONTROLLERS", "SCENARIO", "controller", "open_scenario", "ros"]
 
 SCENARIO = Path(__file__).resolve().parents[3] / "usd" / "warehouse_g1_scene.usda"
-CONTROLLERS = {"walk": 100, "wbc": 200}  # controller: physics steps per second it needs
+CONTROLLERS = {"walk": 100, "sonic": 200}  # controller: physics steps per second it needs
 CONTROLLER_SETTING = "/exts/oc.scenario.warehouse/controller"
 ROS_SETTING = "/exts/oc.scenario.warehouse/ros"
 # Isaac Sim extension that rescans the whole stage for gantry prims every 15 physics steps (~50 ms each here); the
@@ -19,7 +19,7 @@ GRAPHS = "/World/G1/Graph"  # the G1's ROS 2 graphs: camera, lidar, TF, IMU, joi
 
 
 def controller() -> str:
-    """The G1's controller: "walk" (oc.control.g1_walk, default) or "wbc" (oc.control.g1_sonic)."""
+    """The G1's controller: "walk" (oc.control.g1_walk, default) or "sonic" (oc.control.g1_sonic)."""
     name = carb.settings.get_settings().get(CONTROLLER_SETTING) or "walk"
     if name not in CONTROLLERS:
         raise RuntimeError(f"{CONTROLLER_SETTING} must be one of {sorted(CONTROLLERS)}, got {name!r}")
@@ -33,7 +33,7 @@ def ros() -> bool:
 
 def open_scenario() -> None:
     """Open SCENARIO as the stage, replacing the current one. Its G1 is at /World/G1. Physics runs at the rate
-    controller() needs (walk 100 Hz, wbc 200 Hz). Unless ros(), the G1's ROS 2 graphs are deactivated, so it publishes nothing and doesn't render its camera and
+    controller() needs (walk 100 Hz, sonic 200 Hz). Unless ros(), the G1's ROS 2 graphs are deactivated, so it publishes nothing and doesn't render its camera and
     lidar. Disables GANTRY_EXTENSION, whose stage scans would otherwise slow the simulation.
 
     Raises:

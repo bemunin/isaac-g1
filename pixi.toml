@@ -55,7 +55,7 @@ isaacsim = { version = "==6.1.0.0", extras = ["all", "extscache", "ros2"] }
 
 [feature.sim.tasks]
 sim = "python scripts/sim.py"
-warehouse = { cmd = "python scripts/warehouse.py", description = "Open the warehouse Scenario and play it: [--workflow standalone|ext] [--physics newton|physx] [--dds fast|cyclone|zenoh] [--controller walk|wbc] [--ros] [--headless]" }
+warehouse = { cmd = "python scripts/warehouse.py", description = "Open the warehouse Scenario and play it: [--workflow standalone|ext] [--physics newton|physx] [--dds fast|cyclone|zenoh] [--controller walk|sonic] [--ros] [--headless] [--benchmark SECONDS] [--benchmark-output DIR]" }
 benchmark = { cmd = "python scripts/benchmark.py", description = "Run a benchmark: --name dds [--workflow ext|standalone] [--physics newton|physx] [--dds fast|cyclone|zenoh] [--headless]" }
 
 [environments]

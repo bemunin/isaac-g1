@@ -13,7 +13,7 @@ pixi run warehouse                   # Standalone workflow, Newton (defaults), w
 pixi run warehouse --workflow ext    # Extension workflow
 pixi run warehouse --headless        # no window
 pixi run warehouse --physics physx   # PhysX instead of Newton
-pixi run warehouse --controller wbc  # SONIC whole-body control instead of the walking policy
+pixi run warehouse --controller sonic  # SONIC whole-body control instead of the walking policy
 pixi run warehouse --ros             # publish the G1's ROS 2 topics
 ```
 
@@ -45,9 +45,9 @@ the start. It keeps 1.75 m from the racks on each side and turns 1.5 m past thei
 1.75 m below their south ends. A lap takes about 108 s at 0.5 m/s and 45°/s, and the loop repeats forever. Each lap is measured
 from the start pose, so the loop closes instead of drifting.
 
-## Behavior sequence (`--controller wbc`)
+## Behavior sequence (`--controller sonic`)
 
-With the setting `exts."oc.scenario.warehouse".controller = "wbc"` (`--controller wbc`), the G1 instead
+With the setting `exts."oc.scenario.warehouse".controller = "sonic"` (`--controller sonic`), the G1 instead
 follows `WAREHOUSE_SEQUENCE` (`warehouse_sequence.py`) through
 `oc.control.g1_sonic`'s `G1Wbc`, and `open_scenario()` sets physics to 200 Hz, the rate SONIC was
 trained at. `walk` keeps the Scenario's 100 Hz. The loop:
@@ -67,7 +67,7 @@ import oc.scenario.warehouse
 
 oc.scenario.warehouse.open_scenario()  # opens SCENARIO as the stage; raises RuntimeError if it can't
 oc.scenario.warehouse.WAREHOUSE_WALK_TRAJECTORY  # a looping WalkTrajectory
-oc.scenario.warehouse.WAREHOUSE_SEQUENCE  # a looping BehaviorSequence (controller "wbc")
-oc.scenario.warehouse.controller()  # "walk" or "wbc", from /exts/oc.scenario.warehouse/controller
+oc.scenario.warehouse.WAREHOUSE_SEQUENCE  # a looping BehaviorSequence (controller "sonic")
+oc.scenario.warehouse.controller()  # "walk" or "sonic", from /exts/oc.scenario.warehouse/controller
 oc.scenario.warehouse.ros()  # whether open_scenario() keeps the G1's ROS 2 graphs, from /exts/oc.scenario.warehouse/ros
 ```
