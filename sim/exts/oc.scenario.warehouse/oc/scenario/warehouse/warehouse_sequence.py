@@ -6,7 +6,7 @@ clear for x -9.75..-6.25 and aisle 3 (BOXES G-I) for x -14.75..-11.25; their rac
 past both ends.
 """
 
-from oc.control.g1_wbc_sonic import BehaviorSequence
+from oc.control.g1_sonic import BehaviorSequence
 
 WAREHOUSE_SEQUENCE = (
     BehaviorSequence(loop=True)

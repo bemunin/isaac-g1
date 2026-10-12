@@ -1,4 +1,4 @@
-# G1 WBC SONIC
+# G1 SONIC
 
 Moves a Unitree G1 with NVIDIA SONIC whole-body control while the simulation plays. It runs SONIC's
 kinematic planner and tracking policy in-process with onnxruntime (see
@@ -7,7 +7,7 @@ Behavior sequence, whose behaviors are named after Nav2's (drive on heading at a
 run; spin; wait; plus side step), or as Real-time control (Locomotion commands, cmd_vel-ready for Nav2).
 Enabling the extension does not move any robot; a caller starts a `G1Wbc` and gives it commands.
 
-Extension ID: `oc.control.g1_wbc_sonic`
+Extension ID: `oc.control.g1_sonic`
 
 ## Setup
 
@@ -34,7 +34,7 @@ lap also completed at 100 Hz.)
 ## API
 
 ```python
-from oc.control.g1_wbc_sonic import BehaviorSequence, G1Wbc, Gait, LocomotionCommand, MovementStatus
+from oc.control.g1_sonic import BehaviorSequence, G1Wbc, Gait, LocomotionCommand, MovementStatus
 
 robot = G1Wbc("/World/G1", on_done=lambda status: print(status))  # IMU at /World/G1/pelvis/imu_sensor
 robot.start()  # steps on every Play until stop(); stands until it gets a command
@@ -117,7 +117,7 @@ and `forward(state, None, t)` at 50 Hz.
 
 ## Tests
 
-Extension Manager → G1 WBC SONIC → Tests tab runs `oc.control.g1_wbc_sonic.tests`. They cover:
+Extension Manager → G1 SONIC → Tests tab runs `oc.control.g1_sonic.tests`. They cover:
 - Behavior sequences, speed profiles, steering and the Sequence executor
 - Locomotion command limits, gait ceilings, the speed limit, timeout and preemption
 - Joint orders against NVIDIA's

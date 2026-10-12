@@ -2,7 +2,7 @@
 
 ## Decision
 
-`oc.control.g1_wbc_sonic` runs NVIDIA SONIC's three ONNX models (planner, encoder, decoder) with
+`oc.control.g1_sonic` runs NVIDIA SONIC's three ONNX models (planner, encoder, decoder) with
 onnxruntime inside the Kit extension. It steps them from a physics callback, as `G1Walker` does, and
 re-implements in Python the parts of NVIDIA's C++ runtime that it needs: observation histories, planner
 replanning, resampling and blending. It uses the default SONIC weights.

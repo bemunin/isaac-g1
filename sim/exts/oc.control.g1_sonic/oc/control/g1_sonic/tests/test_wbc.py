@@ -4,7 +4,7 @@ import isaacsim.robot_motion.experimental.motion_generation as mg
 import numpy as np
 import omni.kit.test
 import warp as wp
-from oc.control.g1_wbc_sonic import (
+from oc.control.g1_sonic import (
     BehaviorSequence,
     G1WbcController,
     Gait,
@@ -12,13 +12,13 @@ from oc.control.g1_wbc_sonic import (
     MovementFailure,
     MovementStatus,
 )
-from oc.control.g1_wbc_sonic.behavior_sequence import RUN_DECEL, WALK_DECEL, WALK_SPEED
-from oc.control.g1_wbc_sonic.controllers.kinematic_planner import (
+from oc.control.g1_sonic.behavior_sequence import RUN_DECEL, WALK_DECEL, WALK_SPEED
+from oc.control.g1_sonic.controllers.kinematic_planner import (
     IDLE,
     WALK,
     KinematicPlanner,
 )
-from oc.control.g1_wbc_sonic.controllers.sonic import (
+from oc.control.g1_sonic.controllers.sonic import (
     DECODER_SIZE,
     DEFAULT_POSE,
     ENCODER_SIZE,
@@ -30,12 +30,12 @@ from oc.control.g1_wbc_sonic.controllers.sonic import (
     SonicPolicy,
     _session,
 )
-from oc.control.g1_wbc_sonic.controllers.wbc_controller import (
+from oc.control.g1_sonic.controllers.wbc_controller import (
     COMMAND_TIMEOUT,
     MAX_FACING_LEAD,
     limit,
 )
-from oc.control.g1_wbc_sonic.sequence_executor import SequenceExecutor, profile_speed
+from oc.control.g1_sonic.sequence_executor import SequenceExecutor, profile_speed
 
 _controller = None
 

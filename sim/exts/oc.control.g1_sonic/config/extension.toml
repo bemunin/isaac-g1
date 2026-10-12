@@ -1,8 +1,8 @@
 [package]
 version = "0.1.0"
-title = "G1 WBC SONIC"
+title = "G1 SONIC"
 description = "Moves a Unitree G1 with NVIDIA SONIC whole-body control: Nav2-style Behavior sequences and real-time commands."
-keywords = ["control", "g1_wbc_sonic", "sonic", "whole-body"]
+keywords = ["control", "g1_sonic", "sonic", "whole-body"]
 authors = ["bemunin <tw.munin@gmail.com>"]
 readme = "docs/README.md"
 changelog = "docs/CHANGELOG.md"
@@ -22,10 +22,10 @@ reloadable = true
 "omni.usd" = {}
 
 [[python.module]]
-name = "oc.control.g1_wbc_sonic"
+name = "oc.control.g1_sonic"
 
 [[python.module]]
-name = "oc.control.g1_wbc_sonic.tests"
+name = "oc.control.g1_sonic.tests"
 
 [[test]]
 dependencies = ["omni.kit.test"]

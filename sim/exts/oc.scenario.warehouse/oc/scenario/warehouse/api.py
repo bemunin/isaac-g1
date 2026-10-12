@@ -19,7 +19,7 @@ GRAPHS = "/World/G1/Graph"  # the G1's ROS 2 graphs: camera, lidar, TF, IMU, joi
 
 
 def controller() -> str:
-    """The G1's controller: "walk" (oc.control.g1_walk, default) or "wbc" (oc.control.g1_wbc_sonic)."""
+    """The G1's controller: "walk" (oc.control.g1_walk, default) or "wbc" (oc.control.g1_sonic)."""
     name = carb.settings.get_settings().get(CONTROLLER_SETTING) or "walk"
     if name not in CONTROLLERS:
         raise RuntimeError(f"{CONTROLLER_SETTING} must be one of {sorted(CONTROLLERS)}, got {name!r}")

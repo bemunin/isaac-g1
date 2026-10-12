@@ -3,7 +3,7 @@ import omni.ext
 
 
 class Extension(omni.ext.IExt):
-    """Kit instantiates this class when oc.control.g1_wbc_sonic is enabled.
+    """Kit instantiates this class when oc.control.g1_sonic is enabled.
 
     Provides G1Wbc; enabling the extension does not move any robot.
     """
@@ -12,4 +12,4 @@ class Extension(omni.ext.IExt):
         carb.log_info(f"[{ext_id}] startup")
 
     def on_shutdown(self):
-        carb.log_info("[oc.control.g1_wbc_sonic] shutdown")
+        carb.log_info("[oc.control.g1_sonic] shutdown")

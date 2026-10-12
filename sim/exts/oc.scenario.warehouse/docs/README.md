@@ -49,7 +49,7 @@ from the start pose, so the loop closes instead of drifting.
 
 With the setting `exts."oc.scenario.warehouse".controller = "wbc"` (`--controller wbc`), the G1 instead
 follows `WAREHOUSE_SEQUENCE` (`warehouse_sequence.py`) through
-`oc.control.g1_wbc_sonic`'s `G1Wbc`, and `open_scenario()` sets physics to 200 Hz, the rate SONIC was
+`oc.control.g1_sonic`'s `G1Wbc`, and `open_scenario()` sets physics to 200 Hz, the rate SONIC was
 trained at. `walk` keeps the Scenario's 100 Hz. The loop:
 1. Stand 2 s at (-8, 9.5), facing north.
 2. Walk 17 m up aisle 4 at 1 m/s, slowing down before the spin.

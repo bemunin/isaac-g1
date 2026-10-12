@@ -5,7 +5,7 @@ import omni.kit.app
 import omni.timeline
 from carb.eventdispatcher import get_eventdispatcher
 from oc.control.g1_walk import G1Walker
-from oc.control.g1_wbc_sonic import G1Wbc
+from oc.control.g1_sonic import G1Wbc
 
 from .api import controller, open_scenario
 from .warehouse_sequence import WAREHOUSE_SEQUENCE

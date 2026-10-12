@@ -16,11 +16,12 @@ __pycache__/
 /ros_ws/log/
 
 # Downloaded SONIC weights (pixi run sonic-download)
-/sim/exts/oc.control.g1_wbc_sonic/data/sonic/
+/sim/exts/oc.control.g1_sonic/data/sonic/
 *.onnx
 
 # Workspace
 .obsidian/
+.vscode/
 research/
 
 # Isaac Sim skill links, created per OS by oc-init-proj
