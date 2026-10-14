@@ -51,7 +51,7 @@ prerelease-mode = "allow"
 
 [feature.sim.pypi-dependencies]
 torch = { version = "==2.11.0", index = "https://download.pytorch.org/whl/cu128" }
-isaacsim = { version = "==6.1.0.0", extras = ["all", "extscache", "ros2"] }
+isaacsim = { version = "==6.2.0.0", extras = ["all", "extscache", "ros2"] }
 
 [feature.sim.tasks]
 sim = "python scripts/sim.py"

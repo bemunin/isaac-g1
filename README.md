@@ -1,6 +1,6 @@
 # isaac-g1
 
-A Pixi-based Isaac Sim 6.1 project for the Unitree G1, built for agentic AI workflows.
+A Pixi-based Isaac Sim 6.2 project for the Unitree G1, built for agentic AI workflows.
 Connects to ROS 2 Jazzy over the DDS implementation of your choice.
 
 ![G1 walking in the Isaac Sim warehouse](docs/images/isaac_g1_walk.gif)
