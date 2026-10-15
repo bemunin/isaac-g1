@@ -7,8 +7,8 @@
                 double radius = 5
             }
             dictionary Perspective = {
-                double3 position = (-7.6697209161754093, 13.2558434155837475, 1.6987939071147091)
-                double3 target = (-8.0000011294328273, 9.504634158671634747, 0.9882071755328468)
+                double3 position = (-7.520806398002017, -5.029518223213136, 1.0041131581928044)
+                double3 target = (10.008356127748431, 23.01267251093479, 1.2418522046305671)
             }
             dictionary Right = {
                 double3 position = (0, -5, 0)
@@ -46,7 +46,6 @@ def Xform "World"
         prepend references = @https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.1/Isaac/Samples/ROS2/Robots/G1_ROS.usd@
     )
     {
-        # Start in aisle 4 (BOXES J-L), 0.75 m inside its south end, facing +y up the aisle.
         quatd xformOp:orient = (0.7071067811865476, 0, 0, 0.7071067811865476)
         double3 xformOp:translate = (-8, 9.5, 0.7922728583216667)
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient"]
@@ -1315,8 +1314,6 @@ def Xform "Environment"
         prepend payload = @https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.1/Isaac/Environments/Simple_Warehouse/full_warehouse.usd@
     )
     {
-        # Newton's MuJoCo solver rejects these mirrored (scale -0.01) wall-wire colliders:
-        # "Only plane shapes are allowed to have a size of zero".
         over "SM_WallWire_51"
         {
             over "SM_WallWire_09"
@@ -1363,6 +1360,234 @@ def Xform "Environment"
             {
                 bool physics:collisionEnabled = 0
             }
+        }
+
+        over "SM_BarelPlastic_C_2" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_BucketPlastic_B_41" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_CardBoxB_01_29" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_CratePlasticNote_B_5" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_CratePlastic_D_01_47" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_PushcartA_02_22" (
+            active = false
+        )
+        {
+        }
+
+        over "S_TrafficCone2" (
+            active = false
+        )
+        {
+        }
+
+        over "S_TrafficCone3" (
+            active = false
+        )
+        {
+        }
+
+        over "S_TrafficCone_2" (
+            active = false
+        )
+        {
+        }
+
+        over "S_WetFloorSign2" (
+            active = false
+        )
+        {
+        }
+
+        over "S_WetFloorSign_2" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_BarelPlastic_C_01_25" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_BottlePlasticD_4" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_CardBoxA_02_2" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_CardBoxA_3" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_CardBoxB_02_32" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_CardBoxD_04_6" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_PaperNote_Small_15" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_PaperNote_Small_20" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_BottlePlasticD_2" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_CardBoxD_03_9" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_CardBoxD_4" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_CratePlasticNote_B_03_18" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_CratePlastic_E_03_44" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_PaperNote_Small_09_72" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_PaperNote_Small_16" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_PaperNote_Small_17" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_PaperNote_Small_18" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_BottlePlasticD_3" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_CardBoxB_3" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_PaperNote_Small_06_54" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_PaperNote_Small_08_75" (
+            active = false
+        )
+        {
+        }
+
+        over "S_TrafficCone4" (
+            active = false
+        )
+        {
+        }
+
+        over "S_TrafficCone5" (
+            active = false
+        )
+        {
+        }
+
+        over "S_TrafficCone6" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_BottlePlasticD_01_35" (
+            active = false
+        )
+        {
+        }
+
+        over "SM_PaperNote_Small_13" (
+            active = false
+        )
+        {
+        }
+
+        over "forklift" (
+            active = false
+        )
+        {
         }
     }
 }
@@ -1520,10 +1745,10 @@ over "OmniverseKit_Persp" (
     float exposure:time = 0.02
     float focalLength = 18.147562
     float focusDistance = 400
-    custom uniform vector3d omni:kit:centerOfInterest = (0, 0, -3.8321781549808813)
-    float3 xformOp:rotateXYZ = (79.31401, -7.315276e-14, 174.96829)
+    custom uniform vector3d omni:kit:centerOfInterest = (0, 0, -33.07102235913953)
+    float3 xformOp:rotateXYZ = (90.41189, -3.180555e-14, -32.009487)
     float3 xformOp:scale = (1, 1, 1)
-    double3 xformOp:translate = (-7.6697209161754093, 13.2558434155837475, 1.6987939071147091)
+    double3 xformOp:translate = (-7.520806398002017, -5.029518223213136, 1.0041131581928044)
     uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
 }
 
