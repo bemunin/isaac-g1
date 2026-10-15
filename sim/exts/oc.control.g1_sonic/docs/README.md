@@ -5,7 +5,8 @@ kinematic planner and tracking policy in-process with onnxruntime (see
 [ADR 0002](../../../../docs/adr/0002-sonic-in-process-onnx.md)). Commands come from a code-defined
 Behavior sequence, whose behaviors are named after Nav2's (drive on heading at a gait: slow walk, walk or
 run; spin; wait; plus side step), or as Real-time control (Locomotion commands, cmd_vel-ready for Nav2).
-Enabling the extension does not move any robot; a caller starts a `G1Wbc` and gives it commands.
+Lower-body ground moves (squat, kneel and crawl) are also available. Enabling the extension does not move any
+robot; a caller starts a `G1Wbc` and gives it commands.
 
 Extension ID: `oc.control.g1_sonic`
 
@@ -49,6 +50,13 @@ robot.side_move_left(1.0)    # meters, runs to completion
 robot.turn_right(90)         # degrees, in place
 robot.set_speed_limit(0.8)   # m/s cap on real-time commands, like Nav2's SpeedLimit: slow walk at most; None lifts it
 robot.halt()                 # slow down and stand; also ends a looping sequence
+
+# Lower-body ground moves (SONIC's ground modes; halt() or a drive stands back up):
+robot.squat(0.6)             # hold a squat at pelvis height 0.4-0.8 m
+robot.kneel(0.3)             # kneel on two legs, 0.2-0.4 m; kneel_one_leg(0.3) for one
+robot.crawl_hands()          # enter hand crawl (mode 8): /cmd_vel or command() then drives it at 0.4-1.0 m/s
+robot.crawl_elbows()         # enter elbow crawl (mode 14), a lower crawl at 0.7-1.0 m/s
+
 robot.status                 # MovementStatus.IDLE, RUNNING, SUCCEEDED, ABORTED or CANCELED
 robot.failure                # MovementFailure(reason="timeout", index=segment) after ABORTED
 ```
@@ -81,6 +89,11 @@ robot.failure                # MovementFailure(reason="timeout", index=segment) 
 - **Real-time commands** stop (status IDLE) when no new one arrives for 0.5 s. A command with no linear
   speed turns in place at `wz`. `set_speed_limit` scales their linear speed down to the limit, which also caps
   the gait (up to 0.8 m/s slow walk, up to 1.5 m/s walk); it doesn't apply to Behavior sequences.
+- **Lower-body moves.** `squat(height)` [0.4-0.8 m], `kneel(height)` and `kneel_one_leg(height)` [0.2-0.4 m] hold a
+  static ground posture in place until the next command. `crawl_hands()` and `crawl_elbows()` enter a low *moving*
+  mode (SONIC modes 8 and 14) that real-time commands then drive at 0.4-1.0 / 0.7-1.0 m/s, holding the low pose when
+  they stop; `halt()` stands back up. Standing up directly from elbow crawl is unreliable — enter hand crawl first.
+  An out-of-range height raises `ValueError`.
 - **Callbacks.** `on_done` is called with SUCCEEDED, ABORTED or CANCELED when a Behavior sequence ends.
 
 ## Behavior

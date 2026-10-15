@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.2] - 2026-10-15
+### Added
+- Lower-body ground moves on `G1Wbc`: `squat(height)` (0.4-0.8 m), `kneel(height)` and `kneel_one_leg(height)` (0.2-0.4 m) hold a static ground posture until the next command; `crawl_hands()` and `crawl_elbows()` enter a low *moving* mode (SONIC modes 8 and 14) that real-time commands drive at 0.4-1.0 / 0.7-1.0 m/s and hold the low pose when they stop. `halt()` stands back up (from elbow crawl, enter hand crawl first). An out-of-range height raises `ValueError`.
+- `Posture`, `Crawl` and their height/speed ranges in `locomotion_command.py`; `KinematicPlanner.command(..., height=-1.0)` threads SONIC's pelvis-height input (was hardcoded), and `G1WbcController` gains a `posture(mode, height)` hold and a `crawl(mode)` locomotion mode.
+
 ## [0.1.0] - 2026-10-08
 ### Added
 - `G1Wbc`: moves a G1 with NVIDIA SONIC whole-body control (default weights, kinematic planner + tracking policy, onnxruntime on CPU) while the simulation plays, with IMU and pose feedback.
