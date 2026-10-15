@@ -1,5 +1,5 @@
-"""Warehouse (Standalone workflow): open the warehouse Scenario (oc.scenario.warehouse), whose G1 walks a
-loop through the open hall (with the controller chosen by --controller), and play until the app closes.
+"""Warehouse (Standalone workflow): open the warehouse Scenario (oc.scenario.warehouse), whose G1 walks with SONIC at
+/cmd_vel, and play until the app closes.
 
 With --benchmark SECONDS, record isaacsim.benchmark.services KPIs for SECONDS of wall-clock play, write them to
 --benchmark-output and exit."""
@@ -16,8 +16,7 @@ from sim import PHYSICS_EXPERIENCE, obstacles_argument
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--physics", choices=PHYSICS_EXPERIENCE, default="newton", help="physics engine (default: newton)")
-parser.add_argument("--controller", choices=("walk", "sonic"), default="sonic", help="G1 controller (default: sonic)")
-parser.add_argument("--ros", action="store_true", help="publish the G1's ROS 2 topics")
+parser.add_argument("--no-ros", action="store_true", help="don't publish the G1's ROS 2 topics or follow /cmd_vel")
 parser.add_argument(
     "-o",
     "--obstacles",
@@ -41,8 +40,7 @@ from isaacsim import SimulationApp
 
 extensions = [
     *("--ext-folder", str(ROOT / "sim" / "exts"), "--enable", "oc.scenario.warehouse"),
-    f"--/exts/oc.scenario.warehouse/controller={args.controller}",
-    f"--/exts/oc.scenario.warehouse/ros={str(args.ros).lower()}",
+    f"--/exts/oc.scenario.warehouse/ros={str(not args.no_ros).lower()}",
 ]
 if args.obstacles:
     extensions.append(f"--/exts/oc.scenario.warehouse/obstacles={','.join(dict.fromkeys(args.obstacles))}")
@@ -80,12 +78,11 @@ else:
     from isaacsim.benchmark.services import BaseIsaacBenchmark
 
     benchmark = BaseIsaacBenchmark(
-        benchmark_name=f"warehouse_{args.physics}_{args.controller}{'_ros' if args.ros else ''}{'_headless' if args.headless else ''}",
+        benchmark_name=f"warehouse_{args.physics}{'' if args.no_ros else '_ros'}{'_headless' if args.headless else ''}",
         workflow_metadata={
             "metadata": [
                 {"name": "physics", "data": args.physics},
-                {"name": "controller", "data": args.controller},
-                {"name": "ros", "data": str(args.ros)},
+                {"name": "ros", "data": str(not args.no_ros)},
                 {"name": "headless", "data": str(args.headless)},
                 {"name": "duration_s", "data": args.benchmark},
             ]

@@ -5,7 +5,7 @@ import omni.ext
 class Extension(omni.ext.IExt):
     """Kit instantiates this class when oc.control.g1_sonic is enabled.
 
-    Provides G1Wbc; enabling the extension does not move any robot.
+    Provides G1Sonic; enabling the extension does not move any robot.
     """
 
     def on_startup(self, ext_id: str):

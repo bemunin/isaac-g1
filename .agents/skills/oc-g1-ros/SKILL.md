@@ -90,6 +90,7 @@ Links are siblings under the robot root, not nested: `/World/G1/pelvis`, `/World
 | `/World/G1/Graph/ROS2_JointCommands` | `OnPhysicsStep` → subscribes `/joint_commands` (asset: `/isaac_sim_joint_commands`) → `IsaacArticulationController` |
 | `/World/G1/Graph/ROS2_IMU` | `OnPhysicsStep` → publishes `/imu/data` (asset: `/isaac_sim_imu`), `frame_id` `imu` |
 | `/World/G1/Graph/OdometryGraph` | `OnPlaybackTick` → publishes `/odom` and `/tf` (`odom → pelvis` only) |
+| `/World/G1/Graph/ROS2_CmdVel` | Scenario-only. `OnPlaybackTick` → `ROS2SubscribeTwist` (`/cmd_vel`) → `Counter`; `oc.scenario.warehouse`'s `CmdVelBridge` polls the count and forwards each new Twist to `G1Sonic.command()` |
 
 **Topic names.** The scenario renames the asset's `isaac_sim_*` topics to standard ROS names
 through `over`s on each node's `inputs:topicName`; the `isaac_sim_` prefix is specific to this asset,
@@ -106,8 +107,8 @@ is in no TF tree). The `Sensor = "sensors"` variant is an empty payload and adds
   Referencing remaps relationships, not strings, so under `/World/G1` it points nowhere. Its
   `targetPrim` relationship is remapped correctly. Author an `over` setting `robotPath` to
   `/World/G1/pelvis` when `/joint_commands` must drive the robot.
-- **`ROS2_JointCommands` competes with any in-sim controller** (e.g. the `oc.control.g1_walk`
-  walker) as soon as something publishes `/joint_commands`. Keep one owner of the joint
+- **`ROS2_JointCommands` competes with any in-sim controller** (e.g. `oc.control.g1_sonic`'s
+  `G1Sonic`) as soon as something publishes `/joint_commands`. Keep one owner of the joint
   targets.
 - **`ROS2_JointStates` logs** "Reading from targetPrim is deprecated". It is a warning; the topic still
   publishes.

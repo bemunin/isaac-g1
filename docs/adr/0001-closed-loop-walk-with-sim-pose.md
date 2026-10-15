@@ -1,5 +1,9 @@
 # Walk trajectories are followed with IMU heading and simulated root position
 
+> Superseded: the Walk controller and Walk trajectories were removed; the G1 is driven only by Nav2's `cmd_vel`
+> through SONIC ([ADR 0003](0003-sonic-walk-from-nav2-cmd-vel.md)). SONIC still reads the IMU and the simulated
+> root position as described here.
+
 ## Decision
 
 The Walk controller in `oc.control.g1_walk` reads the robot's state from two sources:

@@ -1,8 +1,19 @@
 # Changelog
 
-## [0.7.0] - 2026-10-17
+## [0.8.0] - 2026-10-17
 ### Added
 - `exts."oc.scenario.warehouse".obstacles` (`pixi run warehouse -o clutter,forklift`) shows the Scenario's hidden clutter and forklift. `obstacles()` reads it and `apply_obstacles(stage, kinds)` activates the `OBSTACLES` paths in the session layer; `open_scenario()` calls both.
+
+## [0.7.0] - 2026-10-15
+### Added
+- `/World/G1/Graph/ROS2_CmdVel` (`ROS2SubscribeTwist` on `/cmd_vel` + a message `Counter`) and `CmdVelBridge`, which forwards each new `/cmd_vel` to `G1Sonic.command()`.
+
+### Changed
+- The G1 always uses SONIC (`oc.control.g1_sonic`'s `G1Sonic`) in walk mode at `/cmd_vel`, and physics always runs at 200 Hz. Without a `/cmd_vel` publisher it stands.
+- ROS is on by default (`exts."oc.scenario.warehouse".ros = true`); `--ros` is replaced by `--no-ros`, with which the G1 stands.
+
+### Removed
+- `WAREHOUSE_SEQUENCE`, `WAREHOUSE_WALK_TRAJECTORY`, `controller()`, `CONTROLLERS`, the `controller` setting and `--controller`; `oc.control.g1_walk` is no longer a dependency.
 
 ## [0.6.0] - 2026-10-12
 ### Changed

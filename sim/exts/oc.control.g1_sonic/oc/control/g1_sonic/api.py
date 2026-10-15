@@ -1,5 +1,5 @@
-"""Public API: move the G1 at a prim path with NVIDIA SONIC whole-body control, by a Behavior sequence or Real-time
-control, with IMU and pose feedback, while the simulation plays."""
+"""Public API: move the G1 at a prim path with NVIDIA SONIC whole-body control, by Real-time control, with IMU and pose
+feedback, while the simulation plays."""
 
 import carb
 import isaacsim.robot_motion.experimental.motion_generation as mg
@@ -15,8 +15,7 @@ from isaacsim.robot.policy.examples.application import (
 )
 from isaacsim.sensors.experimental.physics import IMUSensor
 
-from .behavior_sequence import BehaviorSequence, Segment, check_positive
-from .controllers import G1WbcController, MovementStatus
+from .controllers import G1SonicController, MovementStatus
 from .controllers.sonic import (
     ARMATURE,
     CONTROL_DT,
@@ -31,46 +30,31 @@ from .controllers.sonic import (
 from .locomotion_command import (
     POSTURE_HEIGHT_RANGE,
     Crawl,
-    Gait,
     LocomotionCommand,
     Posture,
 )
-from .sequence_executor import MovementFailure
 
-__all__ = [
-    "BehaviorSequence",
-    "Crawl",
-    "G1Wbc",
-    "G1WbcController",
-    "Gait",
-    "LocomotionCommand",
-    "MovementFailure",
-    "MovementStatus",
-    "Posture",
-    "Segment",
-]
+__all__ = ["Crawl", "G1Sonic", "G1SonicController", "MovementStatus", "Posture"]
 
 PHYSICS_DT = 0.005  # s: SONIC was trained at 200 Hz physics, the policy every 4th step
 
 
-class G1Wbc:
-    """Steps a G1WbcController on every physics step while the simulation plays, once start() is called.
+class G1Sonic:
+    """Steps a G1SonicController on every physics step while the simulation plays, once start() is called.
 
-    Binds to the robot on the first physics step after Play and unbinds on Stop; each Play starts standing and
-    restarts the current Behavior sequence. Orientation and angular velocity come from the IMU at imu_path, position and
+    Binds to the robot on the first physics step after Play and unbinds on Stop; each Play starts standing.
+    Orientation and angular velocity come from the IMU at imu_path, position and
     joints from the articulation.
 
-    Commands: execute(sequence) follows a Behavior sequence; command(LocomotionCommand), and its shortcuts
-    slow_walk(cmd_vel), walk(cmd_vel) and run(cmd_vel), move at a body-frame (vx, vy, wz) until commands stop
-    arriving for 0.5 s, no faster than set_speed_limit(); side_move_left/right(meters) and turn_left/right(degrees)
-    run to completion; squat/kneel/kneel_one_leg(height) hold a static ground posture; crawl_hands/crawl_elbows()
-    crawl low, driven by real-time commands; halt() stands. Each command cancels the one before.
+    command(cmd_vel) walks in SONIC's walk mode at a body-frame (vx, vy, wz), e.g. Nav2's cmd_vel, until commands stop
+    arriving for 0.5 s; squat/kneel/kneel_one_leg(height) hold a static ground posture; crawl_hands/crawl_elbows()
+    crawl low, driven by command(); halt() stands. Each command replaces the one before.
     """
 
-    def __init__(self, prim_path: str, imu_path: str | None = None, on_done=None) -> None:
+    def __init__(self, prim_path: str, imu_path: str | None = None) -> None:
         self.prim_path = prim_path
         self.imu_path = imu_path or f"{prim_path}/pelvis/imu_sensor"
-        self._controller = G1WbcController(on_done=on_done)
+        self._controller = G1SonicController()
         self._articulation = None
         self._imu = None
         self._pending_reset = False
@@ -84,56 +68,11 @@ class G1Wbc:
     def status(self) -> MovementStatus:
         return self._controller.status
 
-    @property
-    def failure(self) -> MovementFailure | None:
-        """Why the last Behavior sequence was aborted (reason, segment index), if it was."""
-        return self._controller.failure
-
-    @property
-    def sequence(self) -> BehaviorSequence | None:
-        return self._controller.sequence
-
-    def execute(self, sequence: BehaviorSequence) -> None:
-        """Follow sequence from the robot's current pose, replacing the current command."""
-        self._controller.execute(sequence)
-
-    def command(self, command: LocomotionCommand) -> None:
-        """Move at command's body-frame velocity, no faster than its gait (None: any, chosen from the speed); limited
-        to forward only, |vy| <= 0.4 m/s, |wz| <= 1.5 rad/s. Call again within 0.5 s to keep moving, e.g. from a
-        cmd_vel subscriber."""
-        self._controller.command(command)
-
-    def slow_walk(self, cmd_vel) -> None:
-        """command() at cmd_vel = (vx [m/s], vy [m/s], wz [rad/s]), slow-walking (vx up to 0.8)."""
-        self._controller.command(LocomotionCommand(*cmd_vel, gait=Gait.SLOW_WALK))
-
-    def walk(self, cmd_vel) -> None:
-        """command() at cmd_vel = (vx, vy, wz), walking at most (vx up to 1.5)."""
-        self._controller.command(LocomotionCommand(*cmd_vel, gait=Gait.WALK))
-
-    def run(self, cmd_vel) -> None:
-        """command() at cmd_vel = (vx, vy, wz), running from 1.5 m/s (vx up to 3.0)."""
-        self._controller.command(LocomotionCommand(*cmd_vel, gait=Gait.RUN))
-
-    def set_speed_limit(self, speed_limit: float | None) -> None:
-        """Cap real-time commands' linear speed [m/s], and so their gait, like Nav2's SpeedLimit; None removes it."""
-        self._controller.set_speed_limit(speed_limit)
-
-    def side_move_left(self, meters: float) -> None:
-        check_positive("meters", meters)
-        self._controller.execute(BehaviorSequence().side_step(meters))
-
-    def side_move_right(self, meters: float) -> None:
-        check_positive("meters", meters)
-        self._controller.execute(BehaviorSequence().side_step(-meters))
-
-    def turn_left(self, degrees: float) -> None:
-        check_positive("degrees", degrees)
-        self._controller.execute(BehaviorSequence().spin(degrees))
-
-    def turn_right(self, degrees: float) -> None:
-        check_positive("degrees", degrees)
-        self._controller.execute(BehaviorSequence().spin(-degrees))
+    def command(self, cmd_vel) -> None:
+        """Walk at cmd_vel = (vx [m/s], vy [m/s], wz [rad/s]) in the robot frame: forward or backward at 0.8-1.5 m/s
+        (backward up to 0.8), sideways up to 0.4 m/s, |wz| <= 1.5 rad/s; below 0.1 m/s it stands and turns in place.
+        Call again within 0.5 s to keep moving, e.g. from a cmd_vel subscriber."""
+        self._controller.command(LocomotionCommand(*cmd_vel))
 
     def squat(self, height: float = 0.6) -> None:
         """Squat in place to pelvis height [m] in [0.4, 0.8], held until the next command (halt() stands up)."""
@@ -150,7 +89,7 @@ class G1Wbc:
     def _hold_posture(self, posture: Posture, height: float) -> None:
         low, high = POSTURE_HEIGHT_RANGE[posture]
         if not low <= height <= high:
-            raise ValueError(f"G1Wbc: {posture.name} height must be in [{low}, {high}] m, got {height}")
+            raise ValueError(f"G1Sonic: {posture.name} height must be in [{low}, {high}] m, got {height}")
         self._controller.posture(posture, height)
 
     def crawl_hands(self) -> None:
@@ -164,7 +103,7 @@ class G1Wbc:
         self._controller.crawl(Crawl.ELBOWS)
 
     def halt(self) -> None:
-        """Slow down and stand, cancelling the running command (also a looping Behavior sequence or posture)."""
+        """Slow down and stand, dropping the running command (also a posture or crawl)."""
         self._controller.halt()
 
     def start(self) -> None:
@@ -243,7 +182,7 @@ class G1Wbc:
             if self._decimation is None:
                 self._decimation = max(1, round(CONTROL_DT / dt))
                 if abs(dt - PHYSICS_DT) > 1e-6:
-                    carb.log_warn(f"G1Wbc({self.prim_path}): physics runs at {1 / dt:.0f} Hz; SONIC expects {1 / PHYSICS_DT:.0f} Hz")
+                    carb.log_warn(f"G1Sonic({self.prim_path}): physics runs at {1 / dt:.0f} Hz; SONIC expects {1 / PHYSICS_DT:.0f} Hz")
             if self._tick % self._decimation == 0:
                 t = self._tick * dt
                 state = self._estimated_state(read_robot_state(self._articulation))
@@ -254,4 +193,4 @@ class G1Wbc:
             self._tick += 1
         except Exception as error:  # noqa: BLE001 - a physics callback must not raise
             self._failed = True
-            carb.log_error(f"G1Wbc({self.prim_path}): stopped after error: {error}")
+            carb.log_error(f"G1Sonic({self.prim_path}): stopped after error: {error}")

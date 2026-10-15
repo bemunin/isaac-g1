@@ -1,2 +1,2 @@
-from .wbc_controller import G1WbcController as G1WbcController
-from .wbc_controller import MovementStatus as MovementStatus
+from .sonic_controller import G1SonicController as G1SonicController
+from .sonic_controller import MovementStatus as MovementStatus

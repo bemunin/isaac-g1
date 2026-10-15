@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.0] - 2026-10-15
+### Changed
+- Renamed `G1Wbc` to `G1Sonic`, `G1WbcController` to `G1SonicController` (`controllers/sonic_controller.py`).
+- The one input is a body-frame velocity (Nav2's `cmd_vel`): `G1Sonic.command((vx, vy, wz))` and `halt()`. It always moves in SONIC's walk mode (planner mode 2) and stands in idle mode below 0.1 m/s or 0.5 s after the last command. Forward and backward speeds are clamped to 0.8-1.5 m/s (backward up to 0.8); strafing stays up to 0.4 m/s. `MovementStatus` is `IDLE` or `RUNNING`.
+
+### Kept
+- The lower-body ground moves (`squat`, `kneel`, `kneel_one_leg`, `crawl_hands`, `crawl_elbows`) on `G1Sonic`; `/cmd_vel` drives a crawl.
+
+### Removed
+- `BehaviorSequence`, `Segment`, `SequenceExecutor`, `MovementFailure`, `execute`, `sequence`, `failure`, `on_done`, `side_move_left/right`, `turn_left/right`, `slow_walk/walk/run`, `set_speed_limit`, the `Gait` ceiling and the public `LocomotionCommand`: routes come from Nav2 over `/cmd_vel`.
+
 ## [0.1.2] - 2026-10-15
 ### Added
 - Lower-body ground moves on `G1Wbc`: `squat(height)` (0.4-0.8 m), `kneel(height)` and `kneel_one_leg(height)` (0.2-0.4 m) hold a static ground posture until the next command; `crawl_hands()` and `crawl_elbows()` enter a low *moving* mode (SONIC modes 8 and 14) that real-time commands drive at 0.4-1.0 / 0.7-1.0 m/s and hold the low pose when they stop. `halt()` stands back up (from elbow crawl, enter hand crawl first). An out-of-range height raises `ValueError`.

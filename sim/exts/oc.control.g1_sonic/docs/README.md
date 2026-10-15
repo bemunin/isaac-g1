@@ -2,11 +2,12 @@
 
 Moves a Unitree G1 with NVIDIA SONIC whole-body control while the simulation plays. It runs SONIC's
 kinematic planner and tracking policy in-process with onnxruntime (see
-[ADR 0002](../../../../docs/adr/0002-sonic-in-process-onnx.md)). Commands come from a code-defined
-Behavior sequence, whose behaviors are named after Nav2's (drive on heading at a gait: slow walk, walk or
-run; spin; wait; plus side step), or as Real-time control (Locomotion commands, cmd_vel-ready for Nav2).
-Lower-body ground moves (squat, kneel and crawl) are also available. Enabling the extension does not move any
-robot; a caller starts a `G1Wbc` and gives it commands.
+[ADR 0002](../../../../docs/adr/0002-sonic-in-process-onnx.md)). Its one input is a body-frame velocity,
+Nav2's `cmd_vel`, and it always moves in SONIC's locomotion **walk** mode (planner mode 2, as key 2 in
+NVIDIA's [keyboard tutorial](https://nvlabs.github.io/GR00T-WholeBodyControl/tutorials/keyboard.html)),
+standing in idle mode between commands. `oc.scenario.warehouse` forwards `/cmd_vel` to it (see
+[ADR 0003](../../../../docs/adr/0003-sonic-walk-from-nav2-cmd-vel.md)).
+Lower-body ground moves (squat, kneel and crawl) are also available. Enabling the extension does not move any robot; a caller starts a `G1Sonic` and gives it commands.
 
 Extension ID: `oc.control.g1_sonic`
 
@@ -25,94 +26,57 @@ It fetches `model_encoder.onnx`, `model_decoder.onnx`, `observation_config.yaml`
 ## Run
 
 ```bash
-pixi run warehouse --controller sonic --physics physx
+pixi run warehouse --physics physx
+pixi run ros2 run teleop_twist_keyboard teleop_twist_keyboard   # second terminal: drive /cmd_vel by hand
 ```
 
-The warehouse G1 then follows `WAREHOUSE_SEQUENCE` (see `oc.scenario.warehouse`). Physics should
-run at 200 Hz, as SONIC was trained; the warehouse sets this for `sonic`, and `G1Wbc` warns otherwise. (A
-lap also completed at 100 Hz.)
+The warehouse G1 stands until something publishes `/cmd_vel` (Nav2, teleop, `ros2 topic pub`). Physics
+should run at 200 Hz, as SONIC was trained; the warehouse sets this, and `G1Sonic` warns otherwise.
 
 ## API
 
 ```python
-from oc.control.g1_sonic import BehaviorSequence, G1Wbc, Gait, LocomotionCommand, MovementStatus
+from oc.control.g1_sonic import G1Sonic, MovementStatus
 
-robot = G1Wbc("/World/G1", on_done=lambda status: print(status))  # IMU at /World/G1/pelvis/imu_sensor
+robot = G1Sonic("/World/G1")  # IMU at /World/G1/pelvis/imu_sensor
 robot.start()  # steps on every Play until stop(); stands until it gets a command
 
-# Behavior sequence: fixed in code, followed with pose feedback. Each behavior returns a new sequence.
-robot.execute(BehaviorSequence(loop=True).wait(2).run(10).spin(90).walk(3).side_step(-1))
-
-# Real-time control: each call cancels the running command or sequence (status CANCELED).
-robot.command(LocomotionCommand(0.6, 0.0, 0.3, Gait.WALK))  # vx m/s, vy m/s, wz rad/s, robot frame; repeat within 0.5 s
-robot.walk((0.6, 0.0, 0.3))  # the same; also slow_walk(cmd_vel) and run(cmd_vel)
-robot.side_move_left(1.0)    # meters, runs to completion
-robot.turn_right(90)         # degrees, in place
-robot.set_speed_limit(0.8)   # m/s cap on real-time commands, like Nav2's SpeedLimit: slow walk at most; None lifts it
-robot.halt()                 # slow down and stand; also ends a looping sequence
+robot.command((0.6, 0.0, 0.3))  # vx m/s, vy m/s, wz rad/s, robot frame (cmd_vel); repeat within 0.5 s
+robot.halt()                     # slow down and stand
 
 # Lower-body ground moves (SONIC's ground modes; halt() or a drive stands back up):
 robot.squat(0.6)             # hold a squat at pelvis height 0.4-0.8 m
 robot.kneel(0.3)             # kneel on two legs, 0.2-0.4 m; kneel_one_leg(0.3) for one
-robot.crawl_hands()          # enter hand crawl (mode 8): /cmd_vel or command() then drives it at 0.4-1.0 m/s
+robot.crawl_hands()          # enter hand crawl (mode 8): command() / cmd_vel then drives it at 0.4-1.0 m/s
 robot.crawl_elbows()         # enter elbow crawl (mode 14), a lower crawl at 0.7-1.0 m/s
 
-robot.status                 # MovementStatus.IDLE, RUNNING, SUCCEEDED, ABORTED or CANCELED
-robot.failure                # MovementFailure(reason="timeout", index=segment) after ABORTED
+robot.status                     # MovementStatus.IDLE or RUNNING
 ```
 
-| Behavior | Nav2 | Arguments | Gait |
-| --- | --- | --- | --- |
-| `drive_on_heading` | DriveOnHeading | meters forward, `speed` 0.4-3.0 m/s, `gait=` (None: from the speed) | the gait |
-| `slow_walk` | DriveOnHeading | meters forward, `speed=` 0.4-0.8 m/s (default 0.6) | slow walk |
-| `walk` | DriveOnHeading | meters forward, `speed=` 0.8-1.5 m/s (default 1.0) | walk |
-| `run` | DriveOnHeading | meters forward, `speed=` 1.5-3.0 m/s (default 2.0) | run |
-| `side_step` | (none) | meters, positive left, `speed=` up to 0.4 m/s (default 0.3) | slow walk |
-| `spin` | Spin | degrees in place, positive counterclockwise (left) | idle |
-| `wait` | Wait | `wait(seconds)` stands, then goes on; `wait()` stands until the next command and ends the sequence | idle |
-
-- **Gait is a ceiling.** A Locomotion command's `gait` (`IDLE`, `SLOW_WALK`, `WALK`, `RUN`) is the fastest
-  SONIC mode it may use; the speed picks the mode below it (slow walk up to 0.8 m/s, walk up to 1.5 m/s,
-  run above). `gait=None` lets the speed pick any mode. So a run slowing down passes through walk and slow
-  walk, and `run((0.5, 0, 0))` slow-walks at 0.5 m/s.
-- **Limits.** Commands are forward only, up to the gait's top speed (0.8, 1.5 or 3.0 m/s), |vy| <= 0.4 m/s,
-  |wz| <= 1.5 rad/s. Below 0.1 m/s the robot stands; forward speeds below 0.4 m/s are raised to 0.4, where
-  SONIC's slow walk stops stepping in place.
-- **Slowdowns are automatic.** A drive (slow walk, walk or run) carries its speed into a following one (the lower
-  of the two) and otherwise slows to a stop before the target, at 1.0 m/s² (slow walk, walk) or 1.5 m/s² (run).
-  Speeding up is left to SONIC's planner.
-- **Validation.** Distances, times and real-time turn and side-move amounts must be positive (spin and side-step
-  amounts nonzero) and speeds in range, or `ValueError`. Nothing can follow `wait()`. Executing an empty
-  sequence raises `ValueError`.
-- **Loops.** `BehaviorSequence(loop=True)` repeats from its first segment, measured from the same start pose,
-  until `halt()` or another command. A sequence ending in `wait()` doesn't repeat.
-- **Real-time commands** stop (status IDLE) when no new one arrives for 0.5 s. A command with no linear
-  speed turns in place at `wz`. `set_speed_limit` scales their linear speed down to the limit, which also caps
-  the gait (up to 0.8 m/s slow walk, up to 1.5 m/s walk); it doesn't apply to Behavior sequences.
+- **Walk mode only.** A command walks in SONIC's walk mode (2); below 0.1 m/s of linear speed the robot
+  stands in idle mode (0) and turns in place at `wz`. There is no slow walk or run.
+- **Speeds.** A mostly forward or backward command (|vx| >= |vy|) walks at its speed clamped to 0.8-1.5 m/s,
+  so 0.1-0.8 m/s is raised to 0.8. A mostly sideways one keeps its speed, up to 0.4 m/s, or the feet
+  collide.
+- **Limits.** -0.8 <= vx <= 1.5 m/s (backward up to 0.8), |vy| <= 0.4 m/s, |wz| <= 1.5 rad/s; larger values
+  are clamped, with one warning.
+- **Timeout.** The robot stands (status IDLE) when no new command arrives for 0.5 s of simulation time.
+- **Nav2 tuning.** Keep the controller's speeds inside these limits: e.g. Regulated Pure Pursuit's
+  `desired_linear_vel` 0.8-1.5 and `min_approach_linear_velocity` >= 0.8 (slower approaches overshoot,
+  since they are raised to 0.8), `BackUp` at <= 0.8 m/s, velocity smoother `max_velocity` `[1.5, 0.4, 1.5]`.
 - **Lower-body moves.** `squat(height)` [0.4-0.8 m], `kneel(height)` and `kneel_one_leg(height)` [0.2-0.4 m] hold a
   static ground posture in place until the next command. `crawl_hands()` and `crawl_elbows()` enter a low *moving*
-  mode (SONIC modes 8 and 14) that real-time commands then drive at 0.4-1.0 / 0.7-1.0 m/s, holding the low pose when
-  they stop; `halt()` stands back up. Standing up directly from elbow crawl is unreliable — enter hand crawl first.
-  An out-of-range height raises `ValueError`.
-- **Callbacks.** `on_done` is called with SUCCEEDED, ABORTED or CANCELED when a Behavior sequence ends.
+  mode (SONIC modes 8 and 14) that `command()` then drives, forward only, at 0.4-1.0 / 0.7-1.0 m/s, holding the low
+  pose when commands stop; `halt()` stands back up. Standing up directly from elbow crawl is unreliable — enter hand
+  crawl first. An out-of-range height raises `ValueError`.
 
 ## Behavior
 
-The controller is layered: Behavior sequence -> Sequence executor -> Locomotion command -> Whole-body
-controller. Each policy step (50 Hz, every 4th physics step at 200 Hz), `G1WbcController`:
+Each policy step (50 Hz, every 4th physics step at 200 Hz), `G1SonicController`:
 1. Reads the robot's state. Orientation and body angular velocity come from the pelvis IMU. Position
    and joints come from the articulation (simulation ground truth, as in ADR 0001).
-2. Gets a Locomotion command: the latest real-time one, or else the Sequence executor's
-   (`sequence_executor.py`) for its active Segment, stamped with the Segment's gait. Like a Nav2 behavior,
-   each Segment both commands the velocity and judges its own completion.
-   - The executor anchors the sequence at the robot's pose when it starts and moves on when a Segment
-     ends: a drive or side step 0.15 m before its target (along the segment), a spin within 5°, a wait
-     after its time. A Segment not done within 2 × its nominal time + 3 s aborts the sequence (ABORTED,
-     `failure`).
-   - It steers along the line from the Segment's start to its target, with a correction back onto the
-     line, at the speed profile above, and turns toward the target heading at 2 rad/s per rad of error
-     (up to 1.5 rad/s). Nav2's own controllers come in through Real-time control (`cmd_vel`).
-3. Turns the command into planner inputs: a gait mode, a world movement direction (the command's
+2. Takes the latest real-time Locomotion command, or stands if there is none.
+3. Turns the command into planner inputs: walk or idle mode, a world movement direction (the command's
    direction from the measured yaw), a speed and a facing direction. The facing turns by `wz` each step
    and stays within 30° of the measured yaw.
 4. Runs SONIC's kinematic planner (`planner_sonic.onnx`, 30 Hz output) when the command changes, at
@@ -124,15 +88,14 @@ controller. Each policy step (50 Hz, every 4th physics step at 200 Hz), `G1WbcCo
 On bind, the 29 joints get SONIC's PD gains, armatures and effort limits, and start in its standing
 pose. Falls are not handled. Jumps are not supported, because SONIC's planner has no jump mode.
 
-`G1WbcController` is a MotionGen controller (`isaacsim.robot_motion.experimental.motion_generation.BaseController`).
-To step it directly: `execute(sequence)` or `command(locomotion_command)`, then `reset(state, None, t)`
+`G1SonicController` is a MotionGen controller (`isaacsim.robot_motion.experimental.motion_generation.BaseController`).
+To step it directly: `command(LocomotionCommand(vx, vy, wz))` (from `locomotion_command.py`), then `reset(state, None, t)`
 and `forward(state, None, t)` at 50 Hz.
 
 ## Tests
 
 Extension Manager → G1 SONIC → Tests tab runs `oc.control.g1_sonic.tests`. They cover:
-- Behavior sequences, speed profiles, steering and the Sequence executor
-- Locomotion command limits, gait ceilings, the speed limit, timeout and preemption
+- Command limits, walk/idle mode selection, speeds, timeout and halt
 - Joint orders against NVIDIA's
 - ONNX input sizes, the planner, and the controller loop, without a robot
 

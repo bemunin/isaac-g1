@@ -12,30 +12,34 @@ scenario below, then tabulates the results. Run from the project root.
 
 | # | Scenario (folder suffix) | Flags |
 |---|---|---|
-| 1 | `baseline1_newton_headless` | `--physics newton --headless` |
-| 2 | `newton_ros_headless` | `--physics newton --ros --headless` |
-| 3 | `newton_ros` | `--physics newton --ros` |
-| 4 | `baseline2_physx_headless` | `--physics physx --headless` |
-| 5 | `physx_ros_headless` | `--physics physx --ros --headless` |
-| 6 | `physx_ros` | `--physics physx --ros` |
+| 1 | `baseline1_newton_headless` | `--physics newton --no-ros --headless` |
+| 2 | `newton_ros_headless` | `--physics newton --headless` |
+| 3 | `newton_ros` | `--physics newton` |
+| 4 | `baseline2_physx_headless` | `--physics physx --no-ros --headless` |
+| 5 | `physx_ros_headless` | `--physics physx --headless` |
+| 6 | `physx_ros` | `--physics physx` |
+
+ROS is on by default. The G1 walks only at `/cmd_vel` (SONIC, walk mode) and nothing publishes it here, so
+from 2026-10-15 on **every scenario measures a standing G1**: SONIC still runs its planner and policy each step,
+but the results aren't comparable with the reference results below, where every scenario walked a loop.
 
 One session writes everything into one folder (`warehouse` is the Scenario name; `research/` is gitignored):
 
 ```
 research/benchmark_output/<YYYYMMDD>_<HHMMSS>_warehouse/
-  settings.txt       # seconds, controller, dds, isaacsim
+  settings.txt       # seconds, dds, isaacsim
   summarize.md       # final report: settings, KPI table, deltas, Analysis
   <scenario>/        # one per scenario: kpis_warehouse_*.json, kpis_app_startup.json, <scenario>.log
 ```
 
 ## Steps
 
-1. **Settings.** Defaults: controller `sonic`, 60 s measured (after a 60-frame warmup), the session's DDS
+1. **Settings.** Defaults: 60 s measured (after a 60-frame warmup), the session's DDS
    (`pixi run dds` shows it). Use what the user gave; otherwise the defaults. `run.sh` also records the
    `isaacsim` version pinned in `pixi.toml` in `settings.txt`.
 2. **Run** in the background, once (≈15–20 min; scenarios run sequentially because they share the GPU):
    ```sh
-   .agents/skills/oc-benchmark/run.sh [SECONDS] [CONTROLLER]
+   .agents/skills/oc-benchmark/run.sh [SECONDS]
    ```
    It prints `session=<dir>` first. Scenarios 3 and 6 open an Isaac Sim window that closes itself.
    To use another DDS, run `pixi run dds <name>` first.
@@ -43,7 +47,7 @@ research/benchmark_output/<YYYYMMDD>_<HHMMSS>_warehouse/
    valid run (see shutdown crash below). For `kpis=0`, read the tail of `<session>/<scenario>/<scenario>.log`,
    fix, and rerun only that scenario into the same session:
    ```sh
-   .agents/skills/oc-benchmark/run.sh SECONDS CONTROLLER <session> <scenario> [...]
+   .agents/skills/oc-benchmark/run.sh SECONDS <session> <scenario> [...]
    ```
 4. **Summarize:**
    ```sh

@@ -49,8 +49,7 @@ import isaacsim.core.experimental.utils.app as app_utils
 import isaacsim.core.experimental.utils.stage as stage_utils
 import omni.graph.core as og
 import omni.timeline
-from oc.control.g1_sonic import G1Wbc, LocomotionCommand
-from oc.control.g1_sonic.locomotion_command import Crawl, Posture
+from oc.control.g1_sonic import Crawl, G1Sonic, Posture
 from oc.scenario.warehouse import apply_obstacles
 
 # Isaac Sim enables the ROS 2 bridge only after startup; the Scenario's graphs need its nodes now.
@@ -117,7 +116,7 @@ og.Controller.edit(
 posture_count = og.Controller.attribute(f"{POSTURE_GRAPH}/Counter.outputs:count")
 posture_linear = og.Controller.attribute(f"{POSTURE_GRAPH}/SubscribePosture.outputs:linearVelocity")
 
-robot = G1Wbc("/World/G1")
+robot = G1Sonic("/World/G1")
 robot.start()  # stands until a command arrives
 omni.timeline.get_timeline_interface().play()
 
@@ -141,7 +140,7 @@ def dispatch_posture(mode: int, height: float) -> None:
             robot.crawl_elbows()
         else:
             carb.log_warn(f"/posture_cmd: ignoring unknown posture id {mode}")
-    except ValueError as error:  # G1Wbc raises on an out-of-range height
+    except ValueError as error:  # G1Sonic raises on an out-of-range height
         carb.log_warn(f"/posture_cmd: {error}")
 
 
@@ -152,7 +151,7 @@ while simulation_app.is_running():
     if (latest := count.get()) != received:  # /cmd_vel -> walk (or drive a selected crawl)
         received = latest
         vx, vy, _ = linear.get()
-        robot.command(LocomotionCommand(vx, vy, angular.get()[2]))
+        robot.command((vx, vy, angular.get()[2]))
     if (latest := posture_count.get()) != posture_received:  # /posture_cmd -> posture or crawl mode
         posture_received = latest
         mode_raw, _, height = posture_linear.get()

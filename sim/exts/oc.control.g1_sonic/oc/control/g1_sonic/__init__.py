@@ -1,9 +1,6 @@
-from .api import BehaviorSequence as BehaviorSequence
-from .api import G1Wbc as G1Wbc
-from .api import G1WbcController as G1WbcController
-from .api import Gait as Gait
-from .api import LocomotionCommand as LocomotionCommand
-from .api import MovementFailure as MovementFailure
+from .api import Crawl as Crawl
+from .api import G1Sonic as G1Sonic
+from .api import G1SonicController as G1SonicController
 from .api import MovementStatus as MovementStatus
-from .api import Segment as Segment
+from .api import Posture as Posture
 from .extension import Extension as Extension
