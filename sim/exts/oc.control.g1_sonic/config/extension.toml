@@ -1,5 +1,5 @@
 [package]
-version = "0.1.0"
+version = "0.1.2"
 title = "G1 SONIC"
 description = "Moves a Unitree G1 with NVIDIA SONIC whole-body control: Nav2-style Behavior sequences and real-time commands."
 keywords = ["control", "g1_sonic", "sonic", "whole-body"]

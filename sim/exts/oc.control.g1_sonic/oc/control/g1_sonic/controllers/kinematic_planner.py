@@ -74,7 +74,7 @@ class KinematicPlanner:
         self.motion = None
         self.frame = 0  # current frame of motion
         self._tick = 0
-        self._command = (IDLE, None, 0.0, 0.0)  # mode, movement yaw (None: standing), facing yaw, speed [m/s]
+        self._command = (IDLE, None, 0.0, 0.0, -1.0)  # mode, movement yaw (None: standing), facing yaw, speed [m/s], height [m]
         self._planned = None
         self._since_replan = 0.0
 
@@ -88,16 +88,17 @@ class KinematicPlanner:
         context[:, 2] = DEFAULT_HEIGHT
         context[:, 3] = 1.0
         context[:, 7:] = DEFAULT_POSE
-        self._command = (IDLE, None, 0.0, 0.0)
+        self._command = (IDLE, None, 0.0, 0.0, -1.0)
         self.motion = self._plan(context, self._command)
         self.frame = 0
         self._tick = 0
         self._planned = self._command
         self._since_replan = 0.0
 
-    def command(self, mode: int, movement_yaw: float | None, facing_yaw: float, speed: float) -> None:
-        """Move in mode toward movement_yaw (None: stand) at speed [m/s, <= 0: the mode's default], facing facing_yaw."""
-        self._command = (mode, None if mode == IDLE else movement_yaw, facing_yaw, speed if mode != IDLE else 0.0)
+    def command(self, mode: int, movement_yaw: float | None, facing_yaw: float, speed: float, height: float = -1.0) -> None:
+        """Move in mode toward movement_yaw (None: stand) at speed [m/s, <= 0: the mode's default], facing facing_yaw.
+        height [m] sets the pelvis height for the ground postures (squat, kneel); -1 leaves it to the mode."""
+        self._command = (mode, None if mode == IDLE else movement_yaw, facing_yaw, speed if mode != IDLE else 0.0, height)
 
     def reference(self):
         """The policy's reference: joint positions [10, 29], joint velocities [10, 29] and root quats [10, 4] of
@@ -123,9 +124,9 @@ class KinematicPlanner:
         self.frame = min(self.frame + 1, len(self.motion) - 1)
 
     def _needs_replan(self) -> bool:
-        mode, movement, facing, speed = self._command
-        old_mode, old_movement, old_facing, old_speed = self._planned
-        if mode != old_mode or _angle_between(facing, old_facing) > FACING_CHANGE:
+        mode, movement, facing, speed, height = self._command
+        old_mode, old_movement, old_facing, old_speed, old_height = self._planned
+        if mode != old_mode or _angle_between(facing, old_facing) > FACING_CHANGE or abs(height - old_height) > 1e-6:
             return True
         if mode == IDLE:
             return False
@@ -148,7 +149,7 @@ class KinematicPlanner:
         self._since_replan = 0.0
 
     def _plan(self, context: np.ndarray, command) -> Motion:
-        mode, movement, facing, speed = command
+        mode, movement, facing, speed, height = command
         moving = np.zeros(3, np.float32) if movement is None else np.array([math.cos(movement), math.sin(movement), 0.0], np.float32)
         allowed_tokens = np.zeros((1, 11), np.int64)
         allowed_tokens[0, :6] = 1  # localmotion_kplanner_onnx.hpp
@@ -165,7 +166,7 @@ class KinematicPlanner:
                 "specific_target_positions": np.zeros((1, 4, 3), np.float32),
                 "specific_target_headings": np.zeros((1, 4), np.float32),
                 "allowed_pred_num_tokens": allowed_tokens,
-                "height": np.array([-1.0], np.float32),
+                "height": np.array([height], np.float32),
             },
         )
         qpos = qpos[0, : int(count[0])].astype(float)

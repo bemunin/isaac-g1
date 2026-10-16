@@ -28,17 +28,25 @@ from .controllers.sonic import (
     quat_conjugate,
     quat_rotate,
 )
-from .locomotion_command import Gait, LocomotionCommand
+from .locomotion_command import (
+    POSTURE_HEIGHT_RANGE,
+    Crawl,
+    Gait,
+    LocomotionCommand,
+    Posture,
+)
 from .sequence_executor import MovementFailure
 
 __all__ = [
     "BehaviorSequence",
+    "Crawl",
     "G1Wbc",
     "G1WbcController",
     "Gait",
     "LocomotionCommand",
     "MovementFailure",
     "MovementStatus",
+    "Posture",
     "Segment",
 ]
 
@@ -55,7 +63,8 @@ class G1Wbc:
     Commands: execute(sequence) follows a Behavior sequence; command(LocomotionCommand), and its shortcuts
     slow_walk(cmd_vel), walk(cmd_vel) and run(cmd_vel), move at a body-frame (vx, vy, wz) until commands stop
     arriving for 0.5 s, no faster than set_speed_limit(); side_move_left/right(meters) and turn_left/right(degrees)
-    run to completion; halt() stands. Each command cancels the one before.
+    run to completion; squat/kneel/kneel_one_leg(height) hold a static ground posture; crawl_hands/crawl_elbows()
+    crawl low, driven by real-time commands; halt() stands. Each command cancels the one before.
     """
 
     def __init__(self, prim_path: str, imu_path: str | None = None, on_done=None) -> None:
@@ -126,8 +135,36 @@ class G1Wbc:
         check_positive("degrees", degrees)
         self._controller.execute(BehaviorSequence().spin(-degrees))
 
+    def squat(self, height: float = 0.6) -> None:
+        """Squat in place to pelvis height [m] in [0.4, 0.8], held until the next command (halt() stands up)."""
+        self._hold_posture(Posture.SQUAT, height)
+
+    def kneel(self, height: float = 0.3) -> None:
+        """Kneel on both legs at pelvis height [m] in [0.2, 0.4], held until the next command (halt() stands up)."""
+        self._hold_posture(Posture.KNEEL_TWO_LEGS, height)
+
+    def kneel_one_leg(self, height: float = 0.3) -> None:
+        """Kneel on one leg at pelvis height [m] in [0.2, 0.4], held until the next command (halt() stands up)."""
+        self._hold_posture(Posture.KNEEL_ONE_LEG, height)
+
+    def _hold_posture(self, posture: Posture, height: float) -> None:
+        low, high = POSTURE_HEIGHT_RANGE[posture]
+        if not low <= height <= high:
+            raise ValueError(f"G1Wbc: {posture.name} height must be in [{low}, {high}] m, got {height}")
+        self._controller.posture(posture, height)
+
+    def crawl_hands(self) -> None:
+        """Crawl on hands (SONIC mode 8): a low moving mode that real-time commands (command/walk/cmd_vel) drive at
+        0.4-1.0 m/s; it holds the low pose when they stop. halt() stands back up."""
+        self._controller.crawl(Crawl.HANDS)
+
+    def crawl_elbows(self) -> None:
+        """Crawl on elbows (SONIC mode 14): a lower moving mode driven by real-time commands at 0.7-1.0 m/s, holding
+        the low pose when they stop. halt() stands back up. (Overheats on the real robot.)"""
+        self._controller.crawl(Crawl.ELBOWS)
+
     def halt(self) -> None:
-        """Slow down and stand, cancelling the running command (also a looping Behavior sequence)."""
+        """Slow down and stand, cancelling the running command (also a looping Behavior sequence or posture)."""
         self._controller.halt()
 
     def start(self) -> None:

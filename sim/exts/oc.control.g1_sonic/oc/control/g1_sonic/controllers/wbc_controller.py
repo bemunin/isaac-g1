@@ -18,7 +18,13 @@ from ..behavior_sequence import (
     check_positive,
     gait_mode,
 )
-from ..locomotion_command import STAND, Gait, LocomotionCommand
+from ..locomotion_command import (
+    CRAWL_SPEED_RANGE,
+    STAND,
+    Crawl,
+    Gait,
+    LocomotionCommand,
+)
 from ..sequence_executor import (
     MAX_TURN_RATE,
     MovementFailure,
@@ -70,6 +76,8 @@ class G1WbcController(mg.BaseController):
         self._facing = 0.0  # world yaw the planner is told to face
         self._heading_offset = 0.0  # world yaw - planner yaw
         self._clamp_warned = False
+        self._posture = None  # (planner mode, pelvis height [m]) while holding a static ground posture, else None
+        self._locomotion_mode = None  # a Crawl mode while crawling (cmd_vel drives it), else None (normal gaits)
 
     @property
     def on_done(self):
@@ -100,7 +108,8 @@ class G1WbcController(mg.BaseController):
 
     def command(self, command: LocomotionCommand) -> None:
         """Real-time Locomotion command, limited (see limit) and to the speed limit; stands COMMAND_TIMEOUT s after the
-        last call. Cancels a running Behavior sequence."""
+        last call. Cancels a running Behavior sequence or posture."""
+        self._posture = None
         limited = limit(command)
         if limited != command and not self._clamp_warned:
             carb.log_warn(f"G1WbcController: {command} limited to {limited}")
@@ -126,6 +135,21 @@ class G1WbcController(mg.BaseController):
         """Slow down and stand, cancelling what is running."""
         self._cancel()
 
+    def posture(self, mode: int, height: float) -> None:
+        """Hold a static ground posture (SONIC planner mode 4-6) at pelvis height [m], cancelling what is running.
+        Held until another command; halt() or any drive stands back up."""
+        self._cancel()
+        self._posture = (int(mode), float(height))
+        self._realtime_status = MovementStatus.RUNNING
+
+    def crawl(self, mode: int) -> None:
+        """Enter a crawl mode (SONIC planner mode 8 hands / 14 elbows): a low moving mode that real-time commands
+        drive, cancelling a running sequence or posture. The robot holds the low pose when no command arrives;
+        halt() stands back up."""
+        self._cancel()
+        self._locomotion_mode = Crawl(int(mode))
+        self._realtime_status = MovementStatus.RUNNING
+
     def reset(self, estimated_state: mg.RobotState, setpoint_state: mg.RobotState | None, t: float, **kwargs) -> bool:
         """Restart the planner standing still, align it with the robot's heading and restart the Behavior sequence."""
         base_quat = self._orientation(estimated_state)
@@ -134,15 +158,21 @@ class G1WbcController(mg.BaseController):
         self._heading_offset = wrap(yaw_of(base_quat) - yaw_of(self._planner.root_quat()))
         self._facing = yaw_of(base_quat)
         self._command = None
+        self._posture = None
+        self._locomotion_mode = None
         self._realtime_status = None
         self._executor.restart()
         return True
 
     def forward(self, estimated_state: mg.RobotState, setpoint_state: mg.RobotState | None, t: float, **kwargs) -> mg.RobotState:
         pose = self.pose(estimated_state)
-        mode, movement, speed = self.planner_inputs(self.step(pose, t), pose[2])
         offset = self._heading_offset
-        self._planner.command(int(mode), None if movement is None else wrap(movement - offset), wrap(self._facing - offset), speed)
+        if self._posture is not None:  # hold a static ground posture at its height, facing where it stood
+            mode, height = self._posture
+            self._planner.command(mode, None, wrap(self._facing - offset), -1.0, height)
+        else:
+            mode, movement, speed = self.planner_inputs(self.step(pose, t), pose[2])
+            self._planner.command(int(mode), None if movement is None else wrap(movement - offset), wrap(self._facing - offset), speed)
 
         joints = estimated_state.joints
         names = list(joints.robot_joint_space)
@@ -172,12 +202,18 @@ class G1WbcController(mg.BaseController):
             return self._command
         return self._executor.update(pose, t) or STAND
 
-    def planner_inputs(self, command: LocomotionCommand, yaw: float) -> tuple[Gait, float | None, float]:
+    def planner_inputs(self, command: LocomotionCommand, yaw: float) -> tuple[int, float | None, float]:
         """(planner mode, world movement yaw or None to stand, speed [m/s]) for command with the robot at world yaw.
         Also turns the facing the planner is told by wz, keeping it within MAX_FACING_LEAD of yaw."""
         command = limit(command)
         lead = clamp(wrap(self._facing + command.wz * CONTROL_DT - yaw), -MAX_FACING_LEAD, MAX_FACING_LEAD)
         self._facing = wrap(yaw + lead)
+        if self._locomotion_mode is not None:  # crawl: cmd_vel drives a low mode; hold the low pose when stopped
+            speed = math.hypot(command.vx, command.vy)
+            if speed < DEADBAND:
+                return self._locomotion_mode, None, 0.0
+            low, high = CRAWL_SPEED_RANGE[self._locomotion_mode]
+            return self._locomotion_mode, wrap(yaw + math.atan2(command.vy, command.vx)), clamp(speed, low, high)
         ceiling = Gait.RUN if command.gait is None else command.gait
         speed = math.hypot(command.vx, command.vy)
         if ceiling == Gait.IDLE or speed < DEADBAND:
@@ -187,9 +223,11 @@ class G1WbcController(mg.BaseController):
         return min(ceiling, gait_mode(speed)), wrap(yaw + math.atan2(command.vy, command.vx)), speed
 
     def _cancel(self) -> None:
-        """Cancel a running Behavior sequence or real-time command; the robot stands facing where it was told to."""
-        if self._command is not None:
+        """Cancel a running Behavior sequence, real-time command, posture or crawl mode; the robot stands."""
+        if self._command is not None or self._posture is not None or self._locomotion_mode is not None:
             self._command = None
+            self._posture = None
+            self._locomotion_mode = None
             self._realtime_status = MovementStatus.CANCELED
         self._executor.cancel()
 
