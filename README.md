@@ -1,12 +1,13 @@
 # isaac-g1
 
-A Pixi-based Isaac Sim 6.2 project for the Unitree G1, built for agentic AI workflows.
-Connects to ROS 2 Jazzy over the DDS implementation of your choice.
+A Pixi-based Isaac Sim project for the Unitree G1, built for agentic AI workflows.
+Connects to ROS 2 Jazzy over the DDS of your choice.
 
 ![G1 walking in the Isaac Sim warehouse](docs/images/isaac_g1_walk.gif)
 
 ## Prerequisites
 
+- Isaac Sim 6.2.0. The project targets the newest Isaac Sim release first.
 - [Pixi](https://pixi.sh)
 - Linux (Ubuntu 22.04 / 24.04) or Windows
 - An NVIDIA RTX GPU that meets [Isaac Sim's requirements](https://docs.isaacsim.omniverse.nvidia.com/latest/installation/requirements.html)

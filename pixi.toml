@@ -3,7 +3,7 @@ authors = ["bemunin <tw.munin@gmail.com>"]
 channels = ["conda-forge", "https://prefix.dev/robostack-jazzy"]
 name = "isaac-g1"
 platforms = [{ platform = "linux-64", glibc = "2.35" }, "win-64"]
-version = "0.1.0"
+version = "0.1.1"
 
 [tasks]
 dds = { cmd = "python scripts/dds.py", description = "Show or select the DDS for new Pixi sessions" }
