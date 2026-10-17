@@ -4,8 +4,8 @@ command the G1 over ROS 2 with SONIC instead of the warehouse loop. Play until t
 Walk from /cmd_vel; sit, kneel, crawl and stand from /posture_cmd (geometry_msgs/Twist: linear.x = id 0 stand,
 4 squat, 5/6 kneel two/one leg, 8/14 hand/elbow crawl; linear.z = pelvis height [m] for the postures). A posture
 holds in place; a crawl is a low mode that /cmd_vel then drives, and holds its low pose when /cmd_vel is quiet. To
-stand up from elbow crawl, enter hand crawl (8) first, then stand (0). The Scenario's layer is not saved, and the
-oc.scenario.warehouse extension (whose G1 walks a loop) is not enabled."""
+stand up from elbow crawl, enter hand crawl (8) first, then stand (0). The Scenario's layer is not saved. The
+oc.scenario.warehouse extension is enabled only for its obstacles (-o); its G1 loop is not started."""
 
 import argparse
 import os
@@ -14,17 +14,32 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-from sim import PHYSICS_EXPERIENCE
+from sim import PHYSICS_EXPERIENCE, obstacles_argument
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--physics", choices=PHYSICS_EXPERIENCE, default="newton", help="physics engine (default: newton)")
+parser.add_argument(
+    "-o",
+    "--obstacles",
+    type=obstacles_argument,
+    action="extend",
+    default=[],
+    metavar="LIST",
+    help="warehouse props to show, comma-separated: clutter, forklift (default: none)",
+)
 parser.add_argument("--headless", action="store_true", help="run without a window")
 args = parser.parse_args()
 
 from isaacsim import SimulationApp
 
 simulation_app = SimulationApp(
-    {"headless": args.headless, "extra_args": ["--ext-folder", str(ROOT / "sim" / "exts"), "--enable", "oc.control.g1_sonic"]},
+    {
+        "headless": args.headless,
+        "extra_args": [
+            *("--ext-folder", str(ROOT / "sim" / "exts")),
+            *("--enable", "oc.control.g1_sonic", "--enable", "oc.scenario.warehouse"),  # the latter only for -o
+        ],
+    },
     experience=f"{os.environ['EXP_PATH']}/{PHYSICS_EXPERIENCE[args.physics]}.kit",
 )
 
@@ -36,6 +51,7 @@ import omni.graph.core as og
 import omni.timeline
 from oc.control.g1_sonic import G1Wbc, LocomotionCommand
 from oc.control.g1_sonic.locomotion_command import Crawl, Posture
+from oc.scenario.warehouse import apply_obstacles
 
 # Isaac Sim enables the ROS 2 bridge only after startup; the Scenario's graphs need its nodes now.
 app_utils.enable_extension("isaacsim.ros2.bridge")
@@ -53,6 +69,7 @@ opened, stage = stage_utils.open_stage(str(SCENARIO))
 if not opened:
     simulation_app.close()
     sys.exit(f"could not open {SCENARIO}")
+apply_obstacles(stage, args.obstacles)
 scene = stage.GetPrimAtPath("/PhysicsScene")
 for name in ("newton:timeStepsPerSecond", "physxScene:timeStepsPerSecond"):
     if attribute := scene.GetAttribute(name):

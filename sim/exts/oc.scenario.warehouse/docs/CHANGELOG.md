@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.7.0] - 2026-10-17
+### Added
+- `exts."oc.scenario.warehouse".obstacles` (`pixi run warehouse -o clutter,forklift`) shows the Scenario's hidden clutter and forklift. `obstacles()` reads it and `apply_obstacles(stage, kinds)` activates the `OBSTACLES` paths in the session layer; `open_scenario()` calls both.
+
 ## [0.6.0] - 2026-10-12
 ### Changed
 - The default controller is now `sonic` (SONIC whole-body control); `exts."oc.scenario.warehouse".controller = "walk"` (`pixi run warehouse --controller walk`) selects the walking policy.

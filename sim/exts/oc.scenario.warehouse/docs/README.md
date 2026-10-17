@@ -15,7 +15,13 @@ pixi run warehouse --headless        # no window
 pixi run warehouse --physics physx   # PhysX instead of Newton
 pixi run warehouse --controller walk # the walking policy instead of SONIC whole-body control
 pixi run warehouse --ros             # publish the G1's ROS 2 topics
+pixi run warehouse -o clutter,forklift # show the hidden props (`-o none` or no flag: none)
 ```
+
+The Scenario marks its clutter (boxes, crates, cones, signs) and forklift `active = false`. `-o/--obstacles`
+sets `exts."oc.scenario.warehouse".obstacles` (comma-separated `clutter`, `forklift`); `open_scenario()` then
+calls `apply_obstacles()`, which activates the paths in `OBSTACLES` in the session layer, so the `.usda` is
+never changed. Prims missing from the stage are logged and skipped.
 
 SONIC's weights must be downloaded first (`pixi run sonic-download`).
 

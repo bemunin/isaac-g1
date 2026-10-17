@@ -1,5 +1,6 @@
 """Launch Isaac Sim with ROS 2 Jazzy and an RMW from the Pixi environment."""
 
+import argparse
 import os
 import subprocess
 import sys
@@ -16,6 +17,16 @@ PHYSICS_EXPERIENCE = {
     "newton": "isaacsim.exp.full.newton",  # Newton entry point; disables PhysX
     "physx": "isaacsim.exp.full",
 }
+OBSTACLES = ("clutter", "forklift")  # warehouse props `-o/--obstacles` can show (see oc.scenario.warehouse)
+
+
+def obstacles_argument(value: str) -> list[str]:
+    """argparse type for -o/--obstacles: a comma-separated list of OBSTACLES, or "none"."""
+    kinds = [kind.strip() for kind in value.split(",") if kind.strip()]
+    for kind in kinds:
+        if kind not in (*OBSTACLES, "none"):
+            raise argparse.ArgumentTypeError(f"invalid obstacle {kind!r} (choose from {', '.join(OBSTACLES)}, none)")
+    return [kind for kind in kinds if kind != "none"]
 
 
 def _keep(path: str) -> bool:

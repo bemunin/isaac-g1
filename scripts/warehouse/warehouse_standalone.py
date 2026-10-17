@@ -12,12 +12,21 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-from sim import PHYSICS_EXPERIENCE
+from sim import PHYSICS_EXPERIENCE, obstacles_argument
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--physics", choices=PHYSICS_EXPERIENCE, default="newton", help="physics engine (default: newton)")
 parser.add_argument("--controller", choices=("walk", "sonic"), default="sonic", help="G1 controller (default: sonic)")
 parser.add_argument("--ros", action="store_true", help="publish the G1's ROS 2 topics")
+parser.add_argument(
+    "-o",
+    "--obstacles",
+    type=obstacles_argument,
+    action="extend",
+    default=[],
+    metavar="LIST",
+    help="warehouse props to show, comma-separated: clutter, forklift (default: none)",
+)
 parser.add_argument("--headless", action="store_true", help="run without a window")
 parser.add_argument("--benchmark", type=float, metavar="SECONDS", help="record KPIs for SECONDS of play, then exit")
 parser.add_argument("--benchmark-output", type=Path, default=ROOT / "research" / "benchmark_output", metavar="DIR")
@@ -35,6 +44,8 @@ extensions = [
     f"--/exts/oc.scenario.warehouse/controller={args.controller}",
     f"--/exts/oc.scenario.warehouse/ros={str(args.ros).lower()}",
 ]
+if args.obstacles:
+    extensions.append(f"--/exts/oc.scenario.warehouse/obstacles={','.join(dict.fromkeys(args.obstacles))}")
 if args.benchmark is not None:
     args.benchmark_output.mkdir(parents=True, exist_ok=True)
     extensions += [

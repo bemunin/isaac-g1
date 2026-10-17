@@ -11,7 +11,7 @@ from pathlib import Path
 
 from dds import DDS_RMW
 
-from sim import PHYSICS_EXPERIENCE, launch_environment, session_dds
+from sim import PHYSICS_EXPERIENCE, launch_environment, obstacles_argument, session_dds
 
 ROOT = Path(__file__).resolve().parent.parent
 EXTENSION = "oc.scenario.warehouse"
@@ -39,6 +39,15 @@ def main() -> int:
         action="store_true",
         help="publish the G1's ROS 2 topics (camera, lidar, TF, IMU, joint states, odometry); off by default",
     )
+    parser.add_argument(
+        "-o",
+        "--obstacles",
+        type=obstacles_argument,
+        action="extend",
+        default=[],
+        metavar="LIST",
+        help="warehouse props to show, comma-separated: clutter, forklift (default: none)",
+    )
     parser.add_argument("--headless", action="store_true", help="run without a window")
     parser.add_argument(
         "--benchmark",
@@ -57,6 +66,8 @@ def main() -> int:
     if args.benchmark is not None and args.workflow == "ext":
         parser.error("--benchmark needs --workflow standalone")
 
+    obstacles = ",".join(dict.fromkeys(args.obstacles))  # de-duplicated, in the order given
+
     dds = args.dds or session_dds()
     if dds is None:
         parser.error(f"unsupported RMW_IMPLEMENTATION: {os.environ['RMW_IMPLEMENTATION']!r}; pass --dds")
@@ -68,12 +79,14 @@ def main() -> int:
             f"--/exts/{EXTENSION}/autostart=true",
             f"--/exts/{EXTENSION}/controller={args.controller}",
             f"--/exts/{EXTENSION}/ros={str(args.ros).lower()}",
+            *([f"--/exts/{EXTENSION}/obstacles={obstacles}"] if obstacles else []),
             *(["--no-window"] if args.headless else []),
         ]
     else:
         command = [
             *(sys.executable, str(STANDALONE_SCRIPT), "--physics", args.physics, "--controller", args.controller),
             *(["--ros"] if args.ros else []),
+            *(["--obstacles", obstacles] if obstacles else []),
             *(["--headless"] if args.headless else []),
             *(
                 ["--benchmark", str(args.benchmark), "--benchmark-output", str(args.benchmark_output.resolve())]
