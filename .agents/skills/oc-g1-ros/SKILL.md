@@ -11,20 +11,20 @@ plus one IMU and four ROS 2 OmniGraphs. Background and line-cited sources:
 
 ## 0. Match the Isaac Sim version
 
-Every path, URL and API fact in this skill is written for **Isaac Sim 6.1** (the repo pins
-`isaacsim==6.1.0.0` in `pixi.toml`). Before using any of them, find the version the user is on:
+Every path, URL and API fact in this skill is written for **Isaac Sim 6.2** (the repo pins
+`isaacsim==6.2.0.0` in `pixi.toml`). Before using any of them, find the version the user is on:
 what they state, else the `isaacsim` pin in `pixi.toml`, else
-`.pixi/envs/sim/lib/python3.12/site-packages/isaacsim/VERSION`. If it is not 6.1, rewrite the
+`.pixi/envs/sim/lib/python3.12/site-packages/isaacsim/VERSION`. If it is not 6.2, rewrite the
 version segment everywhere you use it, in code and in committed layers:
 
-| Where | 6.1 form | Rewrite to |
+| Where | 6.2 form | Rewrite to |
 |---|---|---|
-| Asset URLs | `.../Assets/Isaac/6.1/Isaac/...` | `.../Assets/Isaac/<major.minor>/Isaac/...` (e.g. `6.0`) |
+| Asset URLs | `.../Assets/Isaac/6.2/Isaac/...` | `.../Assets/Isaac/<major.minor>/Isaac/...` (e.g. `6.0`) |
 | Local mirror | `~/mnt/vault/nvsim/isaacsim_assets/Assets/Isaac/6.1/...` | same `<major.minor>` |
-| Docs URLs | `docs.isaacsim.omniverse.nvidia.com/6.1.0/...` | `<major.minor.patch>` (e.g. `6.0.0`) |
+| Docs URLs | `docs.isaacsim.omniverse.nvidia.com/6.2.0/...` | `<major.minor.patch>` (e.g. `6.0.0`) |
 
 Then confirm the asset exists at that version before referencing it:
-`curl -sI <G1_ROS.usd URL> | head -1` must return `200`. `G1_ROS.usd` exists for 6.0 and 6.1 but
+`curl -sI <G1_ROS.usd URL> | head -1` must return `200`. `G1_ROS.usd` exists for 6.0, 6.1 and 6.2 but
 **not 5.1** (404); stop and tell the user if it is missing. Also re-check version-specific facts
 against the installed package rather than trusting this skill: the RealSense catalog (§2), API
 signatures (`RtxCamera`, `create_ros2_camera_graph`), and the node attributes in
@@ -36,7 +36,7 @@ signatures (`RtxCamera`, `create_ros2_camera_graph`), and the node attributes in
 
 | Copy | Path |
 |---|---|
-| Remote (what stages reference) | `https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.1/Isaac/Samples/ROS2/Robots/G1_ROS.usd` |
+| Remote (what stages reference) | `https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/Samples/ROS2/Robots/G1_ROS.usd` |
 | Local mirror (read-only, for inspection) | `~/mnt/vault/nvsim/isaacsim_assets/Assets/Isaac/6.1/Isaac/Samples/ROS2/Robots/G1_ROS.usd` |
 
 Reference the remote URL in committed layers, matching `sim/exts/oc.scenario.warehouse/usd/warehouse_g1_scene.usda`. The file
@@ -51,7 +51,7 @@ Reference the asset's defaultPrim (`g1_29dof_with_hand_rev_1_0`) onto `/World/G1
 def Xform "World"
 {
     def "G1" (
-        prepend references = @https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.1/Isaac/Samples/ROS2/Robots/G1_ROS.usd@
+        prepend references = @https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/Samples/ROS2/Robots/G1_ROS.usd@
     )
     {
     }
@@ -60,7 +60,7 @@ def Xform "World"
 
 ```python
 from pxr import Usd
-G1_ROS_URL = "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.1/Isaac/Samples/ROS2/Robots/G1_ROS.usd"
+G1_ROS_URL = "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/Samples/ROS2/Robots/G1_ROS.usd"
 prim = stage.DefinePrim("/World/G1", "Xform")
 prim.GetReferences().AddReference(G1_ROS_URL)
 ```
@@ -120,7 +120,7 @@ the right link with Unitree's URDF offsets. Author sensors and their graphs whil
 
 Isaac Sim 6.x renders each RTX sensor at its own rate ("multi-tick rendering", on by default via
 `/rtx/hydra/supportMultiTickRate=true`). Source:
-<https://docs.isaacsim.omniverse.nvidia.com/6.1.0/sensors/isaacsim_sensors_multitick_rendering.html>.
+<https://docs.isaacsim.omniverse.nvidia.com/6.2.0/sensors/isaacsim_sensors_multitick_rendering.html>.
 
 - **Rate lives on the sensor prim**: `omni:sensor:tickRate` (Hz) from `OmniSensorAPI`, on `Camera`
   and `OmniLidar` prims; `0` = autotrigger, render every frame. Set it with

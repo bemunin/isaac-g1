@@ -43,7 +43,7 @@ def Xform "World"
     custom string isaac:nameOverride = "world"
 
     def "G1" (
-        prepend references = @https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.1/Isaac/Samples/ROS2/Robots/G1_ROS.usd@
+        prepend references = @https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/Samples/ROS2/Robots/G1_ROS.usd@
     )
     {
         quatd xformOp:orient = (0.7071067811865476, 0, 0, 0.7071067811865476)
@@ -1311,7 +1311,7 @@ def Xform "Environment"
     }
 
     def "full_warehouse" (
-        prepend payload = @https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.1/Isaac/Environments/Simple_Warehouse/full_warehouse.usd@
+        prepend payload = @https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/Environments/Simple_Warehouse/full_warehouse.usd@
     )
     {
         over "SM_WallWire_51"
