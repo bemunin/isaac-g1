@@ -14,7 +14,7 @@ pixi run warehouse                   # Standalone workflow, Newton, with a windo
 pixi run warehouse --workflow ext    # Extension workflow
 pixi run warehouse --headless        # no window
 pixi run warehouse --physics physx   # PhysX instead of Newton
-pixi run warehouse --no-ros          # no ROS 2 topics; the G1 stands
+pixi run warehouse --ros             # publish the G1's ROS 2 topics and follow /cmd_vel (off: the G1 stands)
 pixi run warehouse -o clutter,forklift # show the hidden props (`-o none` or no flag: none)
 ```
 
@@ -23,19 +23,18 @@ sets `exts."oc.scenario.warehouse".obstacles` (comma-separated `clutter`, `forkl
 calls `apply_obstacles()`, which activates the paths in `OBSTACLES` in the session layer, so the `.usda` is
 never changed. Prims missing from the stage are logged and skipped.
 
-SONIC's weights must be downloaded first (`pixi run sonic-download`). Drive the G1 from a second terminal:
+SONIC's weights must be downloaded first (`pixi run sonic-download`). With `--ros`, drive the G1 from a second terminal:
 
 ```bash
 pixi run ros2 run teleop_twist_keyboard teleop_twist_keyboard                     # by hand
 pixi run ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 1.0}}"  # straight ahead
 ```
 
-The G1's ROS 2 topics are on by default. `/World/G1/Graph` holds its eight ROS 2 graphs (camera, lidar,
+The G1's ROS 2 topics are off by default. `/World/G1/Graph` holds its eight ROS 2 graphs (camera, lidar,
 TF, IMU, joint states, odometry, the joint-command subscriber and `ROS2_CmdVel`, the `/cmd_vel`
-subscriber). `--no-ros` sets
-`exts."oc.scenario.warehouse".ros = false`: `open_scenario()` deactivates the graphs, so the G1
-publishes nothing, doesn't render its camera or lidar and gets no commands; it stands, and the sim runs
-faster.
+subscriber). Unless `exts."oc.scenario.warehouse".ros = true` (`--ros`), `open_scenario()` deactivates the
+graphs, so the G1 publishes nothing, doesn't render its camera or lidar and gets no commands; it stands, and
+the sim runs faster.
 
 `--dds fast|cyclone|zenoh` picks the ROS 2 middleware (default: the session's). The Standalone
 workflow runs `scripts/warehouse/warehouse_standalone.py`, which calls `open_scenario()` and owns the

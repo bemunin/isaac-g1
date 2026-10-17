@@ -30,10 +30,10 @@ def main() -> int:
     parser.add_argument("--physics", choices=PHYSICS_EXPERIENCE, default="newton", help="physics engine (default: newton)")
     parser.add_argument("--dds", choices=DDS_RMW, help="ROS 2 middleware (default: the session's)")
     parser.add_argument(
-        "--no-ros",
+        "--ros",
         action="store_true",
-        help="don't publish the G1's ROS 2 topics (camera, lidar, TF, IMU, joint states, odometry) or follow /cmd_vel: "
-        "the G1 stands",
+        help="publish the G1's ROS 2 topics (camera, lidar, TF, IMU, joint states, odometry) and follow /cmd_vel; "
+        "off by default, the G1 stands",
     )
     parser.add_argument(
         "-o",
@@ -73,14 +73,14 @@ def main() -> int:
             *(sys.executable, "-c", "from isaacsim import main; main()", PHYSICS_EXPERIENCE[args.physics]),
             *("--ext-folder", str(ROOT / "sim" / "exts"), "--enable", EXTENSION),
             f"--/exts/{EXTENSION}/autostart=true",
-            f"--/exts/{EXTENSION}/ros={str(not args.no_ros).lower()}",
+            f"--/exts/{EXTENSION}/ros={str(args.ros).lower()}",
             *([f"--/exts/{EXTENSION}/obstacles={obstacles}"] if obstacles else []),
             *(["--no-window"] if args.headless else []),
         ]
     else:
         command = [
             *(sys.executable, str(STANDALONE_SCRIPT), "--physics", args.physics),
-            *(["--no-ros"] if args.no_ros else []),
+            *(["--ros"] if args.ros else []),
             *(["--obstacles", obstacles] if obstacles else []),
             *(["--headless"] if args.headless else []),
             *(

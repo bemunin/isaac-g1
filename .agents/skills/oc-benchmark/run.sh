@@ -25,9 +25,9 @@ run() {
   echo "$name rc=$rc kpis=$(ls "$d"/kpis_warehouse_*.json 2>/dev/null | wc -l)"
 }
 
-run baseline1_newton_headless --physics newton --no-ros --headless
-run newton_ros_headless --physics newton --headless
-run newton_ros --physics newton
-run baseline2_physx_headless --physics physx --no-ros --headless
-run physx_ros_headless --physics physx --headless
-run physx_ros --physics physx
+run baseline1_newton_headless --physics newton --headless
+run newton_ros_headless --physics newton --ros --headless
+run newton_ros --physics newton --ros
+run baseline2_physx_headless --physics physx --headless
+run physx_ros_headless --physics physx --ros --headless
+run physx_ros --physics physx --ros

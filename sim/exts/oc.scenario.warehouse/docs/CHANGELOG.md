@@ -9,8 +9,8 @@
 - `/World/G1/Graph/ROS2_CmdVel` (`ROS2SubscribeTwist` on `/cmd_vel` + a message `Counter`) and `CmdVelBridge`, which forwards each new `/cmd_vel` to `G1Sonic.command()`.
 
 ### Changed
-- The G1 always uses SONIC (`oc.control.g1_sonic`'s `G1Sonic`) in walk mode at `/cmd_vel`, and physics always runs at 200 Hz. Without a `/cmd_vel` publisher it stands.
-- ROS is on by default (`exts."oc.scenario.warehouse".ros = true`); `--ros` is replaced by `--no-ros`, with which the G1 stands.
+- The G1 always uses SONIC (`oc.control.g1_sonic`'s `G1Sonic`) in walk mode at `/cmd_vel`, and physics always runs at 200 Hz. Without ROS, or without a `/cmd_vel` publisher, it stands.
+- ROS is off by default (`exts."oc.scenario.warehouse".ros = false`, the G1 stands); `--ros` (`ros = true`) publishes its ROS 2 topics and follows `/cmd_vel`.
 
 ### Removed
 - `WAREHOUSE_SEQUENCE`, `WAREHOUSE_WALK_TRAJECTORY`, `controller()`, `CONTROLLERS`, the `controller` setting and `--controller`; `oc.control.g1_walk` is no longer a dependency.

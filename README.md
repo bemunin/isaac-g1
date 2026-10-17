@@ -84,7 +84,7 @@ pixi run warehouse                   # Standalone workflow, Newton, with a windo
 pixi run warehouse --workflow ext    # Extension workflow
 pixi run warehouse --physics physx   # PhysX instead of Newton
 pixi run warehouse --headless        # no window
-pixi run warehouse --no-ros          # no ROS 2 topics; the G1 stands
+pixi run warehouse --ros             # publish the G1's ROS 2 topics and follow /cmd_vel (off by default; the G1 stands)
 pixi run warehouse -o clutter,forklift # Show floor clutter (boxes, crates, cones, signs) and the forklift; both are hidden by default.
 ```
 

@@ -23,8 +23,8 @@ reloadable = true
 # Open the Scenario and play once the app is ready.
 exts."oc.scenario.warehouse".autostart = false
 # Publish the G1's ROS 2 topics (camera, lidar, TF, IMU, joint states, odometry) and follow /cmd_vel; off
-# deactivates /World/G1/Graph and the G1 stands.
-exts."oc.scenario.warehouse".ros = true
+# (the default) deactivates /World/G1/Graph and the G1 stands.
+exts."oc.scenario.warehouse".ros = false
 # Props to show, comma-separated: "clutter" (boxes, crates, cones, signs) and/or "forklift"; empty shows none.
 exts."oc.scenario.warehouse".obstacles = ""
 

@@ -11,7 +11,7 @@ What did you see, and what did you expect?
 
 ## Reproduce
 
-Command and steps, e.g. `pixi run warehouse -o clutter --no-ros`:
+Command and steps, e.g. `pixi run warehouse -o clutter --ros`:
 
 1. 
 

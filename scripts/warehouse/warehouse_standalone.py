@@ -16,7 +16,7 @@ from sim import PHYSICS_EXPERIENCE, obstacles_argument
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--physics", choices=PHYSICS_EXPERIENCE, default="newton", help="physics engine (default: newton)")
-parser.add_argument("--no-ros", action="store_true", help="don't publish the G1's ROS 2 topics or follow /cmd_vel")
+parser.add_argument("--ros", action="store_true", help="publish the G1's ROS 2 topics and follow /cmd_vel (off by default)")
 parser.add_argument(
     "-o",
     "--obstacles",
@@ -40,7 +40,7 @@ from isaacsim import SimulationApp
 
 extensions = [
     *("--ext-folder", str(ROOT / "sim" / "exts"), "--enable", "oc.scenario.warehouse"),
-    f"--/exts/oc.scenario.warehouse/ros={str(not args.no_ros).lower()}",
+    f"--/exts/oc.scenario.warehouse/ros={str(args.ros).lower()}",
 ]
 if args.obstacles:
     extensions.append(f"--/exts/oc.scenario.warehouse/obstacles={','.join(dict.fromkeys(args.obstacles))}")
@@ -78,11 +78,11 @@ else:
     from isaacsim.benchmark.services import BaseIsaacBenchmark
 
     benchmark = BaseIsaacBenchmark(
-        benchmark_name=f"warehouse_{args.physics}{'' if args.no_ros else '_ros'}{'_headless' if args.headless else ''}",
+        benchmark_name=f"warehouse_{args.physics}{'_ros' if args.ros else ''}{'_headless' if args.headless else ''}",
         workflow_metadata={
             "metadata": [
                 {"name": "physics", "data": args.physics},
-                {"name": "ros", "data": str(not args.no_ros)},
+                {"name": "ros", "data": str(args.ros)},
                 {"name": "headless", "data": str(args.headless)},
                 {"name": "duration_s", "data": args.benchmark},
             ]

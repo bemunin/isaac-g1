@@ -65,7 +65,7 @@ GRAPHS = "/World/G1/Graph"  # the G1's ROS 2 graphs: camera, lidar, TF, IMU, joi
 
 
 def ros() -> bool:
-    """Whether the G1 publishes its ROS 2 topics and follows /cmd_vel (on by default)."""
+    """Whether the G1 publishes its ROS 2 topics and follows /cmd_vel (off by default)."""
     return bool(carb.settings.get_settings().get(ROS_SETTING))
 
 
