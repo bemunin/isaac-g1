@@ -12,7 +12,8 @@ SESSION=$(mkdir -p "$SESSION" && cd "$SESSION" && pwd)
 ONLY=("${@:4}")
 
 DDS=$(pixi run dds 2>/dev/null | tail -1)
-printf 'seconds=%s\ncontroller=%s\ndds=%s\n' "$SECONDS_" "$CONTROLLER" "$DDS" > "$SESSION/settings.txt"
+ISAACSIM=$(grep -oP 'isaacsim = \{ version = "==\K[0-9.]+' pixi.toml)  # the pinned Isaac Sim
+printf 'seconds=%s\ncontroller=%s\ndds=%s\nisaacsim=%s\n' "$SECONDS_" "$CONTROLLER" "$DDS" "$ISAACSIM" > "$SESSION/settings.txt"
 echo "session=$SESSION"
 
 run() {

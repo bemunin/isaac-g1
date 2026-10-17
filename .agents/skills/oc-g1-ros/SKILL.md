@@ -11,23 +11,27 @@ plus one IMU and four ROS 2 OmniGraphs. Background and line-cited sources:
 
 ## 0. Match the Isaac Sim version
 
-Every path, URL and API fact in this skill is written for **Isaac Sim 6.2** (the repo pins
-`isaacsim==6.2.0.0` in `pixi.toml`). Before using any of them, find the version the user is on:
-what they state, else the `isaacsim` pin in `pixi.toml`, else
-`.pixi/envs/sim/lib/python3.12/site-packages/isaacsim/VERSION`. If it is not 6.2, rewrite the
-version segment everywhere you use it, in code and in committed layers:
+This skill states no Isaac Sim version: resolve it first and fill in the placeholders below. The version is the
+`isaacsim` pin in `pixi.toml`:
 
-| Where | 6.2 form | Rewrite to |
-|---|---|---|
-| Asset URLs | `.../Assets/Isaac/6.2/Isaac/...` | `.../Assets/Isaac/<major.minor>/Isaac/...` (e.g. `6.0`) |
-| Local mirror | `~/mnt/vault/nvsim/isaacsim_assets/Assets/Isaac/6.1/...` | same `<major.minor>` |
-| Docs URLs | `docs.isaacsim.omniverse.nvidia.com/6.2.0/...` | `<major.minor.patch>` (e.g. `6.0.0`) |
+```sh
+grep -oP 'isaacsim = \{ version = "==\K[0-9]+\.[0-9]+\.[0-9]+' pixi.toml   # prints <major.minor.patch>
+```
+
+`<major.minor>` is its first two fields. If the user names another version, use theirs; if the pin is
+missing, read `.pixi/envs/sim/lib/python3.12/site-packages/isaacsim/VERSION`. Use it everywhere below, in code
+and in committed layers:
+
+| Where | Form |
+|---|---|
+| Asset URLs | `.../Assets/Isaac/<major.minor>/Isaac/...` |
+| Local mirror | `~/mnt/vault/nvsim/isaacsim_assets/Assets/Isaac/<major.minor>/...` |
+| Docs URLs | `docs.isaacsim.omniverse.nvidia.com/<major.minor.patch>/...` |
 
 Then confirm the asset exists at that version before referencing it:
-`curl -sI <G1_ROS.usd URL> | head -1` must return `200`. `G1_ROS.usd` exists for 6.0, 6.1 and 6.2 but
-**not 5.1** (404); stop and tell the user if it is missing. Also re-check version-specific facts
-against the installed package rather than trusting this skill: the RealSense catalog (§2), API
-signatures (`RtxCamera`, `create_ros2_camera_graph`), and the node attributes in
+`curl -sI <G1_ROS.usd URL> | head -1` must return `200`; on a 404, stop and tell the user. Also re-check
+version-specific facts against the installed package rather than trusting this skill: the RealSense catalog
+(§2), API signatures (`RtxCamera`, `create_ros2_camera_graph`), and the node attributes in
 `site-packages/isaacsim/exts/isaacsim.ros2.nodes/ogn/docs/`.
 
 ## 1. Use the G1_ROS.usd asset
@@ -36,8 +40,8 @@ signatures (`RtxCamera`, `create_ros2_camera_graph`), and the node attributes in
 
 | Copy | Path |
 |---|---|
-| Remote (what stages reference) | `https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/Samples/ROS2/Robots/G1_ROS.usd` |
-| Local mirror (read-only, for inspection) | `~/mnt/vault/nvsim/isaacsim_assets/Assets/Isaac/6.1/Isaac/Samples/ROS2/Robots/G1_ROS.usd` |
+| Remote (what stages reference) | `https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/<major.minor>/Isaac/Samples/ROS2/Robots/G1_ROS.usd` |
+| Local mirror (read-only, for inspection) | `~/mnt/vault/nvsim/isaacsim_assets/Assets/Isaac/<major.minor>/Isaac/Samples/ROS2/Robots/G1_ROS.usd` |
 
 Reference the remote URL in committed layers, matching `sim/exts/oc.scenario.warehouse/usd/warehouse_g1_scene.usda`. The file
 is binary; to read it, export text with
@@ -51,7 +55,7 @@ Reference the asset's defaultPrim (`g1_29dof_with_hand_rev_1_0`) onto `/World/G1
 def Xform "World"
 {
     def "G1" (
-        prepend references = @https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/Samples/ROS2/Robots/G1_ROS.usd@
+        prepend references = @https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/<major.minor>/Isaac/Samples/ROS2/Robots/G1_ROS.usd@
     )
     {
     }
@@ -59,8 +63,10 @@ def Xform "World"
 ```
 
 ```python
+from importlib.metadata import version
 from pxr import Usd
-G1_ROS_URL = "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2/Isaac/Samples/ROS2/Robots/G1_ROS.usd"
+major_minor = ".".join(version("isaacsim").split(".")[:2])
+G1_ROS_URL = f"https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/{major_minor}/Isaac/Samples/ROS2/Robots/G1_ROS.usd"
 prim = stage.DefinePrim("/World/G1", "Xform")
 prim.GetReferences().AddReference(G1_ROS_URL)
 ```
@@ -120,7 +126,7 @@ the right link with Unitree's URDF offsets. Author sensors and their graphs whil
 
 Isaac Sim 6.x renders each RTX sensor at its own rate ("multi-tick rendering", on by default via
 `/rtx/hydra/supportMultiTickRate=true`). Source:
-<https://docs.isaacsim.omniverse.nvidia.com/6.2.0/sensors/isaacsim_sensors_multitick_rendering.html>.
+<https://docs.isaacsim.omniverse.nvidia.com/<major.minor.patch>/sensors/isaacsim_sensors_multitick_rendering.html>.
 
 - **Rate lives on the sensor prim**: `omni:sensor:tickRate` (Hz) from `OmniSensorAPI`, on `Camera`
   and `OmniLidar` prims; `0` = autotrigger, render every frame. Set it with
@@ -142,8 +148,8 @@ Isaac Sim 6.x renders each RTX sensor at its own rate ("multi-tick rendering", o
 
 ### Head RGB-D camera (RealSense D435)
 
-Isaac Sim 6.1 ships no D435 asset or config (only D455, D457, D555 under
-`Isaac/Sensors/RealSense/`). Use a plain RTX camera with the D435 colour intrinsics; colour and depth
+Isaac Sim has shipped no D435 asset or config (only D455, D457, D555 under
+`Isaac/Sensors/RealSense/`); list that folder in the installed version to confirm. Use a plain RTX camera with the D435 colour intrinsics; colour and depth
 come from the same camera, so depth is aligned to colour by construction.
 
 **Before authoring, ask the user** which resolution to publish: **640×360** or **1280×720**. Both are
@@ -206,7 +212,7 @@ Gotchas:
 
 ### Head lidar (Livox MID-360)
 
-Isaac Sim 6.1 ships no Livox asset or config, so the scenario defines a custom rotary `OmniLidar` sized
+Isaac Sim has shipped no Livox asset or config (check the installed sensor assets), so the scenario defines a custom rotary `OmniLidar` sized
 to the [MID-360 spec](https://www.livoxtech.com/mid-360/specs): 360° × −7°…52°, 200 000 pts/s,
 10 Hz, 0.1–40 m. Its rosette (non-repetitive) pattern is not modelled; the point budget, FOV and
 message size match, which is what a DDS Benchmark measures.
@@ -243,8 +249,8 @@ about 12 500 at the start pose).
 
 Gotchas:
 
-- **The rotary firing rate is `patternFiringRateHz` in 6.1.** NVIDIA's `Example_Rotary.usda` still
-  authors the old `reportRateBaseHz`, which the schema no longer declares (it saves as `custom`) and
+- **The rotary firing rate is `patternFiringRateHz`** (confirm in the installed lidar schema). NVIDIA's `Example_Rotary.usda` still
+  authored the old `reportRateBaseHz`, which the schema no longer declares (it saves as `custom`) and
   the sensor ignores, falling back to 36 000 Hz.
 - **The lidar validator wants an `OmniLidar` prim** with `OmniSensorGenericLidarCoreAPI`; a
   Camera-typed lidar is rejected.

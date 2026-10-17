@@ -23,7 +23,7 @@ One session writes everything into one folder (`warehouse` is the Scenario name;
 
 ```
 research/benchmark_output/<YYYYMMDD>_<HHMMSS>_warehouse/
-  settings.txt       # seconds, controller, dds
+  settings.txt       # seconds, controller, dds, isaacsim
   summarize.md       # final report: settings, KPI table, deltas, Analysis
   <scenario>/        # one per scenario: kpis_warehouse_*.json, kpis_app_startup.json, <scenario>.log
 ```
@@ -31,7 +31,8 @@ research/benchmark_output/<YYYYMMDD>_<HHMMSS>_warehouse/
 ## Steps
 
 1. **Settings.** Defaults: controller `sonic`, 60 s measured (after a 60-frame warmup), the session's DDS
-   (`pixi run dds` shows it). Use what the user gave; otherwise the defaults.
+   (`pixi run dds` shows it). Use what the user gave; otherwise the defaults. `run.sh` also records the
+   `isaacsim` version pinned in `pixi.toml` in `settings.txt`.
 2. **Run** in the background, once (≈15–20 min; scenarios run sequentially because they share the GPU):
    ```sh
    .agents/skills/oc-benchmark/run.sh [SECONDS] [CONTROLLER]
@@ -53,7 +54,9 @@ research/benchmark_output/<YYYYMMDD>_<HHMMSS>_warehouse/
    any existing `## Analysis` section.
 5. **Analyse.** Replace the placeholder under `## Analysis` in `summarize.md` with bullets on: Newton vs
    PhysX, ROS cost, window cost, bottleneck (per "Reading the KPIs"), real-time factor and hitches, and
-   anomalies (crashes, missing runs). Done when every one of those bullets is written. Report the
+   anomalies (crashes, missing runs). When an earlier `research/benchmark_output/*_warehouse/summarize.md`
+   exists, compare against the newest one (check its `isaacsim=` setting: numbers from another version
+   are not like for like). Done when every one of those bullets is written. Report the
    analysis in chat with the `summarize.md` path.
 
 ## Reading the KPIs
@@ -66,16 +69,3 @@ research/benchmark_output/<YYYYMMDD>_<HHMMSS>_warehouse/
   main-thread time with a Tracy capture (`profile-isaac-sim` skill).
 - **Shutdown crash:** `newton_ros` (windowed) can segfault (rc=139) on timeline stop in the Newton
   tensors + ROS 2 nodes plugins, *after* "Writing metrics to …" in the log — the KPIs are valid.
-
-## Reference results
-
-2026-10-12, RTX 5070, 16 CPUs, Isaac Sim 6.1.0, `sonic`, 60 s, Fast DDS:
-
-| Scenario | FPS | App frame ms | RTF | GPU frame ms | CPU % | VRAM GB |
-|---|---|---|---|---|---|---|
-| baseline1_newton_headless | 44.4 | 22.5 | 0.74 | 5.2 | 537 | 1.76 |
-| newton_ros_headless | 27.1 | 36.9 | 0.45 | 8.1 | 670 | 2.09 |
-| newton_ros | 25.6 | 39.1 | 0.43 | 7.7 | 699 | 2.09 |
-| baseline2_physx_headless | 25.2 | 39.7 | 0.42 | 4.4 | 549 | 1.76 |
-| physx_ros_headless | 20.9 | 47.8 | 0.35 | 7.4 | 677 | 2.10 |
-| physx_ros | 20.1 | 49.8 | 0.34 | 7.2 | 710 | 2.10 |
