@@ -77,7 +77,7 @@ pixi run warehouse --physics physx   # PhysX instead of Newton
 pixi run warehouse --controller walk # Unitree's walking Policy instead of SONIC
 pixi run warehouse --headless        # no window
 pixi run warehouse --ros             # publish the G1's ROS 2 topics (off by default)
-pixi run warehouse -o clutter,forklift # show the boxes, crates, cones and signs, and the forklift (hidden by default)
+pixi run warehouse -o clutter,forklift # Show floor clutter (boxes, crates, cones, signs) and the forklift; both are hidden by default.
 ```
 
 The G1 uses SONIC whole-body control by default; download its weights once with
