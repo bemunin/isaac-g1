@@ -57,31 +57,11 @@ A pretrained neural network that maps a robot's observations to joint actions, e
 _Avoid_: model (alone), checkpoint
 
 **Whole-body controller**:
-The G1's SONIC-based controller: it turns Locomotion commands, from a Movement plan or Real-time control, into joint targets for the whole body (legs, waist and arms).
+The G1's SONIC-based controller: it turns Locomotion commands from Real-time control into joint targets for the whole body (legs, waist and arms).
 _Avoid_: WBC (in prose), SONIC controller
 
-**Movement primitive**:
-One command to the Whole-body controller: slow walk, walk or run forward (a distance), side move left or right, turn left or right (each by an amount), relative to the robot; or stop (stand, either for a time or until the next command). There is no backward movement.
-_Avoid_: action, move, skill, maneuver
-
-**Movement plan**:
-An ordered, unchangeable list of Segments, built from Movement primitives fixed in code and followed relative to the robot's pose when it starts. A looping Movement plan repeats from its first Segment until halted.
-_Avoid_: Movement trajectory, route, script
-
-**Segment**:
-One Movement primitive placed in space: where it starts, the pose it must reach, how it ends (a distance, a heading or a time) and its speed. A forward move slows down before a stop, turn or side move without being told to.
-_Avoid_: goal, waypoint, step
-
-**Plan executor**:
-The part of the Whole-body controller that runs a Movement plan: it decides when each Segment ends, moves on, loops, times out and halts.
-_Avoid_: sequencer, plan runner
-
-**Path tracker**:
-The part of the Whole-body controller that steers the robot along its current Segment, turning the robot's pose into a Locomotion command. Swappable, e.g. for Nav2's path follower.
-_Avoid_: path follower (for ours), controller
-
 **Locomotion command**:
-The one input to the Whole-body controller's motion: a velocity in the robot's frame (forward, sideways, turn rate) and a Gait. Comes from the Path tracker, Real-time control or, later, Nav2.
+The one input to the Whole-body controller's motion: a velocity in the robot's frame (forward, sideways, turn rate) and a Gait. Comes from Real-time control or, later, Nav2.
 _Avoid_: cmd_vel (except for the ROS 2 message), twist, maneuver
 
 **Gait**:
@@ -89,7 +69,7 @@ The fastest of SONIC's movement modes a Locomotion command may use: idle, slow w
 _Avoid_: mode (alone), speed level
 
 **Real-time control**:
-Issuing Locomotion commands or single Movement primitives one at a time while the simulation runs. A new command replaces the current one and cancels any running Movement plan.
+Issuing Locomotion commands one at a time while the simulation runs. A new command replaces the current one.
 _Avoid_: teleop, manual control, live control
 
 ### Robots

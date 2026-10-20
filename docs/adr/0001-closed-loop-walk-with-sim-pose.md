@@ -1,5 +1,7 @@
 # The Whole-body controller reads IMU orientation and simulated root position
 
+Status: Superseded (2026-10-20). The Whole-body controller now reads only the IMU (orientation and body rates); with the Behavior sequence gone it no longer needs a position. When Nav2 needs a pose source, it comes from /odom.
+
 ## Decision
 
 The Whole-body controller in `oc.control.g1_sonic` reads the robot's state from two sources:

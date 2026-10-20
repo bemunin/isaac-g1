@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0] - 2026-10-20
+### Removed
+- The Behavior sequence and the Sequence executor (`behavior_sequence.py`, `sequence_executor.py`): `BehaviorSequence`, `Segment`, `MovementStatus` and `MovementFailure`, and on `G1Wbc` / `G1WbcController`: `execute`, `sequence`, `status`, `failure`, the `on_done` argument, `side_move_left/right` and `turn_left/right`. The G1 is driven by real-time commands (`/cmd_vel` now, Nav2 later).
+- The controller no longer reads the root position, only the IMU orientation and rates and the joints; `G1WbcController.step(t)` takes no pose and `pose()` is gone.
+### Changed
+- The speed ceilings, `MAX_TURN_RATE`, `gait_mode`, `check_positive`, `clamp` and `wrap` moved to `locomotion_command.py`.
+
 ## [0.1.2] - 2026-10-15
 ### Added
 - Lower-body ground moves on `G1Wbc`: `squat(height)` (0.4-0.8 m), `kneel(height)` and `kneel_one_leg(height)` (0.2-0.4 m) hold a static ground posture until the next command; `crawl_hands()` and `crawl_elbows()` enter a low *moving* mode (SONIC modes 8 and 14) that real-time commands drive at 0.4-1.0 / 0.7-1.0 m/s and hold the low pose when they stop. `halt()` stands back up (from elbow crawl, enter hand crawl first). An out-of-range height raises `ValueError`.

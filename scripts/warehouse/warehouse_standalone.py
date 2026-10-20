@@ -1,5 +1,5 @@
-"""Warehouse (Standalone workflow): open the warehouse Scenario (oc.scenario.warehouse), whose G1 walks a
-loop through the open hall (with SONIC whole-body control), and play until the app closes.
+"""Warehouse (Standalone workflow): open the warehouse Scenario (oc.scenario.warehouse), whose G1 stands
+on Play, or is driven over ROS 2 with --ros (SONIC whole-body control), and play until the app closes.
 
 With --benchmark SECONDS, record isaacsim.benchmark.services KPIs for SECONDS of wall-clock play, write them to
 --benchmark-output and exit."""

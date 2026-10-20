@@ -61,6 +61,8 @@ research/benchmark_output/<YYYYMMDD>_<HHMMSS>_warehouse/
 
 ## Reading the KPIs
 
+- **The G1 stands during runs** (no loop since `oc.scenario.warehouse` 0.10.0), so results from earlier
+  sessions aren't comparable.
 - **Bottleneck:** compare `GPU frame ms` with `App frame ms`. GPU far below app frame ⇒ not GPU-bound.
   Then compare `CPU %` with `num_cpus × 100` (in the JSON): well below ⇒ a serial main-thread bottleneck
   (Python loop, SONIC ONNX inference, ROS graphs), not total CPU capacity.

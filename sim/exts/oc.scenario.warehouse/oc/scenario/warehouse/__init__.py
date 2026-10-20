@@ -6,4 +6,3 @@ from .api import obstacles as obstacles
 from .api import open_scenario as open_scenario
 from .api import ros as ros
 from .extension import Extension as Extension
-from .warehouse_sequence import WAREHOUSE_SEQUENCE as WAREHOUSE_SEQUENCE

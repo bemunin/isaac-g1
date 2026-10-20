@@ -1,8 +1,17 @@
-"""Locomotion command: the Whole-body controller's one input, from a Behavior sequence (through the Sequence executor),
-from Real-time control or, later, from Nav2."""
+"""Locomotion command: the Whole-body controller's one input, from Real-time control or, later, from Nav2."""
 
 import enum
+import math
 from dataclasses import dataclass
+
+# Speeds of SONIC's planner modes (docs/source/tutorials/keyboard.md, gamepad.md): slow walk 0.2-0.8 m/s,
+# walk 0.8-1.5 m/s, run 1.5-3.0 m/s; side steps at up to ~0.4 m/s, or the feet collide. Below 0.4 m/s a slow walk
+# steps in place.
+MAX_SLOW_WALK_SPEED = 0.8  # m/s
+MAX_WALK_SPEED = 1.5  # m/s
+MIN_RUN_SPEED, MAX_RUN_SPEED = 1.5, 3.0  # m/s
+MAX_SIDE_SPEED = 0.4  # m/s
+MAX_TURN_RATE = 1.5  # rad/s
 
 
 class Gait(enum.IntEnum):
@@ -59,3 +68,22 @@ class LocomotionCommand:
 
 
 STAND = LocomotionCommand(gait=Gait.IDLE)
+
+
+def gait_mode(speed: float) -> Gait:
+    """SONIC planner mode for a speed [m/s]."""
+    return Gait.RUN if speed >= MIN_RUN_SPEED else Gait.WALK if speed > MAX_SLOW_WALK_SPEED else Gait.SLOW_WALK
+
+
+def check_positive(name: str, value: float) -> None:
+    if not value > 0:
+        raise ValueError(f"G1Wbc: {name} must be positive, got {value}")
+
+
+def wrap(angle: float) -> float:
+    """Wrap an angle to [-pi, pi)."""
+    return (angle + math.pi) % (2.0 * math.pi) - math.pi
+
+
+def clamp(value: float, low: float, high: float) -> float:
+    return min(max(value, low), high)

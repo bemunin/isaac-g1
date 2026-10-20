@@ -1,5 +1,5 @@
-"""Public API: move the G1 at a prim path with NVIDIA SONIC whole-body control, by a Behavior sequence or Real-time
-control, with IMU and pose feedback, while the simulation plays."""
+"""Public API: move the G1 at a prim path with NVIDIA SONIC whole-body control, by Real-time control, with IMU
+feedback, while the simulation plays."""
 
 import carb
 import isaacsim.robot_motion.experimental.motion_generation as mg
@@ -15,8 +15,7 @@ from isaacsim.robot.policy.examples.application import (
 )
 from isaacsim.sensors.experimental.physics import IMUSensor
 
-from .behavior_sequence import BehaviorSequence, Segment, check_positive
-from .controllers import G1WbcController, MovementStatus
+from .controllers import G1WbcController
 from .controllers.sonic import (
     ARMATURE,
     CONTROL_DT,
@@ -35,19 +34,14 @@ from .locomotion_command import (
     LocomotionCommand,
     Posture,
 )
-from .sequence_executor import MovementFailure
 
 __all__ = [
-    "BehaviorSequence",
     "Crawl",
     "G1Wbc",
     "G1WbcController",
     "Gait",
     "LocomotionCommand",
-    "MovementFailure",
-    "MovementStatus",
     "Posture",
-    "Segment",
 ]
 
 PHYSICS_DT = 0.005  # s: SONIC was trained at 200 Hz physics, the policy every 4th step
@@ -56,21 +50,19 @@ PHYSICS_DT = 0.005  # s: SONIC was trained at 200 Hz physics, the policy every 4
 class G1Wbc:
     """Steps a G1WbcController on every physics step while the simulation plays, once start() is called.
 
-    Binds to the robot on the first physics step after Play and unbinds on Stop; each Play starts standing and
-    restarts the current Behavior sequence. Orientation and angular velocity come from the IMU at imu_path, position and
-    joints from the articulation.
+    Binds to the robot on the first physics step after Play and unbinds on Stop; each Play starts standing.
+    Orientation and angular velocity come from the IMU at imu_path, joints from the articulation.
 
-    Commands: execute(sequence) follows a Behavior sequence; command(LocomotionCommand), and its shortcuts
-    slow_walk(cmd_vel), walk(cmd_vel) and run(cmd_vel), move at a body-frame (vx, vy, wz) until commands stop
-    arriving for 0.5 s, no faster than set_speed_limit(); side_move_left/right(meters) and turn_left/right(degrees)
-    run to completion; squat/kneel/kneel_one_leg(height) hold a static ground posture; crawl_hands/crawl_elbows()
-    crawl low, driven by real-time commands; halt() stands. Each command cancels the one before.
+    Commands: command(LocomotionCommand), and its shortcuts slow_walk(cmd_vel), walk(cmd_vel) and run(cmd_vel), move at
+    a body-frame (vx, vy, wz) until commands stop arriving for 0.5 s, no faster than set_speed_limit();
+    squat/kneel/kneel_one_leg(height) hold a static ground posture; crawl_hands/crawl_elbows() crawl low, driven by
+    real-time commands; halt() stands. Each command cancels the one before.
     """
 
-    def __init__(self, prim_path: str, imu_path: str | None = None, on_done=None) -> None:
+    def __init__(self, prim_path: str, imu_path: str | None = None) -> None:
         self.prim_path = prim_path
         self.imu_path = imu_path or f"{prim_path}/pelvis/imu_sensor"
-        self._controller = G1WbcController(on_done=on_done)
+        self._controller = G1WbcController()
         self._articulation = None
         self._imu = None
         self._pending_reset = False
@@ -79,23 +71,6 @@ class G1Wbc:
         self._failed = False
         self._timeline_subscriptions = []
         self._step_callback_id = None
-
-    @property
-    def status(self) -> MovementStatus:
-        return self._controller.status
-
-    @property
-    def failure(self) -> MovementFailure | None:
-        """Why the last Behavior sequence was aborted (reason, segment index), if it was."""
-        return self._controller.failure
-
-    @property
-    def sequence(self) -> BehaviorSequence | None:
-        return self._controller.sequence
-
-    def execute(self, sequence: BehaviorSequence) -> None:
-        """Follow sequence from the robot's current pose, replacing the current command."""
-        self._controller.execute(sequence)
 
     def command(self, command: LocomotionCommand) -> None:
         """Move at command's body-frame velocity, no faster than its gait (None: any, chosen from the speed); limited
@@ -118,22 +93,6 @@ class G1Wbc:
     def set_speed_limit(self, speed_limit: float | None) -> None:
         """Cap real-time commands' linear speed [m/s], and so their gait, like Nav2's SpeedLimit; None removes it."""
         self._controller.set_speed_limit(speed_limit)
-
-    def side_move_left(self, meters: float) -> None:
-        check_positive("meters", meters)
-        self._controller.execute(BehaviorSequence().side_step(meters))
-
-    def side_move_right(self, meters: float) -> None:
-        check_positive("meters", meters)
-        self._controller.execute(BehaviorSequence().side_step(-meters))
-
-    def turn_left(self, degrees: float) -> None:
-        check_positive("degrees", degrees)
-        self._controller.execute(BehaviorSequence().spin(degrees))
-
-    def turn_right(self, degrees: float) -> None:
-        check_positive("degrees", degrees)
-        self._controller.execute(BehaviorSequence().spin(-degrees))
 
     def squat(self, height: float = 0.6) -> None:
         """Squat in place to pelvis height [m] in [0.4, 0.8], held until the next command (halt() stands up)."""
@@ -164,7 +123,7 @@ class G1Wbc:
         self._controller.crawl(Crawl.ELBOWS)
 
     def halt(self) -> None:
-        """Slow down and stand, cancelling the running command (also a looping Behavior sequence or posture)."""
+        """Slow down and stand, cancelling the running command or posture."""
         self._controller.halt()
 
     def start(self) -> None:

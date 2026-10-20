@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.10.0] - 2026-10-20
+### Removed
+- `WAREHOUSE_SEQUENCE` and `warehouse_sequence.py`: the G1 no longer walks a loop. On Play it stands until a `/cmd_vel` arrives (with `--ros`). Benchmarks now measure a standing G1 and are not comparable with runs before 0.10.0.
+
 ## [0.9.0] - 2026-10-20
 ### Added
 - With `exts."oc.scenario.warehouse".ros` (`pixi run warehouse --ros`), the G1 subscribes to `/cmd_vel` (`geometry_msgs/Twist`) through a new graph, `/World/G1/Graph/ROS2_CmdVel`, and drives with SONIC: each Twist is a Locomotion command that takes over from `WAREHOUSE_SEQUENCE` (Real-time control) until the next Play. `CMD_VEL_GRAPH` is its path.

@@ -1,5 +1,5 @@
-"""Whole-body controller: turns Locomotion commands, from a Behavior sequence (Sequence executor) or from Real-time
-control, into joint targets, moving the G1 with NVIDIA SONIC (kinematic planner + tracking policy)."""
+"""Whole-body controller: turns Locomotion commands from Real-time control into joint targets, moving the G1 with
+NVIDIA SONIC (kinematic planner + tracking policy)."""
 
 import math
 from dataclasses import replace
@@ -9,28 +9,20 @@ import isaacsim.robot_motion.experimental.motion_generation as mg
 import numpy as np
 import warp as wp
 
-from ..behavior_sequence import (
+from ..locomotion_command import (
+    CRAWL_SPEED_RANGE,
     MAX_RUN_SPEED,
     MAX_SIDE_SPEED,
     MAX_SLOW_WALK_SPEED,
+    MAX_TURN_RATE,
     MAX_WALK_SPEED,
-    BehaviorSequence,
-    check_positive,
-    gait_mode,
-)
-from ..locomotion_command import (
-    CRAWL_SPEED_RANGE,
     STAND,
     Crawl,
     Gait,
     LocomotionCommand,
-)
-from ..sequence_executor import (
-    MAX_TURN_RATE,
-    MovementFailure,
-    MovementStatus,
-    SequenceExecutor,
+    check_positive,
     clamp,
+    gait_mode,
     wrap,
 )
 from .kinematic_planner import KinematicPlanner
@@ -57,21 +49,18 @@ def limit(command: LocomotionCommand) -> LocomotionCommand:
 
 
 class G1WbcController(mg.BaseController):
-    """Turns the estimated G1 state and a Behavior sequence or real-time Locomotion command into joint position
-    targets for all 29 body joints. Call forward at 50 Hz.
+    """Turns the estimated G1 state and a real-time Locomotion command into joint position targets for all 29 body
+    joints. Call forward at 50 Hz.
 
-    The estimated state needs joint positions and velocities, root position and orientation (world frame) and root
-    angular velocity in the body frame (IMU gyro). on_done(status) is called when a Behavior sequence ends:
-    SUCCEEDED, ABORTED or CANCELED.
+    The estimated state needs joint positions and velocities, root orientation (world frame) and root angular
+    velocity in the body frame (IMU gyro). The root position is not read.
     """
 
-    def __init__(self, directory=SONIC_DIR, on_done=None) -> None:
+    def __init__(self, directory=SONIC_DIR) -> None:
         self._policy = SonicPolicy(directory)
         self._planner = KinematicPlanner(directory)
-        self._executor = SequenceExecutor(on_done)
         self._command = None  # the real-time command
         self._command_time = None  # t of its arrival; None until the next step stamps it
-        self._realtime_status = None  # status of real-time control, or None to report the executor's
         self._speed_limit = None  # m/s: cap on real-time commands' linear speed, or None
         self._facing = 0.0  # world yaw the planner is told to face
         self._heading_offset = 0.0  # world yaw - planner yaw
@@ -79,36 +68,9 @@ class G1WbcController(mg.BaseController):
         self._posture = None  # (planner mode, pelvis height [m]) while holding a static ground posture, else None
         self._locomotion_mode = None  # a Crawl mode while crawling (cmd_vel drives it), else None (normal gaits)
 
-    @property
-    def on_done(self):
-        return self._executor.on_done
-
-    @on_done.setter
-    def on_done(self, callback) -> None:
-        self._executor.on_done = callback
-
-    @property
-    def status(self) -> MovementStatus:
-        return self._executor.status if self._realtime_status is None else self._realtime_status
-
-    @property
-    def failure(self) -> MovementFailure | None:
-        """Why the last Behavior sequence was aborted, if it was."""
-        return self._executor.failure
-
-    @property
-    def sequence(self) -> BehaviorSequence | None:
-        return self._executor.sequence
-
-    def execute(self, sequence: BehaviorSequence) -> None:
-        """Follow sequence from its first segment, starting at the next forward; cancels what is running."""
-        self._cancel()
-        self._realtime_status = None
-        self._executor.execute(sequence)
-
     def command(self, command: LocomotionCommand) -> None:
         """Real-time Locomotion command, limited (see limit) and to the speed limit; stands COMMAND_TIMEOUT s after the
-        last call. Cancels a running Behavior sequence or posture."""
+        last call. Cancels a posture."""
         self._posture = None
         limited = limit(command)
         if limited != command and not self._clamp_warned:
@@ -118,11 +80,8 @@ class G1WbcController(mg.BaseController):
         if self._speed_limit is not None and speed > self._speed_limit:
             scale = self._speed_limit / speed
             limited = replace(limited, vx=limited.vx * scale, vy=limited.vy * scale)
-        if self._command is None:
-            self._executor.cancel()
         self._command = limited
         self._command_time = None
-        self._realtime_status = MovementStatus.RUNNING
 
     def set_speed_limit(self, speed_limit: float | None) -> None:
         """Cap the linear speed [m/s] of real-time commands from their next call, like Nav2's SpeedLimit (absolute);
@@ -140,18 +99,16 @@ class G1WbcController(mg.BaseController):
         Held until another command; halt() or any drive stands back up."""
         self._cancel()
         self._posture = (int(mode), float(height))
-        self._realtime_status = MovementStatus.RUNNING
 
     def crawl(self, mode: int) -> None:
         """Enter a crawl mode (SONIC planner mode 8 hands / 14 elbows): a low moving mode that real-time commands
-        drive, cancelling a running sequence or posture. The robot holds the low pose when no command arrives;
+        drive, cancelling a posture. The robot holds the low pose when no command arrives;
         halt() stands back up."""
         self._cancel()
         self._locomotion_mode = Crawl(int(mode))
-        self._realtime_status = MovementStatus.RUNNING
 
     def reset(self, estimated_state: mg.RobotState, setpoint_state: mg.RobotState | None, t: float, **kwargs) -> bool:
-        """Restart the planner standing still, align it with the robot's heading and restart the Behavior sequence."""
+        """Restart the planner standing still, align it with the robot's heading."""
         base_quat = self._orientation(estimated_state)
         self._planner.reset()
         self._policy.reset(base_quat, self._planner.root_quat())
@@ -160,18 +117,15 @@ class G1WbcController(mg.BaseController):
         self._command = None
         self._posture = None
         self._locomotion_mode = None
-        self._realtime_status = None
-        self._executor.restart()
         return True
 
     def forward(self, estimated_state: mg.RobotState, setpoint_state: mg.RobotState | None, t: float, **kwargs) -> mg.RobotState:
-        pose = self.pose(estimated_state)
         offset = self._heading_offset
         if self._posture is not None:  # hold a static ground posture at its height, facing where it stood
             mode, height = self._posture
             self._planner.command(mode, None, wrap(self._facing - offset), -1.0, height)
         else:
-            mode, movement, speed = self.planner_inputs(self.step(pose, t), pose[2])
+            mode, movement, speed = self.planner_inputs(self.step(t), yaw_of(self._orientation(estimated_state)))
             self._planner.command(int(mode), None if movement is None else wrap(movement - offset), wrap(self._facing - offset), speed)
 
         joints = estimated_state.joints
@@ -189,18 +143,16 @@ class G1WbcController(mg.BaseController):
             )
         )
 
-    def step(self, pose: tuple[float, float, float], t: float) -> LocomotionCommand:
-        """The Locomotion command for the robot at pose (x, y, yaw) at time t [s]: the real-time one, or the Sequence
-        executor's, with its segment's gait."""
-        if self._command is not None:
-            if self._command_time is None:
-                self._command_time = t
-            elif t - self._command_time > COMMAND_TIMEOUT:
-                self._command = None
-                self._realtime_status = MovementStatus.IDLE
-                return STAND
-            return self._command
-        return self._executor.update(pose, t) or STAND
+    def step(self, t: float) -> LocomotionCommand:
+        """The real-time Locomotion command at time t [s], or STAND once it has timed out or when there is none."""
+        if self._command is None:
+            return STAND
+        if self._command_time is None:
+            self._command_time = t
+        elif t - self._command_time > COMMAND_TIMEOUT:
+            self._command = None
+            return STAND
+        return self._command
 
     def planner_inputs(self, command: LocomotionCommand, yaw: float) -> tuple[int, float | None, float]:
         """(planner mode, world movement yaw or None to stand, speed [m/s]) for command with the robot at world yaw.
@@ -223,20 +175,11 @@ class G1WbcController(mg.BaseController):
         return min(ceiling, gait_mode(speed)), wrap(yaw + math.atan2(command.vy, command.vx)), speed
 
     def _cancel(self) -> None:
-        """Cancel a running Behavior sequence, real-time command, posture or crawl mode; the robot stands."""
-        if self._command is not None or self._posture is not None or self._locomotion_mode is not None:
-            self._command = None
-            self._posture = None
-            self._locomotion_mode = None
-            self._realtime_status = MovementStatus.CANCELED
-        self._executor.cancel()
+        """Cancel the real-time command, posture or crawl mode; the robot stands."""
+        self._command = None
+        self._posture = None
+        self._locomotion_mode = None
 
     @staticmethod
     def _orientation(estimated_state: mg.RobotState) -> np.ndarray:
         return np.asarray(estimated_state.root.orientation.numpy(), dtype=float).reshape(-1)
-
-    @staticmethod
-    def pose(estimated_state: mg.RobotState) -> tuple[float, float, float]:
-        """World (x, y, yaw) from the estimated state's root position and orientation."""
-        position = estimated_state.root.position.numpy().reshape(-1)
-        return float(position[0]), float(position[1]), yaw_of(G1WbcController._orientation(estimated_state))

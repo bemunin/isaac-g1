@@ -29,10 +29,10 @@ This installs the Pixi environments, downloads the SONIC weights, links the Isaa
 
 ## Getting started
 
-Run the warehouse example to watch the G1 walk a loop through the hall, and inspect its topics in Foxglove.
+Run the warehouse example to see the G1 stand in the hall, and inspect its topics in Foxglove.
 
-1. Start the sim with ROS 2 on. Isaac Sim opens the warehouse and plays it; the G1 stands 2 s,
-   then walks a loop through the hall.
+1. Start the sim with ROS 2 on. Isaac Sim opens the warehouse and plays it; the G1 stands
+   until a `/cmd_vel` arrives.
 
    ```bash
    pixi run warehouse --ros
@@ -86,15 +86,15 @@ The G1 uses SONIC whole-body control by default; download its weights once with
 ## Control
 
 **SONIC** ([`oc.control.g1_sonic`](sim/exts/oc.control.g1_sonic/docs/README.md)) moves the G1 with
-NVIDIA SONIC whole-body control: slow walk, walk, run, side moves and turns, plus lower-body ground
-moves — `squat`, `kneel`, `kneel_one_leg` and `crawl_hands`/`crawl_elbows`. Drive it from a
-`MovementPlan` or one command at a time (`command(LocomotionCommand)`, `walk(cmd_vel)`, ...).
+NVIDIA SONIC whole-body control: slow walk, walk, run, side steps and turns, plus lower-body ground
+moves — `squat`, `kneel`, `kneel_one_leg` and `crawl_hands`/`crawl_elbows`. Drive it one real-time
+command at a time (`command(LocomotionCommand)`, `walk(cmd_vel)`, ...).
 Download its weights once with `pixi run sonic-download`.
 
 ## Command over ROS
 
 `pixi run warehouse-cmd` opens the warehouse with the G1 standing and ROS 2 on, and drives it with SONIC over
-ROS 2 instead of the loop. Add `--headless` for no window, `--physics physx` for PhysX, `-o clutter,forklift`
+ROS 2. Add `--headless` for no window, `--physics physx` for PhysX, `-o clutter,forklift`
 for the warehouse props.
 
 ```bash

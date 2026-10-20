@@ -1,11 +1,11 @@
 """Warehouse Cmd (Standalone workflow): open the warehouse Scenario's stage with the G1's ROS 2 graphs on, and
-command the G1 over ROS 2 with SONIC instead of the warehouse loop. Play until the app closes.
+command the G1 over ROS 2 with SONIC. Play until the app closes.
 
 Walk from /cmd_vel; sit, kneel, crawl and stand from /posture_cmd (geometry_msgs/Twist: linear.x = id 0 stand,
 4 squat, 5/6 kneel two/one leg, 8/14 hand/elbow crawl; linear.z = pelvis height [m] for the postures). A posture
 holds in place; a crawl is a low mode that /cmd_vel then drives, and holds its low pose when /cmd_vel is quiet. To
 stand up from elbow crawl, enter hand crawl (8) first, then stand (0). The Scenario's layer is not saved. The
-oc.scenario.warehouse extension is enabled only for its obstacles (-o); its G1 loop is not started."""
+oc.scenario.warehouse extension is enabled only for its obstacles (-o)."""
 
 import argparse
 import os

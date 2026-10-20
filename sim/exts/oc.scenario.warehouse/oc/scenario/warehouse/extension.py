@@ -8,21 +8,19 @@ from oc.control.g1_sonic import G1Wbc
 
 from .api import open_scenario
 from .cmd_vel import CmdVelPoller
-from .warehouse_sequence import WAREHOUSE_SEQUENCE
 
 
 class Extension(omni.ext.IExt):
     """Kit instantiates this class when oc.scenario.warehouse is enabled.
 
     With the autostart setting on, opens the Scenario and plays once the app is ready.
-    Whenever the simulation plays, /World/G1 follows WAREHOUSE_SEQUENCE with SONIC whole-body control. With ros(), a
-    /cmd_vel Twist takes over from the sequence (Real-time control) until the next Play.
+    Whenever the simulation plays, /World/G1 stands with SONIC whole-body control. With ros(), /cmd_vel Twists drive it
+    (Real-time control).
     """
 
     def on_startup(self, ext_id: str):
         carb.log_info(f"[{ext_id}] startup")
         self._walker = G1Wbc("/World/G1")
-        self._walker.execute(WAREHOUSE_SEQUENCE)
         self._walker.start()
         self._cmd_vel = CmdVelPoller(self._walker)
         self._app_ready_sub = None
