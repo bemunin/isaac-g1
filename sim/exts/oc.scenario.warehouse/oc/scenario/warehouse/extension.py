@@ -4,30 +4,23 @@ import omni.ext
 import omni.kit.app
 import omni.timeline
 from carb.eventdispatcher import get_eventdispatcher
-from oc.control.g1_walk import G1Walker
 from oc.control.g1_sonic import G1Wbc
 
-from .api import controller, open_scenario
+from .api import open_scenario
 from .warehouse_sequence import WAREHOUSE_SEQUENCE
-from .warehouse_walk_trajectory import WAREHOUSE_WALK_TRAJECTORY
 
 
 class Extension(omni.ext.IExt):
     """Kit instantiates this class when oc.scenario.warehouse is enabled.
 
     With the autostart setting on, opens the Scenario and plays once the app is ready.
-    Whenever the simulation plays, /World/G1 follows WAREHOUSE_SEQUENCE with SONIC whole-body control (controller "sonic",
-    default), or walks WAREHOUSE_WALK_TRAJECTORY (controller "walk").
+    Whenever the simulation plays, /World/G1 follows WAREHOUSE_SEQUENCE with SONIC whole-body control.
     """
 
     def on_startup(self, ext_id: str):
         carb.log_info(f"[{ext_id}] startup")
-        if controller() == "sonic":
-            self._walker = G1Wbc("/World/G1")
-            self._walker.execute(WAREHOUSE_SEQUENCE)
-        else:
-            self._walker = G1Walker("/World/G1")
-            self._walker.execute(WAREHOUSE_WALK_TRAJECTORY)
+        self._walker = G1Wbc("/World/G1")
+        self._walker.execute(WAREHOUSE_SEQUENCE)
         self._walker.start()
         self._app_ready_sub = None
         if carb.settings.get_settings().get("/exts/oc.scenario.warehouse/autostart"):

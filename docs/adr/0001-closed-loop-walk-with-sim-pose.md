@@ -1,10 +1,10 @@
-# Walk trajectories are followed with IMU heading and simulated root position
+# The Whole-body controller reads IMU orientation and simulated root position
 
 ## Decision
 
-The Walk controller in `oc.control.g1_walk` reads the robot's state from two sources:
+The Whole-body controller in `oc.control.g1_sonic` reads the robot's state from two sources:
 
-- **Orientation and body angular rate**: the pelvis IMU, as on the real robot. The walking Policy reads the same IMU.
+- **Orientation and body angular rate**: the pelvis IMU, as on the real robot. The SONIC Policy reads the same IMU.
 - **Position (x, y)**: the articulation root, which is simulation ground truth.
 
 ## Why
@@ -17,4 +17,4 @@ The Walk controller in `oc.control.g1_walk` reads the robot's state from two sou
 ## Consequences
 
 - Sim-to-real: on hardware the position source must be replaced by an odometry or localization estimate.
-- The ROS 2 planner adapter (later) feeds Walk trajectories in; it does not feed pose back.
+- The ROS 2 planner adapter (later) feeds Behavior sequences in; it does not feed pose back.

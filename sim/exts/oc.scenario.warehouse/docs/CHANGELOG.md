@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.8.0] - 2026-10-20
+### Removed
+- The `walk` controller (`oc.control.g1_walk`), the `exts."oc.scenario.warehouse".controller` setting, `controller()`, `CONTROLLERS` and `WAREHOUSE_WALK_TRAJECTORY`. The G1 always follows `WAREHOUSE_SEQUENCE` with SONIC, and physics always runs at `PHYSICS_RATE` (200 Hz).
+
 ## [0.7.0] - 2026-10-17
 ### Added
 - `exts."oc.scenario.warehouse".obstacles` (`pixi run warehouse -o clutter,forklift`) shows the Scenario's hidden clutter and forklift. `obstacles()` reads it and `apply_obstacles(stage, kinds)` activates the `OBSTACLES` paths in the session layer; `open_scenario()` calls both.

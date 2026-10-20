@@ -13,7 +13,6 @@ pixi run warehouse                   # Standalone workflow, Newton, SONIC (defau
 pixi run warehouse --workflow ext    # Extension workflow
 pixi run warehouse --headless        # no window
 pixi run warehouse --physics physx   # PhysX instead of Newton
-pixi run warehouse --controller walk # the walking policy instead of SONIC whole-body control
 pixi run warehouse --ros             # publish the G1's ROS 2 topics
 pixi run warehouse -o clutter,forklift # show the hidden props (`-o none` or no flag: none)
 ```
@@ -28,7 +27,7 @@ SONIC's weights must be downloaded first (`pixi run sonic-download`).
 The G1's ROS 2 topics are off by default. `open_scenario()` deactivates `/World/G1/Graph`, which holds
 its seven ROS 2 graphs (camera, lidar, TF, IMU, joint states, odometry, and the joint-command
 subscriber). The G1 then publishes nothing and doesn't render its camera or lidar, so the sim runs
-faster. The controllers read the pelvis IMU directly and are unaffected. `--ros` sets
+faster. The controller reads the pelvis IMU directly and is unaffected. `--ros` sets
 `exts."oc.scenario.warehouse".ros = true` to keep the graphs, e.g. for Foxglove.
 
 `--dds fast|cyclone|zenoh` picks the ROS 2 middleware (default: the session's). The Standalone
@@ -41,11 +40,11 @@ the Script Editor with `open_scenario()`.
 The Scenario turns off collision on six mirrored wall wires (`SM_WallWire_51`-`56`, scale -0.01):
 Newton's MuJoCo solver rejects their negative scale as a zero-size shape and fails to start physics.
 
-## Behavior sequence (default)
+## Behavior sequence
 
-On every Play, with the setting `exts."oc.scenario.warehouse".controller = "sonic"` (the default), the G1
+On every Play, the G1
 at `/World/G1` follows `WAREHOUSE_SEQUENCE` (`warehouse_sequence.py`) through
-`oc.control.g1_sonic`'s `G1Wbc`, and `open_scenario()` sets physics to 200 Hz, the rate SONIC was
+`oc.control.g1_sonic`'s `G1Wbc`, and `open_scenario()` sets physics to `PHYSICS_RATE` (200 Hz), the rate SONIC was
 trained at. The loop:
 1. Stand 2 s at (-8, 9.5), facing north.
 2. Walk 17 m up aisle 4 at 1 m/s, slowing down before the spin.
@@ -56,25 +55,13 @@ trained at. The loop:
 
 It repeats forever.
 
-## Walk trajectory (`--controller walk`)
-
-With `controller = "walk"` (`--controller walk`), the G1 instead walks `WAREHOUSE_WALK_TRAJECTORY`
-(`warehouse_walk_trajectory.py`) through `oc.control.g1_walk`'s `G1Walker`, and physics keeps the
-Scenario's 100 Hz. The G1 starts in aisle 4
-(BOXES J-L) at (-8, 9.5), facing north (+y). It stands 2 s, then walks a rectangle loop: 17 m up
-aisle 4, left 5 m across to aisle 3, 19.5 m down aisle 3, left 5 m back to aisle 4, and 2.5 m up to
-the start. It keeps 1.75 m from the racks on each side and turns 1.5 m past their north ends and
-1.75 m below their south ends. A lap takes about 108 s at 0.5 m/s and 45°/s, and the loop repeats forever. Each lap is measured
-from the start pose, so the loop closes instead of drifting.
-
 ## API
 
 ```python
 import oc.scenario.warehouse
 
 oc.scenario.warehouse.open_scenario()  # opens SCENARIO as the stage; raises RuntimeError if it can't
-oc.scenario.warehouse.WAREHOUSE_SEQUENCE  # a looping BehaviorSequence (controller "sonic")
-oc.scenario.warehouse.WAREHOUSE_WALK_TRAJECTORY  # a looping WalkTrajectory (controller "walk")
-oc.scenario.warehouse.controller()  # "sonic" (default) or "walk", from /exts/oc.scenario.warehouse/controller
+oc.scenario.warehouse.WAREHOUSE_SEQUENCE  # a looping BehaviorSequence
+oc.scenario.warehouse.PHYSICS_RATE  # 200, the physics steps per second open_scenario() sets
 oc.scenario.warehouse.ros()  # whether open_scenario() keeps the G1's ROS 2 graphs, from /exts/oc.scenario.warehouse/ros
 ```

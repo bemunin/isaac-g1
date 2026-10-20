@@ -1,7 +1,7 @@
 """The warehouse Behavior sequence for the whole-body controller: stand 2 s, walk up aisle 4, down aisle 3, side-step
 back into aisle 4, repeating.
 
-Same loop as warehouse_walk_trajectory.py: the G1 starts in aisle 4 (BOXES J-L) at (-8, 9.5) facing +y. Aisle 4 is
+The G1 starts in aisle 4 (BOXES J-L) at (-8, 9.5) facing +y. Aisle 4 is
 clear for x -9.75..-6.25 and aisle 3 (BOXES G-I) for x -14.75..-11.25; their racks span y 8.75..25.0, with open floor
 past both ends.
 """

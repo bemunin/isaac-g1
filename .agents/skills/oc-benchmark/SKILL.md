@@ -30,12 +30,12 @@ research/benchmark_output/<YYYYMMDD>_<HHMMSS>_warehouse/
 
 ## Steps
 
-1. **Settings.** Defaults: controller `sonic`, 60 s measured (after a 60-frame warmup), the session's DDS
+1. **Settings.** Defaults: 60 s measured (after a 60-frame warmup), the session's DDS
    (`pixi run dds` shows it). Use what the user gave; otherwise the defaults. `run.sh` also records the
    `isaacsim` version pinned in `pixi.toml` in `settings.txt`.
 2. **Run** in the background, once (≈15–20 min; scenarios run sequentially because they share the GPU):
    ```sh
-   .agents/skills/oc-benchmark/run.sh [SECONDS] [CONTROLLER]
+   .agents/skills/oc-benchmark/run.sh [SECONDS]
    ```
    It prints `session=<dir>` first. Scenarios 3 and 6 open an Isaac Sim window that closes itself.
    To use another DDS, run `pixi run dds <name>` first.
@@ -43,7 +43,7 @@ research/benchmark_output/<YYYYMMDD>_<HHMMSS>_warehouse/
    valid run (see shutdown crash below). For `kpis=0`, read the tail of `<session>/<scenario>/<scenario>.log`,
    fix, and rerun only that scenario into the same session:
    ```sh
-   .agents/skills/oc-benchmark/run.sh SECONDS CONTROLLER <session> <scenario> [...]
+   .agents/skills/oc-benchmark/run.sh SECONDS <session> <scenario> [...]
    ```
 4. **Summarize:**
    ```sh

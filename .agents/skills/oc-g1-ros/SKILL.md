@@ -106,8 +106,8 @@ is in no TF tree). The `Sensor = "sensors"` variant is an empty payload and adds
   Referencing remaps relationships, not strings, so under `/World/G1` it points nowhere. Its
   `targetPrim` relationship is remapped correctly. Author an `over` setting `robotPath` to
   `/World/G1/pelvis` when `/joint_commands` must drive the robot.
-- **`ROS2_JointCommands` competes with any in-sim controller** (e.g. the `oc.control.g1_walk`
-  walker) as soon as something publishes `/joint_commands`. Keep one owner of the joint
+- **`ROS2_JointCommands` competes with any in-sim controller** (e.g. the `oc.control.g1_sonic`
+  controller) as soon as something publishes `/joint_commands`. Keep one owner of the joint
   targets.
 - **`ROS2_JointStates` logs** "Reading from targetPrim is deprecated". It is a warning; the topic still
   publishes.

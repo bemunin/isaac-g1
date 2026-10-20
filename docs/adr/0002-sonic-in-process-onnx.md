@@ -3,7 +3,7 @@
 ## Decision
 
 `oc.control.g1_sonic` runs NVIDIA SONIC's three ONNX models (planner, encoder, decoder) with
-onnxruntime inside the Kit extension. It steps them from a physics callback, as `G1Walker` does, and
+onnxruntime inside the Kit extension. It steps them from a physics callback and
 re-implements in Python the parts of NVIDIA's C++ runtime that it needs: observation histories, planner
 replanning, resampling and blending. It uses the default SONIC weights.
 
@@ -22,8 +22,8 @@ replanning, resampling and blending. It uses the default SONIC weights.
 
 - We own the port. Joint-order or history mistakes fail silently, so unit tests check them against
   NVIDIA's constants.
-- Physics runs at 200 Hz for this controller (SONIC's training rate); the warehouse sets it for `sonic` and
-  keeps 100 Hz for `walk`. A lap also completed at 100 Hz.
+- Physics runs at 200 Hz for this controller (SONIC's training rate); the warehouse sets it. A lap also
+  completed at 100 Hz.
 - onnxruntime numerics are not checked against TensorRT. NVIDIA's MuJoCo sim2sim is the reference if
   motion looks wrong.
 - Running the official runtime on hardware later is unaffected: the weights and the planner interface are the same.

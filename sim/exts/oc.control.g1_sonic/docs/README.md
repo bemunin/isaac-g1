@@ -25,7 +25,7 @@ It fetches `model_encoder.onnx`, `model_decoder.onnx`, `observation_config.yaml`
 ## Run
 
 ```bash
-pixi run warehouse --controller sonic --physics physx
+pixi run warehouse --physics physx
 ```
 
 The warehouse G1 then follows `WAREHOUSE_SEQUENCE` (see `oc.scenario.warehouse`). Physics should
