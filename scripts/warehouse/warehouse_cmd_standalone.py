@@ -60,9 +60,8 @@ simulation_app.update()
 
 SCENARIO = ROOT / "sim" / "exts" / "oc.scenario.warehouse" / "usd" / "warehouse_g1_scene.usda"
 PHYSICS_RATE = 200  # Hz, the rate SONIC was trained at
-CMD_VEL_GRAPH = "/World/Graph/ROS2_CmdVel"
+CMD_VEL_GRAPH = "/World/G1/Graph/ROS2_CmdVel"  # in the Scenario
 POSTURE_GRAPH = "/World/Graph/ROS2_Posture"
-CMD_VEL_TOPIC = "/cmd_vel"
 POSTURE_TOPIC = "/posture_cmd"
 
 opened, stage = stage_utils.open_stage(str(SCENARIO))
@@ -76,23 +75,8 @@ for name in ("newton:timeStepsPerSecond", "physxScene:timeStepsPerSecond"):
         attribute.Set(PHYSICS_RATE)
 
 keys = og.Controller.Keys
-# /cmd_vel drives walking (and a selected crawl); the loop forwards each Twist once and SONIC's 0.5 s timeout
-# stops the G1 when /cmd_vel goes quiet.
-og.Controller.edit(
-    {"graph_path": CMD_VEL_GRAPH, "evaluator_name": "execution"},
-    {
-        keys.CREATE_NODES: [
-            ("OnPlaybackTick", "omni.graph.action.OnPlaybackTick"),
-            ("SubscribeTwist", "isaacsim.ros2.bridge.ROS2SubscribeTwist"),
-            ("Counter", "omni.graph.action.Counter"),
-        ],
-        keys.SET_VALUES: [("SubscribeTwist.inputs:topicName", CMD_VEL_TOPIC)],
-        keys.CONNECT: [
-            ("OnPlaybackTick.outputs:tick", "SubscribeTwist.inputs:execIn"),
-            ("SubscribeTwist.outputs:execOut", "Counter.inputs:execIn"),
-        ],
-    },
-)
+# /cmd_vel drives walking (and a selected crawl): the Scenario's ROS2_CmdVel graph subscribes to it. The loop
+# forwards each Twist once and SONIC's 0.5 s timeout stops the G1 when /cmd_vel goes quiet.
 count = og.Controller.attribute(f"{CMD_VEL_GRAPH}/Counter.outputs:count")
 linear = og.Controller.attribute(f"{CMD_VEL_GRAPH}/SubscribeTwist.outputs:linearVelocity")
 angular = og.Controller.attribute(f"{CMD_VEL_GRAPH}/SubscribeTwist.outputs:angularVelocity")

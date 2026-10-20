@@ -7,6 +7,7 @@ from carb.eventdispatcher import get_eventdispatcher
 from oc.control.g1_sonic import G1Wbc
 
 from .api import open_scenario
+from .cmd_vel import CmdVelPoller
 from .warehouse_sequence import WAREHOUSE_SEQUENCE
 
 
@@ -14,7 +15,8 @@ class Extension(omni.ext.IExt):
     """Kit instantiates this class when oc.scenario.warehouse is enabled.
 
     With the autostart setting on, opens the Scenario and plays once the app is ready.
-    Whenever the simulation plays, /World/G1 follows WAREHOUSE_SEQUENCE with SONIC whole-body control.
+    Whenever the simulation plays, /World/G1 follows WAREHOUSE_SEQUENCE with SONIC whole-body control. With ros(), a
+    /cmd_vel Twist takes over from the sequence (Real-time control) until the next Play.
     """
 
     def on_startup(self, ext_id: str):
@@ -22,6 +24,7 @@ class Extension(omni.ext.IExt):
         self._walker = G1Wbc("/World/G1")
         self._walker.execute(WAREHOUSE_SEQUENCE)
         self._walker.start()
+        self._cmd_vel = CmdVelPoller(self._walker)
         self._app_ready_sub = None
         if carb.settings.get_settings().get("/exts/oc.scenario.warehouse/autostart"):
             if omni.kit.app.get_app().is_app_ready():
@@ -35,6 +38,8 @@ class Extension(omni.ext.IExt):
 
     def on_shutdown(self):
         self._app_ready_sub = None
+        self._cmd_vel.stop()
+        self._cmd_vel = None
         self._walker.stop()
         self._walker = None
         carb.log_info("[oc.scenario.warehouse] shutdown")

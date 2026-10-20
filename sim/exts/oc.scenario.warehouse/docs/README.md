@@ -25,10 +25,14 @@ never changed. Prims missing from the stage are logged and skipped.
 SONIC's weights must be downloaded first (`pixi run sonic-download`).
 
 The G1's ROS 2 topics are off by default. `open_scenario()` deactivates `/World/G1/Graph`, which holds
-its seven ROS 2 graphs (camera, lidar, TF, IMU, joint states, odometry, and the joint-command
-subscriber). The G1 then publishes nothing and doesn't render its camera or lidar, so the sim runs
+its eight ROS 2 graphs (camera, lidar, TF, IMU, joint states, odometry, and the joint-command and
+`/cmd_vel` subscribers). The G1 then publishes nothing and doesn't render its camera or lidar, so the sim runs
 faster. The controller reads the pelvis IMU directly and is unaffected. `--ros` sets
 `exts."oc.scenario.warehouse".ros = true` to keep the graphs, e.g. for Foxglove.
+
+With `--ros` the G1 also subscribes to `/cmd_vel` (`geometry_msgs/Twist`, graph `ROS2_CmdVel`). The extension
+polls its counter on every app update and sends each Twist to SONIC as a Locomotion command, which takes over
+from the loop (Real-time control) until the next Play; when `/cmd_vel` goes quiet, the G1 stands.
 
 `--dds fast|cyclone|zenoh` picks the ROS 2 middleware (default: the session's). The Standalone
 workflow runs `scripts/warehouse/warehouse_standalone.py`, which calls `open_scenario()` and owns the

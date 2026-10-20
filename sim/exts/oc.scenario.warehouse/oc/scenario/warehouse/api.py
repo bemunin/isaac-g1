@@ -61,7 +61,8 @@ OBSTACLES = {
 # Isaac Sim extension that rescans the whole stage for gantry prims every 15 physics steps (~50 ms each here); the
 # warehouse has no gantries.
 GANTRY_EXTENSION = "isaacsim.robot_setup.virtual_gantry"
-GRAPHS = "/World/G1/Graph"  # the G1's ROS 2 graphs: camera, lidar, TF, IMU, joint states and commands, odometry
+GRAPHS = "/World/G1/Graph"  # the G1's ROS 2 graphs: camera, lidar, TF, IMU, joint states and commands, odometry, cmd_vel
+CMD_VEL_GRAPH = f"{GRAPHS}/ROS2_CmdVel"  # SubscribeTwist -> Counter: /cmd_vel Twists and a count of them
 
 
 def ros() -> bool:

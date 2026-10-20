@@ -90,6 +90,7 @@ Links are siblings under the robot root, not nested: `/World/G1/pelvis`, `/World
 | `/World/G1/Graph/ROS2_JointCommands` | `OnPhysicsStep` → subscribes `/joint_commands` (asset: `/isaac_sim_joint_commands`) → `IsaacArticulationController` |
 | `/World/G1/Graph/ROS2_IMU` | `OnPhysicsStep` → publishes `/imu/data` (asset: `/isaac_sim_imu`), `frame_id` `imu` |
 | `/World/G1/Graph/OdometryGraph` | `OnPlaybackTick` → publishes `/odom` and `/tf` (`odom → pelvis` only) |
+| `/World/G1/Graph/ROS2_CmdVel` | Not in the asset; the warehouse scenario authors it. `OnPlaybackTick` → `SubscribeTwist` (`/cmd_vel`) → `Counter`; `oc.scenario.warehouse` polls the count and sends each Twist to SONIC as a Locomotion command |
 
 **Topic names.** The scenario renames the asset's `isaac_sim_*` topics to standard ROS names
 through `over`s on each node's `inputs:topicName`; the `isaac_sim_` prefix is specific to this asset,

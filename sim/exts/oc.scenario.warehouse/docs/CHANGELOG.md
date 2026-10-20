@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.9.0] - 2026-10-20
+### Added
+- With `exts."oc.scenario.warehouse".ros` (`pixi run warehouse --ros`), the G1 subscribes to `/cmd_vel` (`geometry_msgs/Twist`) through a new graph, `/World/G1/Graph/ROS2_CmdVel`, and drives with SONIC: each Twist is a Locomotion command that takes over from `WAREHOUSE_SEQUENCE` (Real-time control) until the next Play. `CMD_VEL_GRAPH` is its path.
+
 ## [0.8.0] - 2026-10-20
 ### Removed
 - The `walk` controller (`oc.control.g1_walk`), the `exts."oc.scenario.warehouse".controller` setting, `controller()`, `CONTROLLERS` and `WAREHOUSE_WALK_TRAJECTORY`. The G1 always follows `WAREHOUSE_SEQUENCE` with SONIC, and physics always runs at `PHYSICS_RATE` (200 Hz).

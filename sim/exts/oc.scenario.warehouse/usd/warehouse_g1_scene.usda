@@ -690,6 +690,62 @@ def Xform "World"
                 }
             }
 
+            def OmniGraph "ROS2_CmdVel"
+            {
+                token evaluationMode = "Automatic"
+                token evaluator:type = "execution"
+                token fabricCacheBacking = "StageWithoutHistory"
+                int2 fileFormatVersion = (1, 9)
+                token pipelineStage = "pipelineStageSimulation"
+
+                def OmniGraphNode "OnPlaybackTick"
+                {
+                    token node:type = "omni.graph.action.OnPlaybackTick"
+                    int node:typeVersion = 2
+                    custom double outputs:deltaSeconds
+                    custom double outputs:frame
+                    custom uint outputs:tick (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    custom double outputs:time
+                }
+
+                def OmniGraphNode "SubscribeTwist"
+                {
+                    custom uint inputs:execIn (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    prepend uint inputs:execIn.connect = </World/G1/Graph/ROS2_CmdVel/OnPlaybackTick.outputs:tick>
+                    custom string inputs:topicName = "/cmd_vel"
+                    token node:type = "isaacsim.ros2.bridge.ROS2SubscribeTwist"
+                    int node:typeVersion = 1
+                    custom double3 outputs:angularVelocity
+                    custom uint outputs:execOut (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    custom double3 outputs:linearVelocity
+                }
+
+                def OmniGraphNode "Counter"
+                {
+                    custom uint inputs:execIn (
+                        customData = {
+                            bool isExecution = 1
+                        }
+                    )
+                    prepend uint inputs:execIn.connect = </World/G1/Graph/ROS2_CmdVel/SubscribeTwist.outputs:execOut>
+                    token node:type = "omni.graph.action.Counter"
+                    int node:typeVersion = 2
+                    custom int outputs:count
+                }
+            }
+
             over "ROS2_JointStates"
             {
                 over "PublishJointState"
