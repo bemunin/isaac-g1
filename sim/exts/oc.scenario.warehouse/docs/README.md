@@ -1,6 +1,6 @@
 # G1 Warehouse
 
-Opens the G1 warehouse Scenario; its G1 stands on Play, and /cmd_vel drives it with ROS.
+Opens the G1 warehouse Scenario; its G1 is set up for SONIC on Play and driven over ROS 2 by the `oc_sonic` nodes.
 
 Extension ID: `oc.scenario.warehouse`
 
@@ -22,31 +22,20 @@ sets `exts."oc.scenario.warehouse".obstacles` (comma-separated `clutter`, `forkl
 calls `apply_obstacles()`, which activates the paths in `OBSTACLES` in the session layer, so the `.usda` is
 never changed. Prims missing from the stage are logged and skipped.
 
-SONIC's weights must be downloaded first (`pixi run sonic-download`).
+SONIC's weights must be downloaded first (`pixi run sonic-download`). The `oc_sonic` nodes (`ros2 launch oc_sonic sonic.launch.py`) read `/joint_states` and `/imu/data` and publish `/joint_commands`.
 
-The G1's ROS 2 topics are off by default. `open_scenario()` deactivates `/World/G1/Graph`, which holds
-its eight ROS 2 graphs (camera, lidar, TF, IMU, joint states, odometry, and the joint-command and
-`/cmd_vel` subscribers). The G1 then publishes nothing and doesn't render its camera or lidar, so the sim runs
-faster. The controller reads the pelvis IMU directly and is unaffected. `--ros` sets
-`exts."oc.scenario.warehouse".ros = true` to keep the graphs, e.g. for Foxglove.
-
-With `--ros` the G1 also subscribes to `/cmd_vel` (`geometry_msgs/Twist`, graph `ROS2_CmdVel`). The extension
-polls its counter on every app update and sends each Twist to SONIC as a Locomotion command (Real-time control); when `/cmd_vel` goes quiet, the G1 stands.
-
-`--dds fast|cyclone|zenoh` picks the ROS 2 middleware (default: the session's). The Standalone
-workflow runs `scripts/warehouse/warehouse_standalone.py`, which calls `open_scenario()` and owns the
-app loop. The Extension workflow launches Isaac Sim with this extension and
-`--/exts/oc.scenario.warehouse/autostart=true`. With autostart on, the Scenario, `usd/warehouse_g1_scene.usda`, opens and plays once the app is
-ready. Enabled by hand (autostart off), the extension leaves the stage alone; open the Scenario from
-the Script Editor with `open_scenario()`.
-
-The Scenario turns off collision on six mirrored wall wires (`SM_WallWire_51`-`56`, scale -0.01):
-Newton's MuJoCo solver rejects their negative scale as a zero-size shape and fails to start physics.
+The G1's ROS 2 graphs are on by default (`exts."oc.scenario.warehouse".ros = true`); they are how the `oc_sonic`
+nodes drive it. With the setting off, `open_scenario()` deactivates `/World/G1/Graph`, which holds its ROS 2 graphs
+(camera, lidar, TF, IMU, joint states, odometry and the joint-command subscriber): the G1 then publishes nothing,
+renders no camera or lidar, and nothing drives it. Note that `pixi run warehouse` still passes `ros=false` unless you give it `--ros`.
+`/World/G1/Graph/ROS2_JointCommands`'s `robotPath` is overridden to `/World/G1/pelvis`.
 
 ## Behavior
 
-On Play, the G1 at `/World/G1` stands, driven by `oc.control.g1_sonic`'s `G1Wbc`, and `open_scenario()` sets physics to
-`PHYSICS_RATE` (200 Hz), the rate SONIC was trained at. With `--ros`, `/cmd_vel` drives it (Real-time control).
+On every Play, `G1Drive` (`g1_drive.py`) sets up the G1 at `/World/G1` on the first physics step: SONIC's joint gains,
+armatures and effort limits, the standing pose as position and target, and zero velocities. `open_scenario()` sets
+physics to `PHYSICS_RATE` (100 Hz; SONIC trained at 200 Hz, the policy still runs at 50 Hz). The `oc_sonic` nodes then drive the joints over ROS 2;
+`/cmd_vel` and `ros2 service call /planner/set_mode` go to them, not to Isaac Sim.
 
 ## API
 
@@ -54,6 +43,6 @@ On Play, the G1 at `/World/G1` stands, driven by `oc.control.g1_sonic`'s `G1Wbc`
 import oc.scenario.warehouse
 
 oc.scenario.warehouse.open_scenario()  # opens SCENARIO as the stage; raises RuntimeError if it can't
-oc.scenario.warehouse.PHYSICS_RATE  # 200, the physics steps per second open_scenario() sets
+oc.scenario.warehouse.PHYSICS_RATE  # 100, the physics steps per second open_scenario() sets
 oc.scenario.warehouse.ros()  # whether open_scenario() keeps the G1's ROS 2 graphs, from /exts/oc.scenario.warehouse/ros
 ```

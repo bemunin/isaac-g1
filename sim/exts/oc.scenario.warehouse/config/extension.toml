@@ -1,7 +1,7 @@
 [package]
-version = "0.10.0"
+version = "0.11.0"
 title = "G1 Warehouse"
-description = "Opens the G1 warehouse Scenario; its G1 stands on Play, and /cmd_vel drives it with ROS."
+description = "Opens the G1 warehouse Scenario; its G1 is set up for SONIC on Play and driven over ROS 2 by the oc_sonic nodes."
 category = "Simulation"
 keywords = ["scenario", "warehouse"]
 authors = ["bemunin <tw.munin@gmail.com>"]
@@ -15,15 +15,14 @@ reloadable = true
 
 [dependencies]
 "isaacsim.core.experimental.utils" = {}
-"oc.control.g1_sonic" = {}
 "omni.graph.core" = {}
 "omni.timeline" = {}
 
 [settings]
 # Open the Scenario and play once the app is ready.
 exts."oc.scenario.warehouse".autostart = false
-# Publish the G1's ROS 2 topics (camera, lidar, TF, IMU, joint states, odometry); off deactivates /World/G1/Graph.
-exts."oc.scenario.warehouse".ros = false
+# Publish the G1's ROS 2 topics (camera, lidar, TF, IMU, joint states, odometry); off deactivates /World/G1/Graph, so nothing drives the G1.
+exts."oc.scenario.warehouse".ros = true
 # Props to show, comma-separated: "clutter" (boxes, crates, cones, signs) and/or "forklift"; empty shows none.
 exts."oc.scenario.warehouse".obstacles = ""
 

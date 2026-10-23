@@ -4,25 +4,23 @@ import omni.ext
 import omni.kit.app
 import omni.timeline
 from carb.eventdispatcher import get_eventdispatcher
-from oc.control.g1_sonic import G1Wbc
 
 from .api import open_scenario
-from .cmd_vel import CmdVelPoller
+from .g1_drive import G1Drive
 
 
 class Extension(omni.ext.IExt):
     """Kit instantiates this class when oc.scenario.warehouse is enabled.
 
     With the autostart setting on, opens the Scenario and plays once the app is ready.
-    Whenever the simulation plays, /World/G1 stands with SONIC whole-body control. With ros(), /cmd_vel Twists drive it
-    (Real-time control).
+    Whenever the simulation plays, /World/G1 is set up for SONIC's joint targets (G1Drive); the oc_sonic ROS 2 nodes
+    drive it over /joint_states and /joint_commands.
     """
 
     def on_startup(self, ext_id: str):
         carb.log_info(f"[{ext_id}] startup")
-        self._walker = G1Wbc("/World/G1")
-        self._walker.start()
-        self._cmd_vel = CmdVelPoller(self._walker)
+        self._drive = G1Drive("/World/G1")
+        self._drive.start()
         self._app_ready_sub = None
         if carb.settings.get_settings().get("/exts/oc.scenario.warehouse/autostart"):
             if omni.kit.app.get_app().is_app_ready():
@@ -36,10 +34,8 @@ class Extension(omni.ext.IExt):
 
     def on_shutdown(self):
         self._app_ready_sub = None
-        self._cmd_vel.stop()
-        self._cmd_vel = None
-        self._walker.stop()
-        self._walker = None
+        self._drive.stop()
+        self._drive = None
         carb.log_info("[oc.scenario.warehouse] shutdown")
 
 

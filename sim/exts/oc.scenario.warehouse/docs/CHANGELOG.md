@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.11.0] - 2026-10-23
+### Changed
+- Physics now runs at 100 Hz (`PHYSICS_RATE`, was 200 Hz); the `oc_sonic` policy keeps its 50 Hz with `decimation` 2 (was 4).
+- The G1 is driven by the `oc_sonic` ROS 2 nodes (`/joint_states` and `/imu/data` in, `/joint_commands` out) instead of `oc.control.g1_sonic`, which is no longer a dependency. `exts."oc.scenario.warehouse".ros` now defaults to true, and the scene overrides `ROS2_JointCommands`'s `robotPath` to `/World/G1/pelvis`.
+- On Play the extension's `G1Drive` applies SONIC's gains, armatures, effort limits and standing pose (what `G1Wbc` did when it bound to the robot).
+### Removed
+- `G1Wbc` use, `CmdVelPoller`, `oc/scenario/warehouse/cmd_vel.py`, `CMD_VEL_GRAPH` and the scene's `ROS2_CmdVel` graph: `/cmd_vel` is subscribed by the planner node.
+
 ## [0.10.0] - 2026-10-20
 ### Removed
 - `WAREHOUSE_SEQUENCE` and `warehouse_sequence.py`: the G1 no longer walks a loop. On Play it stands until a `/cmd_vel` arrives (with `--ros`). Benchmarks now measure a standing G1 and are not comparable with runs before 0.10.0.

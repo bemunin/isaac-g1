@@ -10,7 +10,7 @@ from pxr import Usd
 __all__ = ["OBSTACLES", "PHYSICS_RATE", "SCENARIO", "apply_obstacles", "obstacles", "open_scenario", "ros"]
 
 SCENARIO = Path(__file__).resolve().parents[3] / "usd" / "warehouse_g1_scene.usda"
-PHYSICS_RATE = 200  # physics steps per second: SONIC's training rate
+PHYSICS_RATE = 100  # physics steps per second; SONIC trained at 200 Hz, 100 Hz lightens the sim and the policy still runs at 50 Hz
 ROS_SETTING = "/exts/oc.scenario.warehouse/ros"
 OBSTACLES_SETTING = "/exts/oc.scenario.warehouse/obstacles"
 # The SCENARIO marks these props `active = false`; apply_obstacles puts them back. Names are children of full_warehouse.
@@ -61,12 +61,11 @@ OBSTACLES = {
 # Isaac Sim extension that rescans the whole stage for gantry prims every 15 physics steps (~50 ms each here); the
 # warehouse has no gantries.
 GANTRY_EXTENSION = "isaacsim.robot_setup.virtual_gantry"
-GRAPHS = "/World/G1/Graph"  # the G1's ROS 2 graphs: camera, lidar, TF, IMU, joint states and commands, odometry, cmd_vel
-CMD_VEL_GRAPH = f"{GRAPHS}/ROS2_CmdVel"  # SubscribeTwist -> Counter: /cmd_vel Twists and a count of them
+GRAPHS = "/World/G1/Graph"  # the G1's ROS 2 graphs: camera, lidar, TF, IMU, joint states and commands, odometry
 
 
 def ros() -> bool:
-    """Whether the G1 publishes its ROS 2 topics (off by default)."""
+    """Whether the G1 publishes its ROS 2 topics and takes /joint_commands (on by default)."""
     return bool(carb.settings.get_settings().get(ROS_SETTING))
 
 
@@ -98,7 +97,7 @@ def apply_obstacles(stage: Usd.Stage, kinds: list[str]) -> None:
 
 def open_scenario() -> None:
     """Open SCENARIO as the stage, replacing the current one. Its G1 is at /World/G1. Physics runs at PHYSICS_RATE
-    (200 Hz). Unless ros(), the G1's ROS 2 graphs are deactivated, so it publishes nothing and doesn't render its
+    (100 Hz). Unless ros(), the G1's ROS 2 graphs are deactivated, so it publishes nothing and doesn't render its
     camera and lidar. obstacles() are shown. Disables GANTRY_EXTENSION, whose stage scans would otherwise slow the simulation.
 
     Raises:
