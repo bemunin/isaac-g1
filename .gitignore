@@ -16,7 +16,7 @@ __pycache__/
 /ros_ws/log/
 
 # Downloaded SONIC weights (pixi run sonic-download)
-/sim/exts/oc.control.g1_sonic/data/sonic/
+/ros_ws/src/oc_sonic/data/sonic/
 *.onnx
 
 # Workspace

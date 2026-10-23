@@ -43,7 +43,7 @@ if(BUILD_TESTING)
   target_link_libraries(test_golden oc_sonic)
   target_compile_definitions(test_golden PRIVATE
     GOLDEN_DIR="${CMAKE_CURRENT_SOURCE_DIR}/test/data"
-    MODEL_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../../../sim/exts/oc.control.g1_sonic/data/sonic"
+    MODEL_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data/sonic"
   )
 endif()
 

@@ -1,6 +1,6 @@
-"""Download NVIDIA's default SONIC weights (huggingface.co/nvidia/GEAR-SONIC) for oc.control.g1_sonic.
+"""Download NVIDIA's default SONIC weights (huggingface.co/nvidia/GEAR-SONIC) for oc_sonic.
 
-The files (~865 MB) go to sim/exts/oc.control.g1_sonic/data/sonic/, which git ignores. Files already
+The files (~865 MB) go to ros_ws/src/oc_sonic/data/sonic/, which git ignores. Files already
 there with the expected size are skipped. Weights are under the NVIDIA Open Model License (LICENSE)."""
 
 import argparse
@@ -9,7 +9,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-DESTINATION = ROOT / "sim" / "exts" / "oc.control.g1_sonic" / "data" / "sonic"
+DESTINATION = ROOT / "ros_ws" / "src" / "oc_sonic" / "data" / "sonic"
 URL = "https://huggingface.co/nvidia/GEAR-SONIC/resolve/main/{}"
 FILES = {  # name: size in bytes, from the Hugging Face tree API
     "LICENSE": 8886,

@@ -89,7 +89,7 @@ The G1 uses SONIC whole-body control by default; download its weights once with
 NVIDIA SONIC whole-body control: slow walk, walk, run, side steps and turns, plus lower-body ground
 moves — `squat`, `kneel`, `kneel_one_leg` and `crawl_hands`/`crawl_elbows`. Drive it one real-time
 command at a time (`command(LocomotionCommand)`, `walk(cmd_vel)`, ...).
-Download its weights once with `pixi run sonic-download`.
+Download its weights once with `pixi run sonic-download` (saved to `ros_ws/src/oc_sonic/data/sonic/`).
 
 ## Command over ROS
 

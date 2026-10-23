@@ -13,7 +13,7 @@ from launch_ros.descriptions import ComposableNode
 from launch_ros.parameter_descriptions import ParameterValue
 
 # This file resolves (through colcon's symlink install) to ros_ws/src/oc_sonic/launch/.
-WEIGHTS = Path(__file__).resolve().parents[4] / "sim" / "exts" / "oc.control.g1_sonic" / "data" / "sonic"
+WEIGHTS = Path(__file__).resolve().parents[1] / "data" / "sonic"
 
 
 def generate_launch_description():

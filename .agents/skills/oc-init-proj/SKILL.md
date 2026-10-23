@@ -43,7 +43,8 @@ pixi install --all
 
 ## 2. Download the SONIC weights
 
-The warehouse's default controller (`oc.control.g1_sonic`) needs NVIDIA's SONIC weights. Run the
+The warehouse's G1 controller (`oc_sonic`) needs NVIDIA's SONIC weights, saved to
+`ros_ws/src/oc_sonic/data/sonic/` (git-ignored). Run the
 Pixi task; it skips files already downloaded, so rerunning is safe:
 
 ```sh

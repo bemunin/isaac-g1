@@ -4,7 +4,7 @@ NVIDIA SONIC (kinematic planner + tracking policy) for the Unitree G1 as two com
 `oc.control.g1_sonic` Python reference. Messages are in `oc_sonic_msgs`.
 
 ```bash
-pixi run sonic-download   # weights
+pixi run sonic-download   # weights -> ros_ws/src/oc_sonic/data/sonic (git-ignored)
 pixi run build
 ros2 launch oc_sonic sonic.launch.py   # model_dir:=... use_sim_time:=true
 ```
