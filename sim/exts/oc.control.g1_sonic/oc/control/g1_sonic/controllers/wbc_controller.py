@@ -2,12 +2,10 @@
 NVIDIA SONIC (kinematic planner + tracking policy)."""
 
 import math
-from dataclasses import replace
+from dataclasses import dataclass, replace
 
 import carb
-import isaacsim.robot_motion.experimental.motion_generation as mg
 import numpy as np
-import warp as wp
 
 from ..locomotion_command import (
     CRAWL_SPEED_RANGE,
@@ -26,7 +24,7 @@ from ..locomotion_command import (
     wrap,
 )
 from .kinematic_planner import KinematicPlanner
-from .sonic import CONTROL_DT, MUJOCO_JOINTS, SONIC_DIR, SonicPolicy, yaw_of
+from .sonic import CONTROL_DT, SONIC_DIR, SonicPolicy, yaw_of
 
 DEADBAND = 0.1  # m/s: slower commands stand
 MIN_MOVING_SPEED = 0.4  # m/s: slower, SONIC's slow walk steps in place (its planner eases off from rest by itself)
@@ -48,12 +46,19 @@ def limit(command: LocomotionCommand) -> LocomotionCommand:
     )
 
 
-class G1WbcController(mg.BaseController):
-    """Turns the estimated G1 state and a real-time Locomotion command into joint position targets for all 29 body
-    joints. Call forward at 50 Hz.
+@dataclass(frozen=True)
+class G1State:
+    """Estimated G1 state, joints in MUJOCO_JOINTS order. The root position is not needed."""
 
-    The estimated state needs joint positions and velocities, root orientation (world frame) and root angular
-    velocity in the body frame (IMU gyro). The root position is not read.
+    q: np.ndarray  # joint positions [rad]
+    dq: np.ndarray  # joint velocities [rad/s]
+    orientation: np.ndarray  # root quaternion (w, x, y, z), world frame
+    gyro: np.ndarray  # root angular velocity, body frame [rad/s] (IMU)
+
+
+class G1WbcController:
+    """Turns the estimated G1 state (a G1State) and a real-time Locomotion command into joint position targets for
+    all 29 body joints, in MUJOCO_JOINTS order. Call forward at 50 Hz.
     """
 
     def __init__(self, directory=SONIC_DIR) -> None:
@@ -107,9 +112,9 @@ class G1WbcController(mg.BaseController):
         self._cancel()
         self._locomotion_mode = Crawl(int(mode))
 
-    def reset(self, estimated_state: mg.RobotState, setpoint_state: mg.RobotState | None, t: float, **kwargs) -> bool:
+    def reset(self, state: G1State) -> None:
         """Restart the planner standing still, align it with the robot's heading."""
-        base_quat = self._orientation(estimated_state)
+        base_quat = np.asarray(state.orientation, dtype=float).reshape(-1)
         self._planner.reset()
         self._policy.reset(base_quat, self._planner.root_quat())
         self._heading_offset = wrap(yaw_of(base_quat) - yaw_of(self._planner.root_quat()))
@@ -117,31 +122,21 @@ class G1WbcController(mg.BaseController):
         self._command = None
         self._posture = None
         self._locomotion_mode = None
-        return True
 
-    def forward(self, estimated_state: mg.RobotState, setpoint_state: mg.RobotState | None, t: float, **kwargs) -> mg.RobotState:
+    def forward(self, state: G1State, t: float) -> np.ndarray:
+        """Joint position targets (29, float32, MUJOCO_JOINTS order) for the estimated state at time t [s]."""
+        base_quat = np.asarray(state.orientation, dtype=float).reshape(-1)
         offset = self._heading_offset
         if self._posture is not None:  # hold a static ground posture at its height, facing where it stood
             mode, height = self._posture
             self._planner.command(mode, None, wrap(self._facing - offset), -1.0, height)
         else:
-            mode, movement, speed = self.planner_inputs(self.step(t), yaw_of(self._orientation(estimated_state)))
+            mode, movement, speed = self.planner_inputs(self.step(t), yaw_of(base_quat))
             self._planner.command(int(mode), None if movement is None else wrap(movement - offset), wrap(self._facing - offset), speed)
 
-        joints = estimated_state.joints
-        names = list(joints.robot_joint_space)
-        indices = [names.index(name) for name in MUJOCO_JOINTS]
-        q = joints.positions.numpy().reshape(-1)[indices]
-        dq = joints.velocities.numpy().reshape(-1)[indices]
-        gyro = estimated_state.root.angular_velocity.numpy().reshape(-1)
-        targets = self._policy.act(q, dq, self._orientation(estimated_state), gyro, self._planner.reference())
+        targets = self._policy.act(state.q, state.dq, base_quat, state.gyro, self._planner.reference())
         self._planner.step()
-        return mg.RobotState(
-            joints=mg.JointState.from_name(
-                joints.robot_joint_space,
-                positions=(list(MUJOCO_JOINTS), wp.array(targets.astype(np.float32), dtype=wp.float32, device="cpu")),
-            )
-        )
+        return targets.astype(np.float32)
 
     def step(self, t: float) -> LocomotionCommand:
         """The real-time Locomotion command at time t [s], or STAND once it has timed out or when there is none."""
@@ -179,7 +174,3 @@ class G1WbcController(mg.BaseController):
         self._command = None
         self._posture = None
         self._locomotion_mode = None
-
-    @staticmethod
-    def _orientation(estimated_state: mg.RobotState) -> np.ndarray:
-        return np.asarray(estimated_state.root.orientation.numpy(), dtype=float).reshape(-1)

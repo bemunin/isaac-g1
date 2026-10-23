@@ -1,5 +1,5 @@
 [package]
-version = "0.2.0"
+version = "0.3.0"
 title = "G1 SONIC"
 description = "Moves a Unitree G1 with NVIDIA SONIC whole-body control: real-time commands."
 keywords = ["control", "g1_sonic", "sonic", "whole-body"]
@@ -15,8 +15,6 @@ reloadable = true
 [dependencies]
 "isaacsim.core.experimental.prims" = {}
 "isaacsim.core.simulation_manager" = {}
-"isaacsim.robot.policy.examples" = {}
-"isaacsim.robot_motion.experimental.motion_generation" = {}
 "isaacsim.sensors.experimental.physics" = {}
 "omni.timeline" = {}
 "omni.usd" = {}

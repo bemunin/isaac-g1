@@ -2,20 +2,14 @@
 feedback, while the simulation plays."""
 
 import carb
-import isaacsim.robot_motion.experimental.motion_generation as mg
 import numpy as np
 import omni.timeline
 import omni.usd
-import warp as wp
 from isaacsim.core.experimental.prims import Articulation
 from isaacsim.core.simulation_manager import SimulationEvent, SimulationManager
-from isaacsim.robot.policy.examples.application import (
-    apply_robot_state,
-    read_robot_state,
-)
 from isaacsim.sensors.experimental.physics import IMUSensor
 
-from .controllers import G1WbcController
+from .controllers import G1State, G1WbcController
 from .controllers.sonic import (
     ARMATURE,
     CONTROL_DT,
@@ -37,6 +31,7 @@ from .locomotion_command import (
 
 __all__ = [
     "Crawl",
+    "G1State",
     "G1Wbc",
     "G1WbcController",
     "Gait",
@@ -64,6 +59,7 @@ class G1Wbc:
         self.imu_path = imu_path or f"{prim_path}/pelvis/imu_sensor"
         self._controller = G1WbcController()
         self._articulation = None
+        self._dof_indices = None
         self._imu = None
         self._pending_reset = False
         self._tick = 0
@@ -153,6 +149,7 @@ class G1Wbc:
             SimulationManager.deregister_callback(self._step_callback_id)
             self._step_callback_id = None
         self._articulation = None
+        self._dof_indices = None
         self._imu = None
         self._failed = False
 
@@ -163,6 +160,7 @@ class G1Wbc:
         self._imu = IMUSensor(self.imu_path)
         dof_names = list(self._articulation.dof_names)
         dof_indices = [dof_names.index(name) for name in MUJOCO_JOINTS]
+        self._dof_indices = dof_indices
         self._articulation.set_dof_gains(np.array([KP]), np.array([KD]), dof_indices=dof_indices)
         self._articulation.set_dof_armatures(np.array([ARMATURE]), dof_indices=dof_indices)
         self._articulation.set_dof_max_efforts(np.array([EFFORT_LIMIT]), dof_indices=dof_indices)
@@ -176,22 +174,22 @@ class G1Wbc:
         self._pending_reset = True  # reset the controller on the first tick
         return True
 
-    def _estimated_state(self, state: mg.RobotState) -> mg.RobotState:
-        """Joints and root position from the articulation; orientation and body angular velocity from the IMU."""
+    def _estimated_state(self) -> G1State:
+        """Joints from the articulation; orientation and body angular velocity from the IMU."""
+        q = self._articulation.get_dof_positions(dof_indices=self._dof_indices).numpy().reshape(-1)
+        dq = self._articulation.get_dof_velocities(dof_indices=self._dof_indices).numpy().reshape(-1)
         imu = self._imu.get_data()
         orientation, angular_velocity = imu["orientation"], imu["angular_velocity"]
         if not np.linalg.norm(orientation) > 0.5:  # no valid IMU reading yet
-            orientation = state.root.orientation.numpy().reshape(-1)
-            angular_velocity = quat_rotate(quat_conjugate(orientation), state.root.angular_velocity.numpy().reshape(-1))
-        with wp.ScopedDevice("cpu"):
-            return mg.RobotState(
-                joints=state.joints,
-                root=mg.RootState(
-                    position=wp.array(state.root.position.numpy(), dtype=wp.float32),
-                    orientation=wp.array(np.asarray(orientation, dtype=np.float32).reshape(-1), dtype=wp.float32),
-                    angular_velocity=wp.array(np.asarray(angular_velocity, dtype=np.float32).reshape(-1), dtype=wp.float32),
-                ),
-            )
+            orientation = self._articulation.get_world_poses()[1].numpy().reshape(-1)
+            world_angular_velocity = self._articulation.get_velocities()[1].numpy().reshape(-1)
+            angular_velocity = quat_rotate(quat_conjugate(orientation), world_angular_velocity)
+        return G1State(
+            q=q,
+            dq=dq,
+            orientation=np.asarray(orientation, dtype=np.float32).reshape(-1),
+            gyro=np.asarray(angular_velocity, dtype=np.float32).reshape(-1),
+        )
 
     def _on_physics_step(self, dt: float, context) -> None:
         if self._failed:
@@ -205,11 +203,12 @@ class G1Wbc:
                     carb.log_warn(f"G1Wbc({self.prim_path}): physics runs at {1 / dt:.0f} Hz; SONIC expects {1 / PHYSICS_DT:.0f} Hz")
             if self._tick % self._decimation == 0:
                 t = self._tick * dt
-                state = self._estimated_state(read_robot_state(self._articulation))
+                state = self._estimated_state()
                 if self._pending_reset:
                     self._pending_reset = False
-                    self._controller.reset(state, None, t)
-                apply_robot_state(self._articulation, self._controller.forward(state, None, t))
+                    self._controller.reset(state)
+                targets = self._controller.forward(state, t)
+                self._articulation.set_dof_position_targets(targets[None], dof_indices=self._dof_indices)
             self._tick += 1
         except Exception as error:  # noqa: BLE001 - a physics callback must not raise
             self._failed = True

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.0] - 2026-10-23
+### Changed
+- The controller no longer builds on MotionGen and the extension no longer imports warp. `G1WbcController.reset(G1State)` and `forward(G1State, t)` take a `G1State` (NumPy joint positions and velocities, root orientation, gyro) and `forward` returns the 29 joint position targets as a NumPy array.
+### Removed
+- The `isaacsim.robot_motion.experimental.motion_generation` and `isaacsim.robot.policy.examples` dependencies.
+
 ## [0.2.0] - 2026-10-20
 ### Removed
 - The Behavior sequence and the Sequence executor (`behavior_sequence.py`, `sequence_executor.py`): `BehaviorSequence`, `Segment`, `MovementStatus` and `MovementFailure`, and on `G1Wbc` / `G1WbcController`: `execute`, `sequence`, `status`, `failure`, the `on_done` argument, `side_move_left/right` and `turn_left/right`. The G1 is driven by real-time commands (`/cmd_vel` now, Nav2 later).

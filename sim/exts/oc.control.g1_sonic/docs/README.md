@@ -88,9 +88,8 @@ The controller is layered: Real-time control -> Locomotion command -> Whole-body
 On bind, the 29 joints get SONIC's PD gains, armatures and effort limits, and start in its standing
 pose. Falls are not handled. Jumps are not supported, because SONIC's planner has no jump mode.
 
-`G1WbcController` is a MotionGen controller (`isaacsim.robot_motion.experimental.motion_generation.BaseController`).
-To step it directly: `command(locomotion_command)`, then `reset(state, None, t)`
-and `forward(state, None, t)` at 50 Hz.
+`G1WbcController` is a plain NumPy controller. To step it directly, call `command(locomotion_command)`, then
+`reset(G1State)` and `forward(G1State, t)` at 50 Hz. `forward` returns 29 joint position targets in MuJoCo order.
 
 ## Tests
 

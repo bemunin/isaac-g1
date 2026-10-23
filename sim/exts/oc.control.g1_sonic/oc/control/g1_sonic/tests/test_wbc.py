@@ -1,10 +1,8 @@
 import math
 
-import isaacsim.robot_motion.experimental.motion_generation as mg
 import numpy as np
 import omni.kit.test
-import warp as wp
-from oc.control.g1_sonic import G1WbcController, Gait, LocomotionCommand
+from oc.control.g1_sonic import G1State, G1WbcController, Gait, LocomotionCommand
 from oc.control.g1_sonic.controllers.kinematic_planner import (
     IDLE,
     WALK,
@@ -41,21 +39,9 @@ def _shared_controller() -> G1WbcController:
     return _controller
 
 
-def _state(x: float, y: float, yaw: float) -> mg.RobotState:
-    """A G1 standing in SONIC's default pose at (x, y) facing yaw, at rest."""
-    with wp.ScopedDevice("cpu"):
-        return mg.RobotState(
-            joints=mg.JointState.from_name(
-                list(MUJOCO_JOINTS),
-                positions=(list(MUJOCO_JOINTS), wp.array(DEFAULT_POSE.astype(np.float32), dtype=wp.float32)),
-                velocities=(list(MUJOCO_JOINTS), wp.zeros(len(MUJOCO_JOINTS), dtype=wp.float32)),
-            ),
-            root=mg.RootState(
-                position=wp.array([x, y, 0.79], dtype=wp.float32),
-                orientation=wp.array([math.cos(yaw / 2), 0.0, 0.0, math.sin(yaw / 2)], dtype=wp.float32),
-                angular_velocity=wp.zeros(3, dtype=wp.float32),
-            ),
-        )
+def _state(yaw: float) -> G1State:
+    """A G1 standing in SONIC's default pose facing yaw, at rest."""
+    return G1State(DEFAULT_POSE.copy(), np.zeros(29), np.array([math.cos(yaw / 2), 0.0, 0.0, math.sin(yaw / 2)]), np.zeros(3))
 
 
 class TestLocomotionCommand(omni.kit.test.AsyncTestCase):
@@ -142,7 +128,7 @@ class TestKinematicPlanner(omni.kit.test.AsyncTestCase):
 class TestG1WbcController(omni.kit.test.AsyncTestCase):
     async def test_real_time_command_times_out(self):
         controller = _shared_controller()
-        controller.reset(_state(0, 0, 0), None, 0.0)
+        controller.reset(_state(0))
         controller.command(LocomotionCommand(0.5, 0.0, 0.5, Gait.WALK))
         mode, _, speed = controller.planner_inputs(controller.step(1.0), 0.0)
         self.assertEqual(mode, Gait.SLOW_WALK)
@@ -152,14 +138,14 @@ class TestG1WbcController(omni.kit.test.AsyncTestCase):
 
     async def test_halt_stands(self):
         controller = _shared_controller()
-        controller.reset(_state(0, 0, 0), None, 0.0)
+        controller.reset(_state(0))
         controller.command(LocomotionCommand(0.5, gait=Gait.WALK))
         controller.halt()
         self.assertEqual(controller.step(0.0).gait, Gait.IDLE)
 
     async def test_speed_limit_caps_speed_and_gait(self):
         controller = _shared_controller()
-        controller.reset(_state(0, 0, 0), None, 0.0)
+        controller.reset(_state(0))
         controller.set_speed_limit(0.7)
         controller.command(LocomotionCommand(2.5, gait=Gait.RUN))
         mode, _, speed = controller.planner_inputs(controller.step(0.0), 0.0)
@@ -173,15 +159,14 @@ class TestG1WbcController(omni.kit.test.AsyncTestCase):
 
     async def test_real_time_turn_in_place(self):
         controller = _shared_controller()
-        controller.reset(_state(0, 0, 0), None, 0.0)
+        controller.reset(_state(0))
         controller.command(LocomotionCommand(wz=1.0, gait=Gait.WALK))
         self.assertEqual(controller.planner_inputs(controller.step(0.0), 0.0), (Gait.IDLE, None, 0.0))
         self.assertGreater(controller._facing, 0.0)
 
     async def test_forward_outputs_joint_targets(self):
         controller = _shared_controller()
-        controller.reset(_state(0, 0, 0), None, 0.0)
-        target = controller.forward(_state(0, 0, 0), None, 0.0)
-        self.assertEqual(list(target.joints.position_names), list(MUJOCO_JOINTS))
-        self.assertTrue(np.isfinite(target.joints.positions.numpy()).all())
-        self.assertIsNone(target.root)
+        controller.reset(_state(0))
+        targets = controller.forward(_state(0), 0.0)
+        self.assertEqual(targets.shape, (29,))
+        self.assertTrue(np.isfinite(targets).all())

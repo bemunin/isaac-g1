@@ -1,3 +1,4 @@
+from .api import G1State as G1State
 from .api import G1Wbc as G1Wbc
 from .api import G1WbcController as G1WbcController
 from .api import Gait as Gait
