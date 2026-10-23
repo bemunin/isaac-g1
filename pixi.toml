@@ -11,7 +11,7 @@ shell = { cmd = "pixi shell", cwd = "ros_ws", description = "Open a ROS 2 shell 
 zenoh = "ros2 run rmw_zenoh_cpp rmw_zenohd"
 build = { cmd = "colcon build --symlink-install --merge-install", cwd = "ros_ws", description = "Build the ROS 2 packages in ros_ws" }
 lint = "ruff check ."
-sonic-download = { cmd = "python scripts/sonic_download.py", description = "Download NVIDIA's default SONIC weights for oc.control.g1_sonic (~865 MB)" }
+sonic-download = { cmd = "python scripts/sonic_download.py", description = "Download NVIDIA's default SONIC weights (~865 MB)" }
 
 [target.linux-64.tasks]
 foxglove = { cmd = "ros2 launch oc_foxglove_bridge foxglove_bridge.launch.py", env = { AMENT_PREFIX_PATH = "$PIXI_PROJECT_ROOT/ros_ws/install:$AMENT_PREFIX_PATH" }, description = "Start the Foxglove WebSocket bridge with the G1 robot description on sim time (ws://localhost:8765); run build first" }
@@ -34,6 +34,9 @@ ros-jazzy-rmw-cyclonedds-cpp = "*"
 ros-jazzy-rmw-zenoh-cpp = "*"
 ros-jazzy-foxglove-bridge = "*"
 colcon-common-extensions = ">=0.3.0,<0.4"
+onnxruntime-cpp = ">=1.31.0,<2"
+eigen = ">=5.0.1,<6"
+compilers = ">=2.0.0,<3"
 
 [feature.sim.dependencies]
 python = "3.12.*"
@@ -56,7 +59,7 @@ isaacsim = { version = "==6.2.0.0", extras = ["all", "extscache", "ros2"] }
 [feature.sim.tasks]
 sim = "python scripts/sim.py"
 warehouse = { cmd = "python scripts/warehouse.py", description = "Open the warehouse Scenario and play it: [--workflow standalone|ext] [--physics newton|physx] [--dds fast|cyclone|zenoh] [--ros] [-o|--obstacles clutter,forklift] [--headless] [--benchmark SECONDS] [--benchmark-output DIR]" }
-warehouse-cmd = { cmd = "python scripts/sim.py scripts/warehouse/warehouse_cmd_standalone.py", description = "Open the warehouse with ROS 2 on; command the G1 over ROS: walk from /cmd_vel, and sit/kneel/crawl/stand from /posture_cmd: [--physics newton|physx] [-o|--obstacles clutter,forklift] [--headless]" }
+warehouse-cmd = { cmd = "python scripts/sim.py scripts/warehouse/warehouse_cmd_standalone.py", description = "Open the warehouse with ROS 2 on; run `ros2 launch oc_sonic sonic.launch.py` to drive the G1 (/cmd_vel, ~/set_mode): [--physics newton|physx] [-o|--obstacles clutter,forklift] [--headless]" }
 
 [environments]
 default = { features = [] }

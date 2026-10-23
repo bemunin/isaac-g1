@@ -1,0 +1,8 @@
+# SONIC planner mode: 0 idle, 1 slow walk, 2 walk, 3 run, 4 squat, 5 kneel two legs, 6 kneel one leg,
+# 8 hand crawl, 14 elbow crawl. Walking and crawling modes are driven by /cmd_vel.
+uint8 mode
+# Pelvis height [m] for the postures (modes 4-6); -1 = the mode's default. Ignored by the other modes.
+float32 pelvis_height
+---
+bool accepted
+string message
