@@ -1,4 +1,6 @@
-"""Launch Isaac Sim with ROS 2 Jazzy and an RMW from the Pixi environment."""
+"""Open the Isaac Sim app with ROS 2 Jazzy and an RMW from the Pixi environment.
+
+Other arguments go to Isaac Sim unchanged, e.g. --no-window, --/app/...=..., --ext-folder DIR --enable EXT."""
 
 import argparse
 import os
@@ -8,25 +10,11 @@ from pathlib import Path
 
 from dds import DDS_RMW, DEFAULT_DDS
 
-USAGE = (
-    "Usage: pixi run sim [--dds fast|cyclone|zenoh] [--physics newton|physx] "
-    "[--isaac-option ... | script.py [script-args ...]]"
-)
 RMW_LIBRARIES = {f"lib{rmw}.so" for rmw in DDS_RMW.values()}
 PHYSICS_EXPERIENCE = {
     "newton": "isaacsim.exp.full.newton",  # Newton entry point; disables PhysX
     "physx": "isaacsim.exp.full",
 }
-OBSTACLES = ("clutter", "forklift")  # warehouse props `-o/--obstacles` can show (see oc.scenario.warehouse)
-
-
-def obstacles_argument(value: str) -> list[str]:
-    """argparse type for -o/--obstacles: a comma-separated list of OBSTACLES, or "none"."""
-    kinds = [kind.strip() for kind in value.split(",") if kind.strip()]
-    for kind in kinds:
-        if kind not in (*OBSTACLES, "none"):
-            raise argparse.ArgumentTypeError(f"invalid obstacle {kind!r} (choose from {', '.join(OBSTACLES)}, none)")
-    return [kind for kind in kinds if kind != "none"]
 
 
 def _keep(path: str) -> bool:
@@ -93,47 +81,28 @@ def launch_environment(dds: str) -> dict[str, str]:
     return env
 
 
-def main() -> int:
-    args = sys.argv[1:]
-    options = {"--dds": DDS_RMW, "--physics": PHYSICS_EXPERIENCE}
-    chosen = {}
-    # Launcher options come first, in any order, as "--opt value" or "--opt=value".
-    while args and (name := args[0].partition("=")[0]) in options:
-        if args[0] == name:
-            value, args = (args[1] if len(args) > 1 else None), args[2:]
-        else:
-            value, args = args[0].partition("=")[2], args[1:]
-        if value not in options[name]:
-            print(USAGE, file=sys.stderr)
-            return 1
-        chosen[name] = value
-    dds = chosen.get("--dds")
-    physics = chosen.get("--physics", "physx")
+def isaac_sim_command(physics: str, *isaac_args: str) -> list[str]:
+    """The command that opens the Isaac Sim app with the `physics` experience."""
+    return [sys.executable, "-c", "from isaacsim import main; main()", PHYSICS_EXPERIENCE[physics], *isaac_args]
 
+
+def exec_with_ros(command: list[str], dds: str | None = None) -> None:
+    """Replace this process with `command` in the ROS 2 environment of `dds` (default: the session's).
+
+    Raises OSError or RuntimeError if the environment or the command cannot be set up."""
+    dds = dds or session_dds()
     if dds is None:
-        dds = session_dds()
-        if dds is None:
-            print(f"Unsupported RMW_IMPLEMENTATION: {os.environ['RMW_IMPLEMENTATION']!r}", file=sys.stderr)
-            print(USAGE, file=sys.stderr)
-            return 1
+        raise RuntimeError(f"unsupported RMW_IMPLEMENTATION: {os.environ['RMW_IMPLEMENTATION']!r}; pass --dds")
+    os.execvpe(command[0], command, launch_environment(dds))
 
-    script = bool(args) and not args[0].startswith("--")
-    if script:
-        if not Path(args[0]).is_file():
-            print(f"Unknown argument or file not found: {args[0]!r}", file=sys.stderr)
-            print(USAGE, file=sys.stderr)
-            return 1
-        if "--physics" in chosen:
-            print("--physics only applies when launching the Isaac Sim app, not a script", file=sys.stderr)
-            return 1
 
+def main() -> int:
+    parser = argparse.ArgumentParser(prog="pixi run sim", description=__doc__, allow_abbrev=False)
+    parser.add_argument("--dds", choices=DDS_RMW, help="ROS 2 middleware (default: the session's)")
+    parser.add_argument("--physics", choices=PHYSICS_EXPERIENCE, default="physx", help="physics engine (default: physx)")
+    args, isaac_args = parser.parse_known_args()
     try:
-        env = launch_environment(dds)
-        if script:
-            command = [sys.executable, *args]
-        else:
-            command = [sys.executable, "-c", "from isaacsim import main; main()", PHYSICS_EXPERIENCE[physics], *args]
-        os.execvpe(sys.executable, command, env)
+        exec_with_ros(isaac_sim_command(args.physics, *isaac_args), args.dds)
     except (OSError, RuntimeError) as exc:
         print(f"Unable to launch Isaac Sim: {exc}", file=sys.stderr)
         return 1

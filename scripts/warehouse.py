@@ -1,8 +1,8 @@
 """Open the warehouse Scenario (oc.scenario.warehouse) in Isaac Sim and play it, with ROS 2 Jazzy and an RMW
 from the Pixi environment.
 
-The Standalone workflow (default) runs in this script, re-executed through sim.py with the ROS 2 environment;
-the Extension workflow launches Isaac Sim with the extension, which opens the Scenario and plays."""
+The Standalone workflow (default) runs in this script, re-run with --app in the ROS 2 environment; the Extension
+workflow launches Isaac Sim with the extension, which opens the Scenario and plays."""
 
 import argparse
 import os
@@ -11,11 +11,20 @@ from pathlib import Path
 
 from dds import DDS_RMW
 
-from sim import OBSTACLES, PHYSICS_EXPERIENCE, obstacles_argument
+from sim import PHYSICS_EXPERIENCE, exec_with_ros, isaac_sim_command
 
 ROOT = Path(__file__).resolve().parent.parent
 EXTENSION = "oc.scenario.warehouse"
-SIM_SCRIPT = ROOT / "scripts" / "sim.py"
+OBSTACLES = ("clutter", "forklift")  # warehouse props `-o/--obstacles` can show (see oc.scenario.warehouse)
+
+
+def obstacles_argument(value: str) -> list[str]:
+    """argparse type for -o/--obstacles: a comma-separated list of OBSTACLES, or "none"."""
+    kinds = [kind.strip() for kind in value.split(",") if kind.strip()]
+    for kind in kinds:
+        if kind not in (*OBSTACLES, "none"):
+            raise argparse.ArgumentTypeError(f"invalid obstacle {kind!r} (choose from {', '.join(OBSTACLES)}, none)")
+    return [kind for kind in kinds if kind != "none"]
 
 
 def parse_args() -> argparse.Namespace:
@@ -26,15 +35,8 @@ def parse_args() -> argparse.Namespace:
         default="standalone",
         help="standalone or extension workflow (default: standalone)",
     )
-    parser.add_argument(
-        "--physics",
-        choices=PHYSICS_EXPERIENCE,
-        default="newton",
-        help="physics engine (default: newton)",
-    )
-    parser.add_argument(
-        "--dds", choices=DDS_RMW, help="ROS 2 middleware (default: the session's)"
-    )
+    parser.add_argument("--physics", choices=PHYSICS_EXPERIENCE, default="newton", help="physics engine (default: newton)")
+    parser.add_argument("--dds", choices=DDS_RMW, help="ROS 2 middleware (default: the session's)")
     parser.add_argument(
         "--ros",
         action="store_true",
@@ -50,31 +52,25 @@ def parse_args() -> argparse.Namespace:
         help=f"warehouse props to show, comma-separated: {', '.join(OBSTACLES)} (default: none)",
     )
     parser.add_argument("--headless", action="store_true", help="run without a window")
-    # Internal: the Standalone workflow's re-execution through sim.py runs the app in this process.
+    # Internal: the Standalone workflow's re-run in the ROS 2 environment runs the app in this process.
     parser.add_argument("--app", action="store_true", help=argparse.SUPPRESS)
     return parser.parse_args()
 
 
 def launch(args: argparse.Namespace, obstacles: str) -> int:
-    """Run sim.py, which sets up ROS 2 and starts Isaac Sim or this script again with --app."""
-    launcher = [
-        sys.executable,
-        str(SIM_SCRIPT),
-        *(["--dds", args.dds] if args.dds else []),
-    ]
+    """Start Isaac Sim with the extension, or re-run this script with --app, in the ROS 2 environment."""
     if args.workflow == "ext":
-        command = [
-            *launcher,
-            *("--physics", args.physics),
+        command = isaac_sim_command(
+            args.physics,
             *("--ext-folder", str(ROOT / "sim" / "exts"), "--enable", EXTENSION),
             f"--/exts/{EXTENSION}/autostart=true",
             f"--/exts/{EXTENSION}/ros={str(args.ros).lower()}",
             *([f"--/exts/{EXTENSION}/obstacles={obstacles}"] if obstacles else []),
             *(["--no-window"] if args.headless else []),
-        ]
+        )
     else:
         command = [
-            *launcher,
+            sys.executable,
             str(Path(__file__).resolve()),
             "--app",
             *("--physics", args.physics),
@@ -83,8 +79,8 @@ def launch(args: argparse.Namespace, obstacles: str) -> int:
             *(["--headless"] if args.headless else []),
         ]
     try:
-        os.execv(sys.executable, command)
-    except OSError as exc:
+        exec_with_ros(command, args.dds)
+    except (OSError, RuntimeError) as exc:
         print(f"Unable to launch the warehouse: {exc}", file=sys.stderr)
         return 1
 
@@ -134,9 +130,7 @@ def run_standalone(args: argparse.Namespace, obstacles: str) -> int:
 
 def main() -> int:
     args = parse_args()
-    obstacles = ",".join(
-        dict.fromkeys(args.obstacles)
-    )  # de-duplicated, in the order given
+    obstacles = ",".join(dict.fromkeys(args.obstacles))  # de-duplicated, in the order given
     return run_standalone(args, obstacles) if args.app else launch(args, obstacles)
 
 

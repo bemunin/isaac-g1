@@ -12,8 +12,11 @@ import os
 import sys
 from pathlib import Path
 
+from warehouse import obstacles_argument
+
+from sim import PHYSICS_EXPERIENCE, exec_with_ros
+
 ROOT = Path(__file__).resolve().parents[1]
-from sim import PHYSICS_EXPERIENCE, obstacles_argument
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--physics", choices=PHYSICS_EXPERIENCE, default="newton", help="physics engine (default: newton)")
@@ -27,7 +30,14 @@ parser.add_argument(
     help="warehouse props to show, comma-separated: clutter, forklift (default: none)",
 )
 parser.add_argument("--headless", action="store_true", help="run without a window")
+parser.add_argument("--app", action="store_true", help=argparse.SUPPRESS)
 args = parser.parse_args()
+
+if not args.app:  # the ROS 2 environment only takes effect in a new process
+    try:
+        exec_with_ros([sys.executable, str(Path(__file__).resolve()), "--app", *sys.argv[1:]])
+    except (OSError, RuntimeError) as exc:
+        sys.exit(f"Unable to launch the warehouse: {exc}")
 
 from isaacsim import SimulationApp
 
