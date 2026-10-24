@@ -1,13 +1,9 @@
 """Warehouse (Standalone workflow): open the warehouse Scenario (oc.scenario.warehouse), whose G1 stands
-on Play, or is driven over ROS 2 with --ros (SONIC whole-body control), and play until the app closes.
-
-With --benchmark SECONDS, record isaacsim.benchmark.services KPIs for SECONDS of wall-clock play, write them to
---benchmark-output and exit."""
+on Play, or is driven over ROS 2 with --ros (SONIC whole-body control), and play until the app closes."""
 
 import argparse
 import os
 import sys
-import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -27,14 +23,7 @@ parser.add_argument(
     help="warehouse props to show, comma-separated: clutter, forklift (default: none)",
 )
 parser.add_argument("--headless", action="store_true", help="run without a window")
-parser.add_argument("--benchmark", type=float, metavar="SECONDS", help="record KPIs for SECONDS of play, then exit")
-parser.add_argument("--benchmark-output", type=Path, default=ROOT / "research" / "benchmark_output", metavar="DIR")
 args = parser.parse_args()
-
-RECORDERS = [
-    *("app_frametime", "physics_frametime", "runtime", "memory", "cpu_continuous", "hardware"),
-    *("gpu_frametime", "render_frametime", "rtf_stability", "physics_step_interval"),
-]
 
 from isaacsim import SimulationApp
 
@@ -44,12 +33,6 @@ extensions = [
 ]
 if args.obstacles:
     extensions.append(f"--/exts/oc.scenario.warehouse/obstacles={','.join(dict.fromkeys(args.obstacles))}")
-if args.benchmark is not None:
-    args.benchmark_output.mkdir(parents=True, exist_ok=True)
-    extensions += [
-        *("--enable", "isaacsim.benchmark.services"),
-        f"--/exts/isaacsim.benchmark.services/metrics/metrics_output_folder={args.benchmark_output}",
-    ]
 simulation_app = SimulationApp(
     {"headless": args.headless, "extra_args": extensions},
     experience=f"{os.environ['EXP_PATH']}/{PHYSICS_EXPERIENCE[args.physics]}.kit",
@@ -71,32 +54,8 @@ except RuntimeError as error:
     sys.exit(str(error))
 omni.timeline.get_timeline_interface().play()
 
-if args.benchmark is None:
-    while simulation_app.is_running():
-        simulation_app.update()
-else:
-    from isaacsim.benchmark.services import BaseIsaacBenchmark
-
-    benchmark = BaseIsaacBenchmark(
-        benchmark_name=f"warehouse_{args.physics}_sonic{'_ros' if args.ros else ''}{'_headless' if args.headless else ''}",
-        workflow_metadata={
-            "metadata": [
-                {"name": "physics", "data": args.physics},
-                {"name": "controller", "data": "sonic"},
-                {"name": "ros", "data": str(args.ros)},
-                {"name": "headless", "data": str(args.headless)},
-                {"name": "duration_s", "data": args.benchmark},
-            ]
-        },
-        recorders=RECORDERS,
-    )
-    benchmark.run_warmup(60)  # let the renderer, physics and policy settle
-    benchmark.set_phase("benchmark")
-    end = time.monotonic() + args.benchmark
-    while simulation_app.is_running() and time.monotonic() < end:
-        simulation_app.update()
-    benchmark.store_measurements()
-    benchmark.stop()
+while simulation_app.is_running():
+    simulation_app.update()
 
 # Stop first: closing while playing crashes in isaacsim.robot_setup.virtual_gantry's stop handler.
 omni.timeline.get_timeline_interface().stop()

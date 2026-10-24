@@ -43,22 +43,7 @@ def main() -> int:
         help="warehouse props to show, comma-separated: clutter, forklift (default: none)",
     )
     parser.add_argument("--headless", action="store_true", help="run without a window")
-    parser.add_argument(
-        "--benchmark",
-        type=float,
-        metavar="SECONDS",
-        help="record isaacsim.benchmark.services KPIs for SECONDS of wall-clock play, then exit (standalone only)",
-    )
-    parser.add_argument(
-        "--benchmark-output",
-        type=Path,
-        default=ROOT / "research" / "benchmark_output",
-        metavar="DIR",
-        help="folder for the benchmark's KPI file (default: research/benchmark_output)",
-    )
     args = parser.parse_args()
-    if args.benchmark is not None and args.workflow == "ext":
-        parser.error("--benchmark needs --workflow standalone")
 
     obstacles = ",".join(dict.fromkeys(args.obstacles))  # de-duplicated, in the order given
 
@@ -81,11 +66,6 @@ def main() -> int:
             *(["--ros"] if args.ros else []),
             *(["--obstacles", obstacles] if obstacles else []),
             *(["--headless"] if args.headless else []),
-            *(
-                ["--benchmark", str(args.benchmark), "--benchmark-output", str(args.benchmark_output.resolve())]
-                if args.benchmark is not None
-                else []
-            ),
         ]
     try:
         os.execvpe(sys.executable, command, launch_environment(dds))
