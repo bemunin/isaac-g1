@@ -1,5 +1,5 @@
 [package]
-version = "0.1.0"
+version = "0.2.0"
 title = "Warehouse"
 description = "Warehouse extension."
 keywords = ["scenario", "warehouse"]
@@ -14,10 +14,17 @@ icon = "data/icon.png"
 reloadable = true
 
 [dependencies]
-"isaacsim.core.experimental.prims" = {}
 "isaacsim.core.experimental.utils" = {}
 "oc.robot.g1" = {}
 "omni.ui" = {}
+
+[settings]
+# Open the warehouse and play once the app is ready.
+exts."oc.scenario.warehouse".autostart = false
+# Publish the G1's ROS 2 topics (camera, lidar, TF, IMU, joint states, odometry); off deactivates /World/G1/Graph.
+exts."oc.scenario.warehouse".ros = false
+# Props to show, comma-separated: "clutter" (boxes, crates, cones, signs) and/or "forklift"; empty shows none.
+exts."oc.scenario.warehouse".obstacles = ""
 
 [[python.module]]
 name = "oc.scenario.warehouse"

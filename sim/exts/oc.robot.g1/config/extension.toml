@@ -14,6 +14,10 @@ icon = "data/icon.png"
 reloadable = true
 
 [dependencies]
+"isaacsim.core.experimental.prims" = {}
+"isaacsim.core.experimental.utils" = {}
+"omni.graph.core" = {}
+"omni.kit.app" = {}
 "omni.ui" = {}
 
 [[python.module]]

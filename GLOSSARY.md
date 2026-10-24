@@ -85,7 +85,7 @@ _Avoid_: multi tick sensor, sensor rate
 ### Scenarios and workflows
 
 **Scenario**:
-A USD stage holding the environment, the physics scene settings and its robots already placed.
+A USD stage holding the environment and the physics scene settings; its robots are Spawned into it when it opens.
 _Avoid_: scene (for the whole stage), world
 
 **Extension workflow**:

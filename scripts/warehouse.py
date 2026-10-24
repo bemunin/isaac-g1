@@ -76,12 +76,16 @@ def launch_extension(args: argparse.Namespace, obstacles: str) -> int:
 
 
 def run_standalone(args: argparse.Namespace, obstacles: str) -> int:
-    """Open the Scenario, whose G1 stands on Play, or is driven over ROS 2 with --ros (SONIC whole-body
-    control), and play until the app closes."""
+    """Open the Scenario through the extension's autostart, whose G1 stands on Play, or is driven over ROS 2 with
+    --ros (SONIC whole-body control), and play until the app closes."""
     from isaacsim import SimulationApp
 
     extensions = [
         *("--ext-folder", str(ROOT / "sim" / "exts"), "--enable", EXTENSION),
+        # Enabled at startup, before the extension's setup_scene activates the G1's ROS 2 graphs; Isaac Sim itself
+        # enables the bridge only after startup.
+        *("--enable", "isaacsim.ros2.bridge"),
+        f"--/exts/{EXTENSION}/autostart=true",
         f"--/exts/{EXTENSION}/ros={str(args.ros).lower()}",
         *([f"--/exts/{EXTENSION}/obstacles={obstacles}"] if obstacles else []),
     ]
@@ -91,20 +95,7 @@ def run_standalone(args: argparse.Namespace, obstacles: str) -> int:
     )
 
     # Kit modules are importable only once the app runs.
-    import isaacsim.core.experimental.utils.app as app_utils
-    import oc.scenario.warehouse
     import omni.timeline
-
-    # Isaac Sim enables the ROS 2 bridge only after startup; the Scenario's graphs need its nodes now.
-    app_utils.enable_extension("isaacsim.ros2.bridge")
-    simulation_app.update()
-
-    try:
-        oc.scenario.warehouse.open_scenario()
-    except RuntimeError as error:
-        simulation_app.close()
-        sys.exit(str(error))
-    omni.timeline.get_timeline_interface().play()
 
     while simulation_app.is_running():
         simulation_app.update()

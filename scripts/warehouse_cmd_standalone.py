@@ -5,7 +5,7 @@ Walk from /cmd_vel; sit, kneel, crawl and stand from /posture_cmd (geometry_msgs
 4 squat, 5/6 kneel two/one leg, 8/14 hand/elbow crawl; linear.z = pelvis height [m] for the postures). A posture
 holds in place; a crawl is a low mode that /cmd_vel then drives, and holds its low pose when /cmd_vel is quiet. To
 stand up from elbow crawl, enter hand crawl (8) first, then stand (0). The Scenario's layer is not saved. The
-oc.scenario.warehouse extension is enabled only for its obstacles (-o)."""
+oc.scenario.warehouse extension opens the Scenario (physics rate, obstacles) and plays it, through its autostart."""
 
 import argparse
 import os
@@ -39,12 +39,20 @@ except (OSError, RuntimeError) as exc:
 
 from isaacsim import SimulationApp
 
+obstacles = ",".join(dict.fromkeys(args.obstacles))  # de-duplicated, in the order given
+
 simulation_app = SimulationApp(
     {
         "headless": args.headless,
         "extra_args": [
             *("--ext-folder", str(ROOT / "sim" / "exts")),
-            *("--enable", "oc.control.g1_sonic", "--enable", "oc.scenario.warehouse"),  # the latter only for -o
+            *("--enable", "oc.control.g1_sonic", "--enable", "oc.scenario.warehouse"),
+            # Enabled at startup, before the extension's setup_scene activates the G1's ROS 2 graphs; Isaac Sim
+            # itself enables the bridge only after startup.
+            *("--enable", "isaacsim.ros2.bridge"),
+            "--/exts/oc.scenario.warehouse/autostart=true",
+            "--/exts/oc.scenario.warehouse/ros=true",  # the ROS 2 graphs stay on for /cmd_vel
+            *([f"--/exts/oc.scenario.warehouse/obstacles={obstacles}"] if obstacles else []),
         ],
     },
     experience=f"{os.environ['EXP_PATH']}/{PHYSICS_EXPERIENCE[args.physics]}.kit",
@@ -52,34 +60,27 @@ simulation_app = SimulationApp(
 
 # Kit modules are importable only once the app runs.
 import carb
-import isaacsim.core.experimental.utils.app as app_utils
-import isaacsim.core.experimental.utils.stage as stage_utils
 import omni.graph.core as og
 import omni.timeline
+import omni.usd
 from oc.control.g1_sonic import G1Wbc, LocomotionCommand
 from oc.control.g1_sonic.locomotion_command import Crawl, Posture
-from oc.scenario.warehouse import apply_obstacles
 
-# Isaac Sim enables the ROS 2 bridge only after startup; the Scenario's graphs need its nodes now.
-app_utils.enable_extension("isaacsim.ros2.bridge")
-app_utils.enable_extension("isaacsim.robot_setup.virtual_gantry", enabled=False)  # stage scans slow the sim; no gantries here
-simulation_app.update()
-
-SCENARIO = ROOT / "sim" / "exts" / "oc.scenario.warehouse" / "usd" / "warehouse_g1_scene.usda"
-PHYSICS_RATE = 200  # Hz, the rate SONIC was trained at
-CMD_VEL_GRAPH = "/World/G1/Graph/ROS2_CmdVel"  # in the Scenario
+CMD_VEL_GRAPH = "/World/G1/Graph/ROS2_CmdVel"  # on the G1
 POSTURE_GRAPH = "/World/Graph/ROS2_Posture"
 POSTURE_TOPIC = "/posture_cmd"
+_SETUP_UPDATES = 600  # updates the extension gets to open the Scenario and spawn the G1
 
-opened, stage = stage_utils.open_stage(str(SCENARIO))
-if not opened:
+# The extension opens the Scenario on the app's updates; wait for the G1's /cmd_vel graph.
+for _ in range(_SETUP_UPDATES):
+    if not simulation_app.is_running():
+        sys.exit("The app closed before the Scenario was ready")
+    simulation_app.update()
+    if (stage := omni.usd.get_context().get_stage()) and stage.GetPrimAtPath(CMD_VEL_GRAPH):
+        break
+else:
     simulation_app.close()
-    sys.exit(f"could not open {SCENARIO}")
-apply_obstacles(stage, args.obstacles)
-scene = stage.GetPrimAtPath("/PhysicsScene")
-for name in ("newton:timeStepsPerSecond", "physxScene:timeStepsPerSecond"):
-    if attribute := scene.GetAttribute(name):
-        attribute.Set(PHYSICS_RATE)
+    sys.exit(f"The Scenario was not ready after {_SETUP_UPDATES} updates: no {CMD_VEL_GRAPH}")
 
 keys = og.Controller.Keys
 # /cmd_vel drives walking (and a selected crawl): the Scenario's ROS2_CmdVel graph subscribes to it. The loop
@@ -110,7 +111,6 @@ posture_linear = og.Controller.attribute(f"{POSTURE_GRAPH}/SubscribePosture.outp
 
 robot = G1Wbc("/World/G1")
 robot.start()  # stands until a command arrives
-omni.timeline.get_timeline_interface().play()
 
 
 def dispatch_posture(mode: int, height: float) -> None:
