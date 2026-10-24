@@ -17,7 +17,6 @@ reloadable = true
 "isaacsim.core.experimental.prims" = {}
 "isaacsim.core.experimental.utils" = {}
 "omni.graph.core" = {}
-"omni.kit.app" = {}
 "omni.ui" = {}
 
 [[python.module]]
