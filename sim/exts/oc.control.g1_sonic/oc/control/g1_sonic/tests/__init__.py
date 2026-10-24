@@ -1,1 +1,1 @@
-from .test_wbc import *
+from .test_extension import *

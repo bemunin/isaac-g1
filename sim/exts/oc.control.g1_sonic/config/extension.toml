@@ -1,9 +1,10 @@
 [package]
-version = "0.2.0"
-title = "G1 SONIC"
-description = "Moves a Unitree G1 with NVIDIA SONIC whole-body control: real-time commands."
-keywords = ["control", "g1_sonic", "sonic", "whole-body"]
+version = "0.1.0"
+title = "G1 Sonic Whole-Body Controller"
+description = "G1 Sonic Whole-Body Controller extension."
+keywords = ["control", "g1_sonic"]
 authors = ["bemunin <tw.munin@gmail.com>"]
+repository = "https://github.com/bemunin/isaac-g1"
 readme = "docs/README.md"
 changelog = "docs/CHANGELOG.md"
 preview_image = "data/preview.png"
@@ -13,13 +14,6 @@ icon = "data/icon.png"
 reloadable = true
 
 [dependencies]
-"isaacsim.core.experimental.prims" = {}
-"isaacsim.core.simulation_manager" = {}
-"isaacsim.robot.policy.examples" = {}
-"isaacsim.robot_motion.experimental.motion_generation" = {}
-"isaacsim.sensors.experimental.physics" = {}
-"omni.timeline" = {}
-"omni.usd" = {}
 
 [[python.module]]
 name = "oc.control.g1_sonic"
