@@ -34,7 +34,7 @@ With `--ros` the G1 also subscribes to `/cmd_vel` (`geometry_msgs/Twist`, graph 
 polls its counter on every app update and sends each Twist to SONIC as a Locomotion command (Real-time control); when `/cmd_vel` goes quiet, the G1 stands.
 
 `--dds fast|cyclone|zenoh` picks the ROS 2 middleware (default: the session's). The Standalone
-workflow runs `scripts/warehouse/warehouse_standalone.py`, which calls `open_scenario()` and owns the
+workflow runs `scripts/warehouse.py` again through `scripts/sim.py` (with `--app`), which calls `open_scenario()` and owns the
 app loop. The Extension workflow launches Isaac Sim with this extension and
 `--/exts/oc.scenario.warehouse/autostart=true`. With autostart on, the Scenario, `usd/warehouse_g1_scene.usda`, opens and plays once the app is
 ready. Enabled by hand (autostart off), the extension leaves the stage alone; open the Scenario from
