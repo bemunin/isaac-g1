@@ -71,8 +71,8 @@ Pick the ROS 2 middleware once; new Pixi sessions use it.
 The warehouse example can run in many configurations, such as a different physics engine, workflow or headless mode:
 
 ```bash
-pixi run warehouse                   # Standalone workflow, Newton, SONIC, with a window
-pixi run warehouse --workflow ext    # Extension workflow
+pixi run warehouse                   # Extension workflow, Newton, SONIC, with a window
+pixi run warehouse -s                # Standalone workflow
 pixi run warehouse --physics physx   # PhysX instead of Newton
 pixi run warehouse --headless        # no window
 pixi run warehouse --ros             # publish the G1's ROS 2 topics and accept /cmd_vel (off by default)

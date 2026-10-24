@@ -10,6 +10,7 @@ from pathlib import Path
 
 from dds import DDS_RMW, DEFAULT_DDS
 
+ROS_ENV_MARKER = "OC_ROS_ENV"  # set in a process already re-executed in the ROS 2 environment
 RMW_LIBRARIES = {f"lib{rmw}.so" for rmw in DDS_RMW.values()}
 PHYSICS_EXPERIENCE = {
     "newton": "isaacsim.exp.full.newton",  # Newton entry point; disables PhysX
@@ -78,6 +79,7 @@ def launch_environment(dds: str) -> dict[str, str]:
         env["LD_PRELOAD"] = " ".join(preload)
     else:
         env.pop("LD_PRELOAD", None)
+    env[ROS_ENV_MARKER] = dds
     return env
 
 
@@ -96,10 +98,19 @@ def exec_with_ros(command: list[str], dds: str | None = None) -> None:
     os.execvpe(command[0], command, launch_environment(dds))
 
 
+def ensure_ros_environment(dds: str | None = None) -> None:
+    """Re-run this script in the ROS 2 environment of `dds` (default: the session's) unless it already runs there.
+
+    Raises OSError or RuntimeError if the environment cannot be set up."""
+    if os.environ.get(ROS_ENV_MARKER):
+        return
+    exec_with_ros([sys.executable, str(Path(sys.argv[0]).resolve()), *sys.argv[1:]], dds)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="pixi run sim", description=__doc__, allow_abbrev=False)
     parser.add_argument("--dds", choices=DDS_RMW, help="ROS 2 middleware (default: the session's)")
-    parser.add_argument("--physics", choices=PHYSICS_EXPERIENCE, default="physx", help="physics engine (default: physx)")
+    parser.add_argument("-p", "--physics", choices=PHYSICS_EXPERIENCE, default="physx", help="physics engine (default: physx)")
     args, isaac_args = parser.parse_known_args()
     try:
         exec_with_ros(isaac_sim_command(args.physics, *isaac_args), args.dds)

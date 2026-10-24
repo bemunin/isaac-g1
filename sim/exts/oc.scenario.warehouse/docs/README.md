@@ -9,8 +9,8 @@ Extension ID: `oc.scenario.warehouse`
 From the repository root:
 
 ```bash
-pixi run warehouse                   # Standalone workflow, Newton, SONIC (defaults), with a window
-pixi run warehouse --workflow ext    # Extension workflow
+pixi run warehouse                   # Extension workflow, Newton, SONIC (defaults), with a window
+pixi run warehouse -s                # Standalone workflow
 pixi run warehouse --headless        # no window
 pixi run warehouse --physics physx   # PhysX instead of Newton
 pixi run warehouse --ros             # publish the G1's ROS 2 topics
@@ -33,9 +33,9 @@ faster. The controller reads the pelvis IMU directly and is unaffected. `--ros` 
 With `--ros` the G1 also subscribes to `/cmd_vel` (`geometry_msgs/Twist`, graph `ROS2_CmdVel`). The extension
 polls its counter on every app update and sends each Twist to SONIC as a Locomotion command (Real-time control); when `/cmd_vel` goes quiet, the G1 stands.
 
-`--dds fast|cyclone|zenoh` picks the ROS 2 middleware (default: the session's). The Standalone
-workflow re-runs `scripts/warehouse.py` with `--app` in the ROS 2 environment, which calls `open_scenario()` and owns the
-app loop. The Extension workflow launches Isaac Sim with this extension and
+`--dds fast|cyclone|zenoh` picks the ROS 2 middleware (default: the session's). With `-s`, the Standalone
+workflow re-runs `scripts/warehouse.py` once in the ROS 2 environment, which calls `open_scenario()` and owns the
+app loop. The default Extension workflow launches Isaac Sim with this extension and
 `--/exts/oc.scenario.warehouse/autostart=true`. With autostart on, the Scenario, `usd/warehouse_g1_scene.usda`, opens and plays once the app is
 ready. Enabled by hand (autostart off), the extension leaves the stage alone; open the Scenario from
 the Script Editor with `open_scenario()`.
