@@ -1,6 +1,6 @@
 # isaac-g1
 
-Benchmarks Isaac Sim's ROS 2 communication across ROS 2 middlewares, built by Omnicraft.
+Simulates the Unitree G1 in Isaac Sim with SONIC whole-body control, driven over ROS 2 across selectable middlewares, built by Omnicraft.
 
 ## Language
 
@@ -82,24 +82,20 @@ _Avoid_: load, import, add (for robots)
 A robot's sensors, each running at its own tick rate instead of all updating every frame.
 _Avoid_: multi tick sensor, sensor rate
 
-### Benchmarks
-
-**Benchmark**:
-A named, repeatable run selected by name that opens a Scenario under one Physics engine and DDS.
-_Avoid_: test, experiment
+### Scenarios and workflows
 
 **Scenario**:
-A USD stage a Benchmark opens, holding the environment, the physics scene settings and its robots already placed.
+A USD stage holding the environment, the physics scene settings and its robots already placed.
 _Avoid_: scene (for the whole stage), world
 
 **Extension workflow**:
-Running a Benchmark or a Scenario by launching Isaac Sim with its Extension, which opens the Scenario and plays. `ext` on the command line.
+Running a Scenario by launching Isaac Sim with its Extension, which opens the Scenario and plays. `ext` on the command line.
 _Avoid_: ext workflow (in prose), app workflow
 
 **Standalone workflow**:
-Running a Benchmark or a Scenario from a Python script that starts Isaac Sim itself and owns the app loop. `standalone` on the command line.
+Running a Scenario from a Python script that starts Isaac Sim itself and owns the app loop. `standalone` on the command line.
 _Avoid_: script workflow, headless workflow
 
 **Physics engine**:
-The simulator that steps physics for a session: PhysX (default) or Newton.
+The simulator that steps physics for a session: PhysX or Newton. Each command sets its own default.
 _Avoid_: engine (alone), backend
