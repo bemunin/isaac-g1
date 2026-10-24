@@ -89,8 +89,12 @@ A USD stage holding the environment and the physics scene settings; its robots a
 _Avoid_: scene (for the whole stage), world
 
 **Extension workflow**:
-Running a Scenario by launching Isaac Sim with its Extension, which opens the Scenario and plays. `ext` on the command line.
+Running a Scenario by launching Isaac Sim with its Extension, which opens the Scenario and, with Autoplay, plays it. `ext` on the command line.
 _Avoid_: ext workflow (in prose), app workflow
+
+**Autoplay**:
+Playing a Scenario's simulation as soon as the Scenario opens, instead of waiting for the user to press Play. Off unless asked for.
+_Avoid_: autostart (that opens the Scenario), play on start
 
 **Standalone workflow**:
 Running a Scenario from a Python script that starts Isaac Sim itself and owns the app loop. `standalone` on the command line.

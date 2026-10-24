@@ -1,5 +1,5 @@
 [package]
-version = "0.2.0"
+version = "0.3.0"
 title = "Warehouse"
 description = "Warehouse extension."
 keywords = ["scenario", "warehouse"]
@@ -19,8 +19,10 @@ reloadable = true
 "omni.ui" = {}
 
 [settings]
-# Open the warehouse and play once the app is ready.
+# Open the warehouse once the app is ready.
 exts."oc.scenario.warehouse".autostart = false
+# Play the simulation once the Scenario opens (with autostart); off leaves it stopped.
+exts."oc.scenario.warehouse".autoplay = false
 # Publish the G1's ROS 2 topics (camera, lidar, TF, IMU, joint states, odometry); off deactivates /World/G1/Graph.
 exts."oc.scenario.warehouse".ros = false
 # Props to show, comma-separated: "clutter" (boxes, crates, cones, signs) and/or "forklift"; empty shows none.

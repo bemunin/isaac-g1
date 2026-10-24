@@ -55,7 +55,7 @@ isaacsim = { version = "==6.2.0.0", extras = ["all", "extscache", "ros2"] }
 
 [feature.sim.tasks]
 sim = { cmd = "python scripts/sim.py", description = "Open Isaac Sim with ROS 2: [--dds fast|cyclone|zenoh] [-p|--physics newton|physx] [Isaac Sim flags ...]" }
-warehouse = { cmd = "python scripts/warehouse.py", description = "Open the warehouse Scenario and play it: [-s|--standalone] [-p|--physics newton|physx] [--dds fast|cyclone|zenoh] [-r|--ros] [-o|--obstacles clutter,forklift] [--headless]" }
+warehouse = { cmd = "python scripts/warehouse.py", description = "Open the warehouse Scenario (and play it with --autoplay): [-s|--standalone] [-p|--physics newton|physx] [--dds fast|cyclone|zenoh] [-r|--ros] [-o|--obstacles clutter,forklift] [-a|--autoplay] [--headless]" }
 warehouse-cmd = { cmd = "python scripts/warehouse_cmd_standalone.py", description = "Open the warehouse with ROS 2 on; command the G1 over ROS: walk from /cmd_vel, and sit/kneel/crawl/stand from /posture_cmd: [-p|--physics newton|physx] [-o|--obstacles clutter,forklift] [--headless]" }
 
 [environments]

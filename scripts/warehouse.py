@@ -1,8 +1,8 @@
-"""Open the warehouse Scenario (oc.scenario.warehouse) in Isaac Sim and play it, with ROS 2 Jazzy and an RMW
-from the Pixi environment.
+"""Open the warehouse Scenario (oc.scenario.warehouse) in Isaac Sim (and play it with --autoplay), with ROS 2 Jazzy
+and an RMW from the Pixi environment.
 
-The Extension workflow (default) launches Isaac Sim with the extension, which opens the Scenario and plays;
--s/--standalone runs the Standalone workflow in this script, re-executed once in the ROS 2 environment."""
+The Extension workflow (default) launches Isaac Sim with the extension, which opens the Scenario and, with --autoplay,
+plays it; -s/--standalone runs the Standalone workflow in this script, re-executed once in the ROS 2 environment."""
 
 import argparse
 import os
@@ -52,8 +52,17 @@ def parse_args() -> argparse.Namespace:
         metavar="LIST",
         help=f"warehouse props to show, comma-separated: {', '.join(OBSTACLES)} (default: none)",
     )
+    parser.add_argument(
+        "-a",
+        "--autoplay",
+        action="store_true",
+        help="play the simulation once the Scenario opens (default: stopped, press Play)",
+    )
     parser.add_argument("--headless", action="store_true", help="run without a window")
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.headless and not args.autoplay:
+        parser.error("--headless needs -a/--autoplay: nothing can press Play without a window")
+    return args
 
 
 def launch_extension(args: argparse.Namespace, obstacles: str) -> int:
@@ -62,6 +71,7 @@ def launch_extension(args: argparse.Namespace, obstacles: str) -> int:
         args.physics,
         *("--ext-folder", str(ROOT / "sim" / "exts"), "--enable", EXTENSION),
         f"--/exts/{EXTENSION}/autostart=true",
+        f"--/exts/{EXTENSION}/autoplay={str(args.autoplay).lower()}",
         f"--/exts/{EXTENSION}/ros={str(args.ros).lower()}",
         *([f"--/exts/{EXTENSION}/obstacles={obstacles}"] if obstacles else []),
         *(["--no-window"] if args.headless else []),
@@ -77,7 +87,7 @@ def launch_extension(args: argparse.Namespace, obstacles: str) -> int:
 
 def run_standalone(args: argparse.Namespace, obstacles: str) -> int:
     """Open the Scenario through the extension's autostart, whose G1 stands on Play, or is driven over ROS 2 with
-    --ros (SONIC whole-body control), and play until the app closes."""
+    --ros (SONIC whole-body control), and run until the app closes."""
     from isaacsim import SimulationApp
 
     extensions = [
@@ -86,6 +96,7 @@ def run_standalone(args: argparse.Namespace, obstacles: str) -> int:
         # enables the bridge only after startup.
         *("--enable", "isaacsim.ros2.bridge"),
         f"--/exts/{EXTENSION}/autostart=true",
+        f"--/exts/{EXTENSION}/autoplay={str(args.autoplay).lower()}",
         f"--/exts/{EXTENSION}/ros={str(args.ros).lower()}",
         *([f"--/exts/{EXTENSION}/obstacles={obstacles}"] if obstacles else []),
     ]

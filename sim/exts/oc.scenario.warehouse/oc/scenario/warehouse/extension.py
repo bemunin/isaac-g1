@@ -16,7 +16,7 @@ from .ui import WarehouseWindow
 __all__ = ["Extension", "ObjectManager"]
 
 _EXTENSION = "oc.scenario.warehouse"
-_SETTINGS = f"/exts/{_EXTENSION}"  # carb settings: autostart, ros, obstacles
+_SETTINGS = f"/exts/{_EXTENSION}"  # carb settings: autostart, autoplay, ros, obstacles
 _G1_PATH = "/World/G1"
 # G1 spawn pose from the old warehouse_g1_scene.usda.
 # Orientation is roll, pitch, yaw in degrees (extrinsic XYZ).
@@ -37,6 +37,10 @@ def _warehouse_usd_path() -> str:
     return f"{app_utils.get_extension_path(_EXTENSION)}/usd/warehouse.usda"
 
 
+def _autoplay_setting() -> bool:
+    return bool(carb.settings.get_settings().get(f"{_SETTINGS}/autoplay"))
+
+
 def _ros_setting() -> bool:
     return bool(carb.settings.get_settings().get(f"{_SETTINGS}/ros"))
 
@@ -49,7 +53,8 @@ def _obstacles_setting() -> list[str]:
 
 
 class Extension(omni.ext.IExt):
-    """Kit instantiates this class when oc.scenario.warehouse is enabled; with autostart, it opens and plays."""
+    """Kit instantiates this class when oc.scenario.warehouse is enabled; with autostart, it opens the Scenario and,
+    with autoplay, plays it."""
 
     def on_startup(self, ext_id: str):
         carb.log_info(f"on_startup {ext_id}")
@@ -60,7 +65,7 @@ class Extension(omni.ext.IExt):
             self._setup_task = asyncio.ensure_future(self.setup_scene())
 
     async def setup_scene(self):
-        """Open the warehouse stage, spawn the G1, show the obstacles, set the physics rate and play."""
+        """Open the warehouse stage, spawn the G1, show the obstacles, set the physics rate and, with autoplay, play."""
         app = omni.kit.app.get_app()
         # Mutating the stage before the app is ready races the renderer.
         while not app.is_app_ready():
@@ -92,7 +97,8 @@ class Extension(omni.ext.IExt):
         except Exception as e:
             carb.log_error(f"setup_scene: failed to prepare the scenario: {e}")
             return
-        app_utils.play()
+        if _autoplay_setting():
+            app_utils.play()
 
     def on_shutdown(self):
         carb.log_info("on_shutdown")

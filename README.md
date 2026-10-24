@@ -31,11 +31,11 @@ This installs the Pixi environments, downloads the SONIC weights, links the Isaa
 
 Run the warehouse example to see the G1 stand in the hall, and inspect its topics in Foxglove.
 
-1. Start the sim with ROS 2 on. Isaac Sim opens the warehouse and plays it; the G1 stands
-   until a `/cmd_vel` arrives.
+1. Start the sim with ROS 2 on. Isaac Sim opens the warehouse and, with `-a`, plays it; the
+   G1 stands until a `/cmd_vel` arrives.
 
    ```bash
-   pixi run warehouse --ros
+   pixi run warehouse --ros -a
    ```
 
 2. In a second terminal, build `ros_ws` (once, and after changing its packages) and start the

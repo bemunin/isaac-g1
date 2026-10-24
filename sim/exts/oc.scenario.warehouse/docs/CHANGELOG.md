@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0] - 2026-10-24
+### Added
+- `autoplay` setting.
+
+### Changed
+- `autostart` no longer plays the Scenario unless `autoplay` is on.
+
 ## [0.2.0] - 2026-10-24
 ### Added
 - `autostart`, `ros` and `obstacles` settings.

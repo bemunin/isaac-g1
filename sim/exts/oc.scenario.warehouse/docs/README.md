@@ -8,7 +8,8 @@ Extension ID: `oc.scenario.warehouse`
 
 | Setting (`exts."oc.scenario.warehouse"`) | Default | Meaning |
 | --- | --- | --- |
-| `autostart` | `false` | Open the warehouse and play once the app is ready. Off, the extension leaves the stage alone. |
+| `autostart` | `false` | Open the warehouse once the app is ready. Off, the extension leaves the stage alone. |
+| `autoplay` | `false` | Play the simulation once the Scenario opens. Only acts with `autostart`; off leaves it stopped, so press Play. |
 | `ros` | `false` | Publish the G1's ROS 2 topics and `/clock`. Off, `/World/G1/Graph` and `/World/Graph/ROS2_Clock` are deactivated, so the G1 renders no camera or lidar. |
 | `obstacles` | `""` | Props to show, comma-separated: `clutter` (boxes, crates, cones, signs) and/or `forklift`; empty or `none` shows none. |
 
@@ -19,7 +20,8 @@ From the repository root:
 ```bash
 pixi run warehouse                      # Extension workflow, Newton, with a window
 pixi run warehouse -s                   # Standalone workflow
-pixi run warehouse --headless           # no window
+pixi run warehouse -a                   # play once the Scenario opens
+pixi run warehouse --headless -a        # no window (needs -a)
 pixi run warehouse -p physx             # PhysX instead of Newton
 pixi run warehouse --ros                # publish the G1's ROS 2 topics
 pixi run warehouse -o clutter,forklift  # show the hidden props
@@ -49,5 +51,5 @@ objects.visible()  # kinds whose prims are all active
 ObjectManager.OBSTACLES  # {"clutter": (prim paths...), "forklift": (prim paths...)}
 ```
 
-`show()` and `hide()` raise `ValueError` for an unknown kind. A Standalone script sets `autostart` (and `ros`,
-`obstacles`) through `extra_args` and pumps `SimulationApp.update()`, which runs the extension's setup.
+`show()` and `hide()` raise `ValueError` for an unknown kind. A Standalone script sets `autostart` (and `autoplay`,
+`ros`, `obstacles`) through `extra_args` and pumps `SimulationApp.update()`, which runs the extension's setup.
