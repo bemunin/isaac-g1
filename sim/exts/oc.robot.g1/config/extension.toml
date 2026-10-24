@@ -1,0 +1,26 @@
+[package]
+version = "0.1.0"
+title = "G1 Robot"
+description = "G1 humanoid robot extension"
+keywords = ["robot", "g1"]
+authors = ["bemunin <tw.munin@gmail.com>"]
+repository = "https://github.com/bemunin/isaac-g1"
+readme = "docs/README.md"
+changelog = "docs/CHANGELOG.md"
+preview_image = "data/preview.png"
+icon = "data/icon.png"
+
+[core]
+reloadable = true
+
+[dependencies]
+"omni.ui" = {}
+
+[[python.module]]
+name = "oc.robot.g1"
+
+[[python.module]]
+name = "oc.robot.g1.tests"
+
+[[test]]
+dependencies = ["omni.kit.test"]

@@ -1,10 +1,10 @@
 [package]
-version = "0.10.0"
-title = "G1 Warehouse"
-description = "Opens the G1 warehouse Scenario; its G1 stands on Play, and /cmd_vel drives it with ROS."
-category = "Simulation"
+version = "0.1.0"
+title = "Warehouse"
+description = "Warehouse extension."
 keywords = ["scenario", "warehouse"]
 authors = ["bemunin <tw.munin@gmail.com>"]
+repository = "https://github.com/bemunin/isaac-g1"
 readme = "docs/README.md"
 changelog = "docs/CHANGELOG.md"
 preview_image = "data/preview.png"
@@ -14,18 +14,16 @@ icon = "data/icon.png"
 reloadable = true
 
 [dependencies]
+"isaacsim.core.experimental.prims" = {}
 "isaacsim.core.experimental.utils" = {}
-"oc.control.g1_sonic" = {}
-"omni.graph.core" = {}
-"omni.timeline" = {}
-
-[settings]
-# Open the Scenario and play once the app is ready.
-exts."oc.scenario.warehouse".autostart = false
-# Publish the G1's ROS 2 topics (camera, lidar, TF, IMU, joint states, odometry); off deactivates /World/G1/Graph.
-exts."oc.scenario.warehouse".ros = false
-# Props to show, comma-separated: "clutter" (boxes, crates, cones, signs) and/or "forklift"; empty shows none.
-exts."oc.scenario.warehouse".obstacles = ""
+"oc.robot.g1" = {}
+"omni.ui" = {}
 
 [[python.module]]
 name = "oc.scenario.warehouse"
+
+[[python.module]]
+name = "oc.scenario.warehouse.tests"
+
+[[test]]
+dependencies = ["omni.kit.test"]

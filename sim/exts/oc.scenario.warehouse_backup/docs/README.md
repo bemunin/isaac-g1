@@ -1,0 +1,59 @@
+# G1 Warehouse
+
+Opens the G1 warehouse Scenario; its G1 stands on Play, and /cmd_vel drives it with ROS.
+
+Extension ID: `oc.scenario.warehouse`
+
+## Run
+
+From the repository root:
+
+```bash
+pixi run warehouse                   # Extension workflow, Newton, SONIC (defaults), with a window
+pixi run warehouse -s                # Standalone workflow
+pixi run warehouse --headless        # no window
+pixi run warehouse --physics physx   # PhysX instead of Newton
+pixi run warehouse --ros             # publish the G1's ROS 2 topics
+pixi run warehouse -o clutter,forklift # show the hidden props (`-o none` or no flag: none)
+```
+
+The Scenario marks its clutter (boxes, crates, cones, signs) and forklift `active = false`. `-o/--obstacles`
+sets `exts."oc.scenario.warehouse".obstacles` (comma-separated `clutter`, `forklift`); `open_scenario()` then
+calls `apply_obstacles()`, which activates the paths in `OBSTACLES` in the session layer, so the `.usda` is
+never changed. Prims missing from the stage are logged and skipped.
+
+SONIC's weights must be downloaded first (`pixi run sonic-download`).
+
+The G1's ROS 2 topics are off by default. `open_scenario()` deactivates `/World/G1/Graph`, which holds
+its eight ROS 2 graphs (camera, lidar, TF, IMU, joint states, odometry, and the joint-command and
+`/cmd_vel` subscribers). The G1 then publishes nothing and doesn't render its camera or lidar, so the sim runs
+faster. The controller reads the pelvis IMU directly and is unaffected. `--ros` sets
+`exts."oc.scenario.warehouse".ros = true` to keep the graphs, e.g. for Foxglove.
+
+With `--ros` the G1 also subscribes to `/cmd_vel` (`geometry_msgs/Twist`, graph `ROS2_CmdVel`). The extension
+polls its counter on every app update and sends each Twist to SONIC as a Locomotion command (Real-time control); when `/cmd_vel` goes quiet, the G1 stands.
+
+`--dds fast|cyclone|zenoh` picks the ROS 2 middleware (default: the session's). With `-s`, the Standalone
+workflow re-runs `scripts/warehouse.py` once in the ROS 2 environment, which calls `open_scenario()` and owns the
+app loop. The default Extension workflow launches Isaac Sim with this extension and
+`--/exts/oc.scenario.warehouse/autostart=true`. With autostart on, the Scenario, `usd/warehouse_g1_scene.usda`, opens and plays once the app is
+ready. Enabled by hand (autostart off), the extension leaves the stage alone; open the Scenario from
+the Script Editor with `open_scenario()`.
+
+The Scenario turns off collision on six mirrored wall wires (`SM_WallWire_51`-`56`, scale -0.01):
+Newton's MuJoCo solver rejects their negative scale as a zero-size shape and fails to start physics.
+
+## Behavior
+
+On Play, the G1 at `/World/G1` stands, driven by `oc.control.g1_sonic`'s `G1Wbc`, and `open_scenario()` sets physics to
+`PHYSICS_RATE` (200 Hz), the rate SONIC was trained at. With `--ros`, `/cmd_vel` drives it (Real-time control).
+
+## API
+
+```python
+import oc.scenario.warehouse
+
+oc.scenario.warehouse.open_scenario()  # opens SCENARIO as the stage; raises RuntimeError if it can't
+oc.scenario.warehouse.PHYSICS_RATE  # 200, the physics steps per second open_scenario() sets
+oc.scenario.warehouse.ros()  # whether open_scenario() keeps the G1's ROS 2 graphs, from /exts/oc.scenario.warehouse/ros
+```
