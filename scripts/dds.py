@@ -12,11 +12,12 @@ DDS_RMW = {
     "cyclone": "rmw_cyclonedds_cpp",
     "zenoh": "rmw_zenoh_cpp",
 }
+DEFAULT_DDS = "fast"  # also the default in scripts/dds/activate.sh and activate.bat
 USAGE = "Usage: pixi run dds [fast|cyclone|zenoh]"
 
 
-def _daemon(action: str, **kwargs) -> str | None:
-    """Run `ros2 daemon <action>`; return an error message, or None on success."""
+def _daemon(action: str, detach: bool = False) -> str | None:
+    """Run `ros2 daemon <action>`, optionally detached; return an error message, or None on success."""
     try:
         result = subprocess.run(
             ["pixi", "run", "ros2", "daemon", action],
@@ -25,27 +26,27 @@ def _daemon(action: str, **kwargs) -> str | None:
             text=True,
             timeout=20,
             check=False,
-            **kwargs,
+            # Keep the daemon outside the Pixi task's process group after this command exits.
+            start_new_session=detach and os.name != "nt",
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if detach and os.name == "nt" else 0,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         return str(exc)
     return result.stderr.strip() if result.returncode != 0 else None
 
 
-def main() -> int:
-    if len(sys.argv) > 2 or (len(sys.argv) == 2 and sys.argv[1] not in DDS_RMW):
-        print(USAGE, file=sys.stderr)
+def show() -> int:
+    """Print the DDS selected for new Pixi sessions."""
+    choice = SELECTION.read_text(encoding="utf-8").strip() if SELECTION.exists() else DEFAULT_DDS
+    if choice not in DDS_RMW:
+        print(f"Invalid DDS selection in {SELECTION}: {choice!r}", file=sys.stderr)
         return 1
+    print(choice)
+    return 0
 
-    if len(sys.argv) == 1:
-        choice = SELECTION.read_text(encoding="utf-8").strip() if SELECTION.exists() else "fast"
-        if choice not in DDS_RMW:
-            print(f"Invalid DDS selection in {SELECTION}: {choice!r}", file=sys.stderr)
-            return 1
-        print(choice)
-        return 0
 
-    choice = sys.argv[1]
+def select(choice: str) -> int:
+    """Restart the ROS 2 CLI daemon and save `choice` for new Pixi sessions."""
     if error := _daemon("stop"):
         print(f"Could not stop the ROS 2 CLI daemon before changing DDS: {error}", file=sys.stderr)
         return 1
@@ -53,17 +54,23 @@ def main() -> int:
     SELECTION.parent.mkdir(parents=True, exist_ok=True)
     SELECTION.write_text(choice + "\n", encoding="utf-8")
 
-    # Keep the daemon outside the Pixi task's process group after this command exits.
-    if error := _daemon(
-        "start",
-        start_new_session=os.name != "nt",
-        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
-    ):
+    if error := _daemon("start", detach=True):
         print(f"Selected {choice}, but could not start the ROS 2 CLI daemon: {error}", file=sys.stderr)
         return 1
 
     print(f"Selected {choice} for new Pixi sessions")
     return 0
+
+
+def main() -> int:
+    match sys.argv[1:]:
+        case []:
+            return show()
+        case [choice] if choice in DDS_RMW:
+            return select(choice)
+        case _:
+            print(USAGE, file=sys.stderr)
+            return 1
 
 
 if __name__ == "__main__":

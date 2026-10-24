@@ -6,7 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from dds import DDS_RMW
+from dds import DDS_RMW, DEFAULT_DDS
 
 USAGE = (
     "Usage: pixi run sim [--dds fast|cyclone|zenoh] [--physics newton|physx] "
@@ -36,7 +36,7 @@ def _keep(path: str) -> bool:
 
 def session_dds() -> str | None:
     """The DDS selected for this session (RMW_IMPLEMENTATION, default Fast DDS), or None if unsupported."""
-    rmw = os.environ.get("RMW_IMPLEMENTATION", DDS_RMW["fast"])
+    rmw = os.environ.get("RMW_IMPLEMENTATION", DDS_RMW[DEFAULT_DDS])
     return next((name for name, implementation in DDS_RMW.items() if implementation == rmw), None)
 
 
@@ -117,18 +117,19 @@ def main() -> int:
             print(USAGE, file=sys.stderr)
             return 1
 
-    if args and not args[0].startswith("--") and not Path(args[0]).is_file():
-        print(f"Unknown argument or file not found: {args[0]!r}", file=sys.stderr)
-        print(USAGE, file=sys.stderr)
-        return 1
-
-    if args and not args[0].startswith("--") and "--physics" in chosen:
-        print("--physics only applies when launching the Isaac Sim app, not a script", file=sys.stderr)
-        return 1
+    script = bool(args) and not args[0].startswith("--")
+    if script:
+        if not Path(args[0]).is_file():
+            print(f"Unknown argument or file not found: {args[0]!r}", file=sys.stderr)
+            print(USAGE, file=sys.stderr)
+            return 1
+        if "--physics" in chosen:
+            print("--physics only applies when launching the Isaac Sim app, not a script", file=sys.stderr)
+            return 1
 
     try:
         env = launch_environment(dds)
-        if args and not args[0].startswith("--"):
+        if script:
             command = [sys.executable, *args]
         else:
             command = [sys.executable, "-c", "from isaacsim import main; main()", PHYSICS_EXPERIENCE[physics], *args]
