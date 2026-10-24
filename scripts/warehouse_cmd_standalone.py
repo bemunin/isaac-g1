@@ -12,8 +12,7 @@ import os
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "scripts"))
+ROOT = Path(__file__).resolve().parents[1]
 from sim import PHYSICS_EXPERIENCE, obstacles_argument
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -142,7 +141,7 @@ while simulation_app.is_running():
         mode_raw, _, height = posture_linear.get()
         dispatch_posture(round(float(mode_raw)), float(height))
 
-# Stop before closing, as warehouse_standalone.py does.
+# Stop before closing, as warehouse.py does.
 omni.timeline.get_timeline_interface().stop()
 simulation_app.update()
 simulation_app.close()
