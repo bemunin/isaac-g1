@@ -15,6 +15,8 @@ reloadable = true
 
 [dependencies]
 "isaacsim.core.experimental.utils" = {}
+"isaacsim.core.simulation_manager" = {}
+"oc.control.g1_sonic" = {}
 "oc.robot.g1" = {}
 "omni.ui" = {}
 
@@ -27,6 +29,8 @@ exts."oc.scenario.warehouse".autoplay = false
 exts."oc.scenario.warehouse".ros = false
 # Props to show, comma-separated: "clutter" (boxes, crates, cones, signs) and/or "forklift"; empty shows none.
 exts."oc.scenario.warehouse".obstacles = ""
+# Drive the G1 with SONIC from the physics callback; off leaves it unpowered.
+exts."oc.scenario.warehouse".sonic = true
 
 [[python.module]]
 name = "oc.scenario.warehouse"

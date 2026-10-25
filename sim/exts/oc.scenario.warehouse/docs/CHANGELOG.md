@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+### Added
+- `get_sonic_controller()`: the running warehouse's `SonicController` (None when SONIC is off), to command the G1 from Python.
+
+### Changed
+- The `SonicController` is created with `ros=` from the `ros` setting, so it subscribes to ROS 2 only with `ros` on.
+
 ## [0.3.0] - 2026-10-24
 ### Added
 - `autoplay` setting.
