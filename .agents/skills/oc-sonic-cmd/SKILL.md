@@ -17,8 +17,8 @@ The Command source is where Locomotion commands come from: ROS 2 or a Python cal
 
 | Source | `--source` | Warehouse launch |
 |---|---|---|
-| ROS 2 | `ros` | `pixi run warehouse -a -r` (the `pixi run dds` choice must match) |
-| Python | `python` | `pixi run warehouse -a --vscode` (python_server on 127.0.0.1:8226) |
+| ROS 2 | `ros` | `pixi run warehouse -r` (the `pixi run dds` choice must match) |
+| Python | `python` | `pixi run warehouse --vscode` (python_server on 127.0.0.1:8226) |
 
 With both on, the sources race and the latest command wins.
 

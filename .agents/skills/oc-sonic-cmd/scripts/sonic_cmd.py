@@ -40,8 +40,8 @@ _MODES = {
     "scared_walk": 26,
 }
 
-_ROS_HINT = "start the warehouse with ROS on: pixi run warehouse -a -r (check that pixi run dds matches)"
-_PYTHON_HINT = "start the warehouse with: pixi run warehouse -a --vscode"
+_ROS_HINT = "start the warehouse with ROS on: pixi run warehouse -r (check that pixi run dds matches)"
+_PYTHON_HINT = "start the warehouse with: pixi run warehouse --vscode"
 _WAIT_S = 5.0  # wall seconds to wait for the sim (subscribers, /clock) and to see sim time advance
 
 
@@ -60,8 +60,8 @@ def _parse() -> argparse.Namespace:
         "replaced, unless --duration is given.",
         epilog="exit codes: 0 ok, 1 command failed, 2 sim not ready or bad arguments",
     )
-    parser.add_argument("--source", required=True, choices=("ros", "python"), help="ros: topics (warehouse -a -r); "
-                        "python: python_server on --host/--port (warehouse -a --vscode)")
+    parser.add_argument("--source", required=True, choices=("ros", "python"), help="ros: topics (warehouse -r); "
+                        "python: python_server on --host/--port (warehouse --vscode)")
     parser.add_argument("--mode", type=_mode, default=0, metavar="NAME|ID", help="mode name or id 0-26 (default: idle)")
     parser.add_argument("--vx", type=float, default=0.0, help="forward speed [m/s] (default: 0)")
     parser.add_argument("--vy", type=float, default=0.0, help="left speed [m/s] (default: 0)")
