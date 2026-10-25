@@ -1,5 +1,5 @@
 [package]
-version = "0.1.0"
+version = "0.2.0"
 title = "G1 Sonic Whole-Body Controller"
 description = "G1 Sonic Whole-Body Controller extension."
 keywords = ["control", "g1_sonic"]
@@ -14,6 +14,10 @@ icon = "data/icon.png"
 reloadable = true
 
 [dependencies]
+"isaacsim.core.experimental.prims" = {}
+"isaacsim.core.simulation_manager" = {}
+"oc.robot.g1" = {}
+"omni.graph.core" = {}
 
 [[python.module]]
 name = "oc.control.g1_sonic"
