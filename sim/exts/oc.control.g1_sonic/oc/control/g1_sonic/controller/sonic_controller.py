@@ -15,7 +15,7 @@ _log = logging.getLogger(__name__)
 
 
 class SonicMode(IntEnum):
-    """The 27 planner modes; the ids are the planner's (.agents/skills/oc-sonic-cmd/SKILL.md, localmotion_kplanner.hpp:78-115)."""
+    """The 27 planner modes; the ids are the planner's (.agents/skills/oc-sonic-cmd/GUIDE.md, localmotion_kplanner.hpp:78-115)."""
 
     IDLE = 0
     SLOW_WALK = 1
