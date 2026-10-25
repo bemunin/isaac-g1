@@ -49,7 +49,7 @@ Isaac Sim's experimental motion-generation library, whose controllers turn a rob
 _Avoid_: motion gen (as an unnamed generic), cuRobo MotionGen
 
 **MotionGen controller**:
-A controller built on MotionGen's controller interface. The Whole-body controller is one.
+A controller built on MotionGen's controller interface. The Whole-body controller is not one.
 _Avoid_: experiment motion controller, motion controller
 
 **Policy**:
@@ -57,16 +57,28 @@ A pretrained neural network that maps a robot's observations to joint actions, e
 _Avoid_: model (alone), checkpoint
 
 **Whole-body controller**:
-The G1's SONIC-based controller: it turns Locomotion commands from Real-time control into joint targets for the whole body (legs, waist and arms).
+The G1's SONIC-based controller: it turns Locomotion commands into joint targets for the whole body (legs, waist and arms).
 _Avoid_: WBC (in prose), SONIC controller
 
 **Locomotion command**:
-The one input to the Whole-body controller's motion: a velocity in the robot's frame (forward, sideways, turn rate) and a Gait. Comes from Real-time control or, later, Nav2.
+The one input to the Whole-body controller's motion: a SONIC mode, a velocity in the robot's frame (forward, sideways, turn rate) and a pelvis height. Comes over ROS 2 or from a Python caller and, later, Nav2.
 _Avoid_: cmd_vel (except for the ROS 2 message), twist, maneuver
 
+**Command source**:
+Where a run's Locomotion commands come from: ROS 2 or a Python caller in Isaac Sim's process.
+_Avoid_: communication type, channel, interface
+
+**SONIC mode**:
+One of the 27 kinds of motion SONIC's kinematic planner produces, each either a Gait or a Posture.
+_Avoid_: mode (alone), planner mode
+
 **Gait**:
-The fastest of SONIC's movement modes a Locomotion command may use: idle, slow walk, walk or run. The speed picks the mode at or below it, so a run slowing down passes through walk.
-_Avoid_: mode (alone), speed level
+A SONIC mode that moves the robot at the command's velocity, e.g. slow walk, walk, run or a crawl.
+_Avoid_: speed level
+
+**Posture**:
+A SONIC mode held in place, optionally at a pelvis height, e.g. idle (standing), squat or kneel.
+_Avoid_: pose, stance
 
 **Real-time control**:
 Issuing Locomotion commands one at a time while the simulation runs. A new command replaces the current one.
