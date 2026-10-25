@@ -105,7 +105,7 @@ Running a Scenario by launching Isaac Sim with its Extension, which opens the Sc
 _Avoid_: ext workflow (in prose), app workflow
 
 **Autoplay**:
-Playing a Scenario's simulation as soon as the Scenario opens, instead of waiting for the user to press Play. Off unless asked for.
+Playing a Scenario's simulation as soon as the Scenario opens, instead of waiting for the user to press Play. On by default when launching from the command line; the user can opt out to press Play themselves.
 _Avoid_: autostart (that opens the Scenario), play on start
 
 **Standalone workflow**:

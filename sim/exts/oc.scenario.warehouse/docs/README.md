@@ -18,10 +18,10 @@ Extension ID: `oc.scenario.warehouse`
 From the repository root:
 
 ```bash
-pixi run warehouse                      # Extension workflow, Newton, with a window
+pixi run warehouse                      # Extension workflow, Newton, with a window, plays once the Scenario opens
 pixi run warehouse -s                   # Standalone workflow
-pixi run warehouse -a                   # play once the Scenario opens
-pixi run warehouse --headless -a        # no window (needs -a)
+pixi run warehouse -m                   # stay stopped, press Play
+pixi run warehouse --headless           # no window
 pixi run warehouse -p physx             # PhysX instead of Newton
 pixi run warehouse --ros                # publish the G1's ROS 2 topics
 pixi run warehouse -o clutter,forklift  # show the hidden props

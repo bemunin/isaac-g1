@@ -1,8 +1,8 @@
-"""Open the warehouse Scenario (oc.scenario.warehouse) in Isaac Sim (and play it with --autoplay), with ROS 2 Jazzy
+"""Open the warehouse Scenario (oc.scenario.warehouse) in Isaac Sim (and play it unless -m/--manualplay), with ROS 2 Jazzy
 and an RMW from the Pixi environment.
 
-The Extension workflow (default) launches Isaac Sim with the extension, which opens the Scenario and, with --autoplay,
-plays it; -s/--standalone runs the Standalone workflow in this script, re-executed once in the ROS 2 environment."""
+The Extension workflow (default) launches Isaac Sim with the extension, which opens the Scenario and plays it unless
+-m/--manualplay; -s/--standalone runs the Standalone workflow in this script, re-executed once in the ROS 2 environment."""
 
 import argparse
 import os
@@ -54,10 +54,10 @@ def parse_args() -> argparse.Namespace:
         help=f"warehouse props to show, comma-separated: {', '.join(OBSTACLES)} (default: none)",
     )
     parser.add_argument(
-        "-a",
-        "--autoplay",
+        "-m",
+        "--manualplay",
         action="store_true",
-        help="play the simulation once the Scenario opens (default: stopped, press Play)",
+        help="leave the simulation stopped once the Scenario opens, so you press Play (default: play automatically)",
     )
     parser.add_argument(
         "--vscode",
@@ -67,8 +67,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--headless", action="store_true", help="run without a window")
     args = parser.parse_args()
-    if args.headless and not args.autoplay:
-        parser.error("--headless needs -a/--autoplay: nothing can press Play without a window")
+    if args.headless and args.manualplay:
+        parser.error("--headless can't use -m/--manualplay: nothing can press Play without a window")
     return args
 
 
@@ -78,7 +78,7 @@ def launch_extension(args: argparse.Namespace, obstacles: str) -> int:
         args.physics,
         *("--ext-folder", str(ROOT / "sim" / "exts"), "--enable", EXTENSION),
         f"--/exts/{EXTENSION}/autostart=true",
-        f"--/exts/{EXTENSION}/autoplay={str(args.autoplay).lower()}",
+        f"--/exts/{EXTENSION}/autoplay={str(not args.manualplay).lower()}",
         f"--/exts/{EXTENSION}/ros={str(args.ros).lower()}",
         *([f"--/exts/{EXTENSION}/obstacles={obstacles}"] if obstacles else []),
         *(["--enable", VSCODE_EXTENSION] if args.vscode else []),
@@ -105,7 +105,7 @@ def run_standalone(args: argparse.Namespace, obstacles: str) -> int:
         *("--enable", "isaacsim.ros2.bridge"),
         *(["--enable", VSCODE_EXTENSION] if args.vscode else []),
         f"--/exts/{EXTENSION}/autostart=true",
-        f"--/exts/{EXTENSION}/autoplay={str(args.autoplay).lower()}",
+        f"--/exts/{EXTENSION}/autoplay={str(not args.manualplay).lower()}",
         f"--/exts/{EXTENSION}/ros={str(args.ros).lower()}",
         *([f"--/exts/{EXTENSION}/obstacles={obstacles}"] if obstacles else []),
     ]

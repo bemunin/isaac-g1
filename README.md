@@ -35,7 +35,7 @@ Run the warehouse example to see the G1 stand in the hall, and inspect its topic
    G1 stands until a `/cmd_vel` arrives.
 
    ```bash
-   pixi run warehouse --ros -a
+   pixi run warehouse --ros
    ```
 
 2. In a second terminal, build `ros_ws` (once, and after changing its packages) and start the
