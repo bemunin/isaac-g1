@@ -15,6 +15,7 @@ from sim import PHYSICS_EXPERIENCE, ensure_ros_environment, exec_with_ros, isaac
 
 ROOT = Path(__file__).resolve().parent.parent
 EXTENSION = "oc.scenario.warehouse"
+VSCODE_EXTENSION = "isaacsim.code_editor.vscode"
 OBSTACLES = ("clutter", "forklift")  # warehouse props `-o/--obstacles` can show (see oc.scenario.warehouse)
 
 
@@ -58,6 +59,12 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="play the simulation once the Scenario opens (default: stopped, press Play)",
     )
+    parser.add_argument(
+        "--vscode",
+        action="store_true",
+        help="enable isaacsim.code_editor.vscode: a python_server on 127.0.0.1:8226 for the Isaac Sim VS Code Edition; "
+        "it opens an unauthenticated local code-execution port",
+    )
     parser.add_argument("--headless", action="store_true", help="run without a window")
     args = parser.parse_args()
     if args.headless and not args.autoplay:
@@ -74,6 +81,7 @@ def launch_extension(args: argparse.Namespace, obstacles: str) -> int:
         f"--/exts/{EXTENSION}/autoplay={str(args.autoplay).lower()}",
         f"--/exts/{EXTENSION}/ros={str(args.ros).lower()}",
         *([f"--/exts/{EXTENSION}/obstacles={obstacles}"] if obstacles else []),
+        *(["--enable", VSCODE_EXTENSION] if args.vscode else []),
         *(["--no-window"] if args.headless else []),
     )
     try:
@@ -95,6 +103,7 @@ def run_standalone(args: argparse.Namespace, obstacles: str) -> int:
         # Enabled at startup, before the extension's setup_scene activates the G1's ROS 2 graphs; Isaac Sim itself
         # enables the bridge only after startup.
         *("--enable", "isaacsim.ros2.bridge"),
+        *(["--enable", VSCODE_EXTENSION] if args.vscode else []),
         f"--/exts/{EXTENSION}/autostart=true",
         f"--/exts/{EXTENSION}/autoplay={str(args.autoplay).lower()}",
         f"--/exts/{EXTENSION}/ros={str(args.ros).lower()}",

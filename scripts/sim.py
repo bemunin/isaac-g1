@@ -111,7 +111,15 @@ def main() -> int:
     parser = argparse.ArgumentParser(prog="pixi run sim", description=__doc__, allow_abbrev=False)
     parser.add_argument("--dds", choices=DDS_RMW, help="ROS 2 middleware (default: the session's)")
     parser.add_argument("-p", "--physics", choices=PHYSICS_EXPERIENCE, default="physx", help="physics engine (default: physx)")
+    parser.add_argument(
+        "--vscode",
+        action="store_true",
+        help="enable isaacsim.code_editor.vscode: a python_server on 127.0.0.1:8226 for the Isaac Sim VS Code Edition; "
+        "it opens an unauthenticated local code-execution port",
+    )
     args, isaac_args = parser.parse_known_args()
+    if args.vscode:
+        isaac_args += ["--enable", "isaacsim.code_editor.vscode"]
     try:
         exec_with_ros(isaac_sim_command(args.physics, *isaac_args), args.dds)
     except (OSError, RuntimeError) as exc:
