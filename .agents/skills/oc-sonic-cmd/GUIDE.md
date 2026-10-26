@@ -41,7 +41,8 @@ Modes are grouped like the upstream keyboard teleop sets. **Movable** modes take
 - `movement_direction`: any direction for the crawls; `[0, 0, 0]` for SQUAT and the kneels.
 - `facing_direction`: any heading; static poses turn in place.
 - `speed`: adjustable for the crawls only.
-- `pelvis_height`: adjustable in every mode.
+- `pelvis_height`: adjustable in every mode. Send it together with the mode: 0.4 m for SQUAT, KNEEL_TWO_LEGS,
+  KNEEL_ONE_LEG and HAND_CRAWL, 0.2 m for ELBOW_CRAWL, unless the user asks for another height. Never send `-1` in these modes.
 
 ### Set 2: Boxing
 
@@ -89,21 +90,5 @@ Not in any teleop set; LYING_FACE_DOWN is disabled upstream.
 - `movement_direction`: `[0, 0, 0]` for both.
 - `facing_direction`: any heading; both turn in place.
 - `speed`: fixed.
-- `pelvis_height`: fixed for IDLE; adjustable for LYING_FACE_DOWN.
-
-## Get up
-
-SONIC has no get-up mode: switch from a ground pose (SQUAT, a kneel, a crawl, LYING_FACE_DOWN) to IDLE with `pelvis_height` back at `-1`, and the planner plans a ~1.5 s stand-up.
-
-```sh
-pixi run ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{}"
-pixi run ros2 topic pub --once /sonic/pelvis_height std_msgs/msg/Float32 "{data: -1.0}"
-pixi run ros2 topic pub --once /sonic/mode std_msgs/msg/Int32 "{data: 0}"
-```
-
-```python
-controller.command(SonicMode.IDLE)  # zero velocity, pelvis_height -1
-```
-
-- Works from a deliberate ground pose only; there is no recovery from a fall.
-- Crawl → IDLE is unreliable in sim: the robot can lag the stand-up and fall. Going through a kneel or SQUAT first may help (untested).
+- `pelvis_height`: fixed for IDLE; adjustable for LYING_FACE_DOWN. Send it together with the mode: 0.2 m for
+  LYING_FACE_DOWN, unless the user asks for another height. Never send `-1` in LYING_FACE_DOWN.
