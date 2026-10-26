@@ -176,7 +176,7 @@ instead of creating a second controller for it.
 - Kit-free tests (`tests/test_sonic_policy.py`) cover the observation building, histories and action decoding, the
   real ONNX standing check, and `SonicController` against a stub planner and a fake articulation (set-up, decimation,
   order, reset, close).
-- `scripts/warehouse_cmd_standalone.py` still imports the removed `G1Wbc` and needs rewriting on `SonicController`.
+- `scripts/warehouse_cmd_standalone.py` and its `warehouse-cmd` pixi task were removed; ROS commanding now goes through the `/cmd_vel`, `/sonic/mode` and `/sonic/pelvis_height` topics of `oc.control.g1_sonic`.
 
 ## Plan
 

@@ -93,25 +93,18 @@ Download its weights once with `pixi run sonic-download`.
 
 ## Command over ROS
 
-`pixi run warehouse-cmd` opens the warehouse with the G1 standing and ROS 2 on, and drives it with SONIC over
-ROS 2. Add `--headless` for no window, `--physics physx` for PhysX, `-o clutter,forklift`
-for the warehouse props.
+`pixi run warehouse --ros` opens the warehouse with ROS 2 on and SONIC driving the G1. Add `--headless` for no
+window, `--physics physx` for PhysX, `-o clutter,forklift` for the warehouse props.
 
 ```bash
-pixi run warehouse-cmd
+pixi run warehouse --ros
 ```
 
-- **Walk** with `geometry_msgs/Twist` on `/cmd_vel` (`linear.x` forward, `linear.y` left, `angular.z` turn).
-- **Lower body** with `geometry_msgs/Twist` on `/posture_cmd`: `linear.x` picks the move — `0` stand, `4` squat,
-  `5`/`6` kneel two/one leg, `8`/`14` hand/elbow crawl — and `linear.z` is the pelvis height [m] for the postures.
-  A posture holds in place; a crawl is a low mode that `/cmd_vel` then drives. To stand up from elbow crawl, enter
-  hand crawl (`8`) first, then stand (`0`).
+- `/cmd_vel` (`geometry_msgs/Twist`): `linear.x` forward, `linear.y` left, `angular.z` turn.
+- `/sonic/mode` (`std_msgs/Int32`): planner mode Id.
+- `/sonic/pelvis_height` (`std_msgs/Float32`): pelvis height [m], `-1` = mode default.
 
-```bash
-pixi run ros2 topic pub --once /posture_cmd geometry_msgs/msg/Twist "{linear: {x: 4.0, z: 0.6}}"  # squat to 0.6 m
-pixi run ros2 topic pub --once /posture_cmd geometry_msgs/msg/Twist "{linear: {x: 8.0}}"           # hand crawl; /cmd_vel then drives it
-pixi run ros2 topic pub --once /posture_cmd geometry_msgs/msg/Twist "{linear: {x: 0.0}}"           # stand up
-```
+Mode Ids and command sequences: [.agents/skills/oc-sonic-cmd/GUIDE.md](.agents/skills/oc-sonic-cmd/GUIDE.md).
 
 ## Skills
 
