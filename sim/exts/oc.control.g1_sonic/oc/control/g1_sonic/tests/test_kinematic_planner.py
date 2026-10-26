@@ -146,7 +146,7 @@ class TestKinematicPlanner(unittest.TestCase):
 
     def test_stale_cmd_vel_stands_and_stops_turning(self):
         self.planner.set_mode(_WALK)
-        self.planner.set_cmd_vel(1.0, 0.0, 0.5)
+        self.planner.set_cmd_vel(1.0, 0.0, 0.5, expires=True)
         for _ in range(240):  # 1.2 s: the command times out after 1 s
             self.planner.step(0.005)
         yaw = self.planner.facing_yaw
@@ -156,6 +156,14 @@ class TestKinematicPlanner(unittest.TestCase):
         for _ in range(100):
             self.planner.step(0.005)
         self.assertEqual(self.planner.facing_yaw, yaw)
+
+    def test_python_cmd_vel_holds_without_new_messages(self):
+        self.planner.set_mode(_WALK)
+        self.planner.set_cmd_vel(1.0, 0.0, 0.5)
+        for _ in range(240):  # 1.2 s: past the ROS timeout
+            self.planner.step(0.005)
+        self.assertAlmostEqual(self.planner.facing_yaw, 0.6, places=2)
+        self.assertEqual(self.planner.last_inputs.mode, _WALK)
 
     def test_tiny_wz_does_not_turn(self):
         self.planner.set_cmd_vel(0.0, 0.0, 0.005)

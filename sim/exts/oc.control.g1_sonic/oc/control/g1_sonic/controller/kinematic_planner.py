@@ -8,6 +8,7 @@ and a replan runs on one worker thread and is cross-faded into the stored motion
 Design: research/adr/0003-kinematic-planner-inputs.md.
 """
 
+import functools
 import math
 from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass
@@ -34,7 +35,7 @@ LOOK_AHEAD = 2  # 50 Hz frames between the playback frame and where a replan sta
 BLEND_FRAMES = 8  # 50 Hz frames of the cross-fade when a plan is spliced in; about the planner's context length
 REFERENCE_STEP = 5  # 50 Hz frames between the FUTURE_FRAMES reference frames (0.1 s)
 MIN_SPEED = 0.01  # m/s: a slower command stands still
-CMD_TIMEOUT = 1.0  # s: an older /cmd_vel counts as zero (ros2_input_handler.hpp:305-318)
+CMD_TIMEOUT = 1.0  # s: an older ROS /cmd_vel counts as zero (ros2_input_handler.hpp:305-318); Python commands hold
 MIN_TURN_RATE = 0.01  # rad/s: a slower /cmd_vel wz is ignored (ros2_input_handler.hpp:740)
 SPEED_RANGES = {1: (0.2, 0.8), 2: (0.8, 1.5), 3: (1.5, 3.0)}  # m/s for slow walk, walk, run (gamepad.hpp:349-367)
 DEFAULT_SPEED_MODES = frozenset({4, 5, 6})  # squat, kneel two legs, kneel: target_vel -1 (gamepad.hpp:369-381)
@@ -182,6 +183,7 @@ class KinematicPlanner:
         self._cmd = (0.0, 0.0)  # latest /cmd_vel vx, vy
         self._wz = 0.0
         self._cmd_age = math.inf  # s of sim time since the last /cmd_vel
+        self._cmd_expires = False  # True when the last command came from ROS, so it times out
         self._mode = IDLE
         self._pelvis_height = -1.0
         self._initialized = False
@@ -197,10 +199,11 @@ class KinematicPlanner:
         self.late_plans = 0  # plans spliced after their start frame had played
         self.skipped_replans = 0  # 10 Hz ticks skipped because the previous plan was still in flight
 
-    def set_cmd_vel(self, vx: float, vy: float, wz: float) -> None:
+    def set_cmd_vel(self, vx: float, vy: float, wz: float, expires: bool = False) -> None:
         self._cmd = (vx, vy)
         self._wz = wz
         self._cmd_age = 0.0
+        self._cmd_expires = expires
 
     def set_mode(self, mode: int) -> None:
         if not 0 <= mode < NUM_MODES:
@@ -232,7 +235,7 @@ class KinematicPlanner:
             from .ros import subscribe_commands
 
             self._ros_subscriptions = [
-                G1(robot_prim_path).subscribe_cmd_vel(self.set_cmd_vel),
+                G1(robot_prim_path).subscribe_cmd_vel(functools.partial(self.set_cmd_vel, expires=True)),
                 *subscribe_commands(robot_prim_path, self.set_mode, self.set_pelvis_height),
             ]
 
@@ -303,7 +306,7 @@ class KinematicPlanner:
 
     def _stale(self) -> bool:
         """True when the last /cmd_vel is older than CMD_TIMEOUT; its vx, vy and wz then count as zero."""
-        return self._cmd_age > CMD_TIMEOUT
+        return self._cmd_expires and self._cmd_age > CMD_TIMEOUT
 
     def _build_inputs(self, context: np.ndarray) -> KinematicPlannerInputs:
         vx, vy = (0.0, 0.0) if self._stale() else self._cmd

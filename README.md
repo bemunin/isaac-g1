@@ -52,19 +52,34 @@ Run the warehouse example to see the G1 stand in the hall, and inspect its topic
 The sim uses the session's DDS (`pixi run dds` shows it). If it is `zenoh`, start the router with
 `pixi run zenoh` before steps 1 and 2. See [DDS](#dds) and [Warehouse](#warehouse) for the options.
 
-## DDS
+## Control
 
-Pick the ROS 2 middleware once; new Pixi sessions use it.
+Our project use **SONIC** ([`oc.control.g1_sonic`](sim/exts/oc.control.g1_sonic/docs/README.md)) to move the G1 with
+NVIDIA SONIC whole-body control: slow walk, walk, run, side steps and turns, plus lower-body ground
+moves — `squat`, `kneel`, `kneel_one_leg` and `crawl_hands`/`crawl_elbows`. Drive it one real-time
+command at a time (`command(LocomotionCommand)`, `walk(cmd_vel)`, ...).
+Download its weights once with `pixi run sonic-download`.
 
-| Command | Does |
-| --- | --- |
-| `pixi run dds [fast\|cyclone\|zenoh]` | Select the DDS (no argument shows the current one) |
-| `pixi run zenoh` | Start the Zenoh router (needed for `zenoh`) |
-| `pixi run shell` | Open a ROS 2 shell in `ros_ws` |
-| `pixi run build` | Build the ROS 2 packages in `ros_ws` |
-| `pixi run foxglove` | Start the Foxglove bridge and the G1 robot description on `ws://localhost:8765` (`oc_foxglove_bridge`) |
+## Command over ROS
 
-![Foxglove showing the G1 lidar, camera, TF and IMU topics](docs/images/showcase_foxglove_panel.png)
+SONIC listens on these topics:
+
+| Topic | Message | Sets |
+| --- | --- | --- |
+| `/sonic/mode` | `std_msgs/Int32` | Motion mode Id 0–26, e.g. `2` WALK, `4` SQUAT, `8` hand crawl |
+| `/cmd_vel` | `geometry_msgs/Twist` | `linear.x` forward and `linear.y` left [m/s], `angular.z` turn [rad/s] |
+| `/sonic/pelvis_height` | `std_msgs/Float32` | Pelvis height [m] for ground poses; `-1` keeps the mode's default |
+
+Example: make the G1 walk forward at 1 m/s:
+
+```bash
+pixi run ros2 topic pub --once /sonic/mode std_msgs/msg/Int32 "{data: 2}"
+pixi run ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 1.0}}"
+```
+The full ROS 2 command examples are in oc-sonic-cmd [SKILL.md](.agents/skills/oc-sonic-cmd/SKILL.md), and all 27 sonic motion mode details are in [GUIDE.md](.agents/skills/oc-sonic-cmd/GUIDE.md).
+
+> [!IMPORTANT]
+> Your coding agent can drive the G1 too: load the `oc-sonic-cmd` skill in your coding agent and start asking it to walk, turn, squat or crawl.
 
 ## Warehouse
 
@@ -83,28 +98,20 @@ The G1 uses SONIC whole-body control by default; download its weights once with
 `pixi run sonic-download` first. `--dds fast|cyclone|zenoh` overrides the session's DDS. See
 [`sim/exts/oc.scenario.warehouse`](sim/exts/oc.scenario.warehouse/docs/README.md).
 
-## Control
+## DDS
 
-**SONIC** ([`oc.control.g1_sonic`](sim/exts/oc.control.g1_sonic/docs/README.md)) moves the G1 with
-NVIDIA SONIC whole-body control: slow walk, walk, run, side steps and turns, plus lower-body ground
-moves — `squat`, `kneel`, `kneel_one_leg` and `crawl_hands`/`crawl_elbows`. Drive it one real-time
-command at a time (`command(LocomotionCommand)`, `walk(cmd_vel)`, ...).
-Download its weights once with `pixi run sonic-download`.
+Pick the ROS 2 middleware once; new Pixi sessions use it.
 
-## Command over ROS
+| Command | Does |
+| --- | --- |
+| `pixi run dds [fast\|cyclone\|zenoh]` | Select the DDS (no argument shows the current one) |
+| `pixi run zenoh` | Start the Zenoh router (needed for `zenoh`) |
+| `pixi run shell` | Open a ROS 2 shell in `ros_ws` |
+| `pixi run build` | Build the ROS 2 packages in `ros_ws` |
+| `pixi run foxglove` | Start the Foxglove bridge and the G1 robot description on `ws://localhost:8765` (`oc_foxglove_bridge`) |
 
-`pixi run warehouse --ros` opens the warehouse with ROS 2 on and SONIC driving the G1. Add `--headless` for no
-window, `--physics physx` for PhysX, `-o clutter,forklift` for the warehouse props.
+![Foxglove showing the G1 lidar, camera, TF and IMU topics](docs/images/showcase_foxglove_panel.png)
 
-```bash
-pixi run warehouse --ros
-```
-
-- `/cmd_vel` (`geometry_msgs/Twist`): `linear.x` forward, `linear.y` left, `angular.z` turn.
-- `/sonic/mode` (`std_msgs/Int32`): planner mode Id.
-- `/sonic/pelvis_height` (`std_msgs/Float32`): pelvis height [m], `-1` = mode default.
-
-Mode Ids and command sequences: [.agents/skills/oc-sonic-cmd/GUIDE.md](.agents/skills/oc-sonic-cmd/GUIDE.md).
 
 ## Skills
 
@@ -113,6 +120,7 @@ Ask your coding agent to use these (in Claude Code, `/<name>`):
 - `oc-init-proj`: install the Pixi envs and create the project symlinks; `/init` in Claude Code, `$oc-init-proj` in Codex.
 - `oc-add-ext`: scaffold a new Isaac Sim extension.
 - `oc-g1-ros`: add the G1 to a stage, work with its ROS 2 graphs, or add sensors.
+- `oc-sonic-cmd`: command the G1 with any of the 27 SONIC motion modes (walk, run, squat, kneel, crawl, ...) over ROS 2 or Python.
 
 The other skills in `.agents/skills/` are third-party Isaac Sim references. Agent rules live in
 [`AGENTS.md`](AGENTS.md); project terms in [`GLOSSARY.md`](GLOSSARY.md).
