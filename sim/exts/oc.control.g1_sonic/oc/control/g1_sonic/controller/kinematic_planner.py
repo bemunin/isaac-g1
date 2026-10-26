@@ -172,7 +172,7 @@ class KinematicPlanner:
         self._pelvis_height = -1.0
         self._initialized = False
         self._elapsed = 0.0
-        self._stop_ros = None
+        self._ros_subscriptions = []  # /cmd_vel and /sonic subscriptions while connected
         self._motion: Motion | None = None  # the stored plan; frame 0 is the playback frame at the last splice
         self._cursor = 0.0  # playback position in `_motion`, 50 Hz frames
         self._pending: tuple[Future, int] | None = None  # the replan in flight and its start frame in `_motion`
@@ -211,10 +211,15 @@ class KinematicPlanner:
         self._motion = resample_50hz(self.mujoco_qpos)
         self._cursor = 0.0
         self._initialized = True
-        if robot_prim_path is not None and self._stop_ros is None:
-            from . import ros  # Kit only
+        if robot_prim_path is not None and not self._ros_subscriptions:
+            from oc.robot.g1 import G1  # Kit only
 
-            self._stop_ros = ros.connect(self, robot_prim_path)
+            from .ros import subscribe_commands
+
+            self._ros_subscriptions = [
+                G1(robot_prim_path).subscribe_cmd_vel(self.set_cmd_vel),
+                *subscribe_commands(robot_prim_path, self.set_mode, self.set_pelvis_height),
+            ]
 
     def reference(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Joints, joint velocities (IsaacLab order) and root quaternions (wxyz) of FUTURE_FRAMES frames 0.1 s apart,
@@ -244,9 +249,9 @@ class KinematicPlanner:
 
     def close(self) -> None:
         """Stop the ROS 2 subscriptions and the worker thread."""
-        if self._stop_ros is not None:
-            self._stop_ros()
-            self._stop_ros = None
+        for subscription in self._ros_subscriptions:
+            subscription.stop()
+        self._ros_subscriptions = []
         self._pending = None
         if self._executor is not None:
             self._executor.shutdown(wait=True, cancel_futures=True)
