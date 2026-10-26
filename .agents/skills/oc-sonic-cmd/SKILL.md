@@ -26,11 +26,11 @@ Each topic sets its inputs independently, and the others keep their last values.
 Publish a mode Id from [GUIDE.md](GUIDE.md) to `/sonic/mode`, e.g. `2` WALK or `4` SQUAT. To switch to WALK:
 ```sh
 # reset velocity and pelvis height to defaults
-ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist "{}"                        
-ros2 topic pub --once /sonic/pelvis_height std_msgs/msg/Float32 "{data: -1.0}"   
+pixi run ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{}"                        
+pixi run ros2 topic pub --once /sonic/pelvis_height std_msgs/msg/Float32 "{data: -1.0}"   
 
 # change mode
-ros2 topic pub --once /sonic/mode std_msgs/msg/Int32 "{data: 2}"
+pixi run ros2 topic pub --once /sonic/mode std_msgs/msg/Int32 "{data: 2}"
 ```
 
 Velocity and pelvis height carry over to the new mode, so reset both first: a zero `/cmd_vel` and
@@ -43,19 +43,25 @@ Velocity and pelvis height carry over to the new mode, so reset both first: a ze
 
 ```sh
 # forward at 1.0 m/s
-ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 1.0}}"
+pixi run ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 1.0}}"
 
 # step left at 0.4 m/s
-ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{linear: {y: 0.4}}"
+pixi run ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{linear: {y: 0.4}}"
 
 # forward while turning left
-ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 1.0}, angular: {z: 0.3}}"
+pixi run ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 1.0}, angular: {z: 0.3}}"
 
 # stop
-ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist "{}"
+pixi run ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{}"
 ```
 
-The last command holds after Ctrl+C.
+`/cmd_vel` publishes at 10 Hz until the user says stop. Keep exactly one `/cmd_vel` publisher running, in the
+background, and manage it yourself: before starting a new one, and when the user says stop, kill the running one,
+then publish the next command (a zero Twist for stop).
+
+```sh
+pkill -f "topic pub.*/cmd_vel"  # end the running /cmd_vel publisher
+```
 
 ### Rotate (set facing direction)
 
@@ -64,9 +70,8 @@ angle ÷ rate seconds, then stop. Static modes turn in place.
 
 ```sh
 # turn 90° left: 0.5 rad/s for 3.14 s
-ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist "{angular: {z: 0.5}}"
-sleep 3.14
-ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist "{}"
+timeout 3.14 pixi run ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{angular: {z: 0.5}}"
+pixi run ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{}"
 ```
 
 The angle is approximate: the turn runs on sim time, and each `ros2` call adds start-up delay.
@@ -76,8 +81,8 @@ The angle is approximate: the turn runs on sim time, and each `ros2` call adds s
 Ground poses (Set 1 and LYING_FACE_DOWN) take 0.2-0.8 m; `-1` restores the mode's default.
 
 ```sh
-ros2 topic pub --once /sonic/pelvis_height std_msgs/msg/Float32 "{data: 0.5}"   # lower to 0.5 m
-ros2 topic pub --once /sonic/pelvis_height std_msgs/msg/Float32 "{data: -1.0}"  # default height
+pixi run ros2 topic pub --once /sonic/pelvis_height std_msgs/msg/Float32 "{data: 0.5}"   # lower to 0.5 m
+pixi run ros2 topic pub --once /sonic/pelvis_height std_msgs/msg/Float32 "{data: -1.0}"  # default height
 ```
 
 ## Isaac Sim API command
@@ -184,16 +189,30 @@ are wall-clock seconds, so a slow sim covers less ground per step.
 
 ## Notes
 
-Before sending a command, check every requested value against the target mode's row in [GUIDE.md](GUIDE.md)
-and clamp it into range:
+### Clamp inputs
 
-- **Mode**: an Id 0-26 from GUIDE.md; map a named motion ("crawl", "box") to its Id.
-- **Speed** (the length of `(vx, vy)`): scale `(vx, vy)` into the mode's Speed range, keeping the direction.
-  For a `fixed` speed, keep the request and tell the user the speed is not adjustable in that mode.
-- **Static modes** (Movable `no`): send zero `vx` and `vy`; only `wz` (turning) applies.
-- **HAPPY_DANCE_WALK**: forward only, so send `vy = 0` and `vx >= 0`.
-- **Pelvis height**: clamp ground poses to 0.2-0.8 m; send `-1` for every other mode.
+Check each requested value against the mode's row in [GUIDE.md](GUIDE.md) and clamp it into range:
+
+- **Mode**: an Id 0-26; map a named motion ("crawl", "box") to its Id.
+- **Speed**: scale `(vx, vy)` into the mode's Speed range, keeping the direction. A `fixed` speed can't be set:
+  keep the request and say so.
+- **Static modes** (Movable `no`): zero `vx` and `vy`; only `wz` applies.
+- **HAPPY_DANCE_WALK**: forward only, `vy = 0` and `vx >= 0`.
+- **Pelvis height**: 0.2-0.8 m for ground poses, `-1` for every other mode.
 
 Tell the user each value you changed, e.g. "WALK speed 2.0 → 1.5 m/s".
+
+### Stop
+
+When the user says stop, switch to IDLE: zero `/cmd_vel`, `pelvis_height` `-1`, mode `0`.
+From a ground pose this is the get-up (GUIDE.md).
+
+```sh
+pkill -f "topic pub.*/cmd_vel"
+pixi run ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist "{}"
+pixi run ros2 topic pub --once /sonic/pelvis_height std_msgs/msg/Float32 "{data: -1.0}"
+pixi run ros2 topic pub --once /sonic/mode std_msgs/msg/Int32 "{data: 0}"
+pixi run ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{}" &
+```
 
 When `SonicMode` changes (`controller/sonic_controller.py`), update GUIDE.md to match.

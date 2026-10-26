@@ -96,9 +96,9 @@ Not in any teleop set; LYING_FACE_DOWN is disabled upstream.
 SONIC has no get-up mode: switch from a ground pose (SQUAT, a kneel, a crawl, LYING_FACE_DOWN) to IDLE with `pelvis_height` back at `-1`, and the planner plans a ~1.5 s stand-up.
 
 ```sh
-ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist "{}"
-ros2 topic pub --once /sonic/pelvis_height std_msgs/msg/Float32 "{data: -1.0}"
-ros2 topic pub --once /sonic/mode std_msgs/msg/Int32 "{data: 0}"
+pixi run ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{}"
+pixi run ros2 topic pub --once /sonic/pelvis_height std_msgs/msg/Float32 "{data: -1.0}"
+pixi run ros2 topic pub --once /sonic/mode std_msgs/msg/Int32 "{data: 0}"
 ```
 
 ```python
