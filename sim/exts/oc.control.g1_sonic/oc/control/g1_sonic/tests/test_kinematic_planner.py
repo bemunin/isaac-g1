@@ -21,7 +21,8 @@ kinematic_planner = importlib.import_module(f"{_STUB}.kinematic_planner")
 sonic_policy = importlib.import_module(f"{_STUB}.sonic_policy")
 
 _CPU = ["CPUExecutionProvider"]  # deterministic
-_WALK = 2
+_SLOW_WALK, _WALK, _RUN, _SQUAT = 1, 2, 3, 4
+_GROUND_MODE = 8  # not a standing mode (localmotion_kplanner.hpp:117-139)
 _DTYPES = {"tensor(float)": "float32", "tensor(int64)": "int64"}
 
 
@@ -96,6 +97,71 @@ class TestKinematicPlanner(unittest.TestCase):
         self._replan()
         self.assertEqual(self.planner.last_inputs.speed, -1.0)
         np.testing.assert_array_equal(self.planner.last_inputs.movement_direction, np.zeros(3))
+
+    def test_speed_is_clamped_per_mode(self):
+        for mode, command, expected in ((_SLOW_WALK, 5.0, 0.8), (_WALK, 0.1, 0.8), (_RUN, 2.0, 2.0)):
+            self.planner.set_mode(mode)
+            self.planner.set_cmd_vel(command, 0.0, 0.0)
+            self._replan()
+            self.assertAlmostEqual(self.planner.last_inputs.speed, expected, msg=f"mode {mode}")
+
+    def test_squat_while_moving_sends_default_speed(self):
+        self.planner.set_mode(_SQUAT)
+        self.planner.set_cmd_vel(1.0, 0.0, 0.0)
+        self._replan()
+        self.assertEqual(self.planner.last_inputs.speed, -1.0)
+        np.testing.assert_allclose(self.planner.last_inputs.movement_direction, [1.0, 0.0, 0.0], atol=1e-6)
+
+    def test_movement_direction_is_binned_to_8_directions(self):
+        self.planner.set_mode(_WALK)
+        for degrees, expected in ((30, 45), (10, 0), (-100, -90), (170, 180)):
+            angle = math.radians(degrees)
+            self.planner.set_cmd_vel(math.cos(angle), math.sin(angle), 0.0)
+            self._replan()
+            direction = self.planner.last_inputs.movement_direction
+            np.testing.assert_allclose(direction, [math.cos(math.radians(expected)), math.sin(math.radians(expected)), 0.0], atol=1e-6, err_msg=f"{degrees} deg")
+
+    def test_stopped_in_a_standing_mode_goes_idle_and_moving_resumes(self):
+        self.planner.set_mode(_WALK)
+        self.planner.set_pelvis_height(0.5)
+        self.planner.set_cmd_vel(0.0, 0.0, 0.0)
+        self._replan()
+        inputs = self.planner.last_inputs
+        self.assertEqual((inputs.mode, inputs.speed, inputs.pelvis_height), (kinematic_planner.IDLE, -1.0, -1.0))
+        np.testing.assert_array_equal(inputs.movement_direction, np.zeros(3))
+        self.assertEqual(self.planner._mode, _WALK)
+        self.planner.set_cmd_vel(1.0, 0.0, 0.0)
+        self._replan()
+        self.assertEqual(self.planner.last_inputs.mode, _WALK)
+        self.assertAlmostEqual(self.planner.last_inputs.pelvis_height, 0.5)
+
+    def test_stopped_in_a_ground_mode_keeps_mode_and_height(self):
+        self.planner.set_mode(_GROUND_MODE)
+        self.planner.set_pelvis_height(0.5)
+        self.planner.set_cmd_vel(0.0, 0.0, 0.0)
+        self._replan()
+        inputs = self.planner.last_inputs
+        self.assertEqual((inputs.mode, inputs.speed), (_GROUND_MODE, 0.0))
+        self.assertAlmostEqual(inputs.pelvis_height, 0.5)
+
+    def test_stale_cmd_vel_stands_and_stops_turning(self):
+        self.planner.set_mode(_WALK)
+        self.planner.set_cmd_vel(1.0, 0.0, 0.5)
+        for _ in range(240):  # 1.2 s: the command times out after 1 s
+            self.planner.step(0.005)
+        yaw = self.planner.facing_yaw
+        self.assertAlmostEqual(yaw, 0.5, places=2)
+        self.assertEqual(self.planner.last_inputs.mode, kinematic_planner.IDLE)
+        self.assertEqual(self.planner.last_inputs.speed, -1.0)
+        for _ in range(100):
+            self.planner.step(0.005)
+        self.assertEqual(self.planner.facing_yaw, yaw)
+
+    def test_tiny_wz_does_not_turn(self):
+        self.planner.set_cmd_vel(0.0, 0.0, 0.005)
+        for _ in range(100):
+            self.planner.step(0.005)
+        self.assertEqual(self.planner.facing_yaw, 0.0)
 
     def test_plans_at_10_hz_of_sim_time(self):
         for _ in range(200):

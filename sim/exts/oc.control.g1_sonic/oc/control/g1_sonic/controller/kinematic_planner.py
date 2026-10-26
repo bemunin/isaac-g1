@@ -34,6 +34,13 @@ LOOK_AHEAD = 2  # 50 Hz frames between the playback frame and where a replan sta
 BLEND_FRAMES = 8  # 50 Hz frames of the cross-fade when a plan is spliced in; about the planner's context length
 REFERENCE_STEP = 5  # 50 Hz frames between the FUTURE_FRAMES reference frames (0.1 s)
 MIN_SPEED = 0.01  # m/s: a slower command stands still
+CMD_TIMEOUT = 1.0  # s: an older /cmd_vel counts as zero (ros2_input_handler.hpp:305-318)
+MIN_TURN_RATE = 0.01  # rad/s: a slower /cmd_vel wz is ignored (ros2_input_handler.hpp:740)
+SPEED_RANGES = {1: (0.2, 0.8), 2: (0.8, 1.5), 3: (1.5, 3.0)}  # m/s for slow walk, walk, run (gamepad.hpp:349-367)
+DEFAULT_SPEED_MODES = frozenset({4, 5, 6})  # squat, kneel two legs, kneel: target_vel -1 (gamepad.hpp:369-381)
+# Modes that go to IDLE when stopped (localmotion_kplanner.hpp:117-139 is_standing_motion_mode).
+STANDING_MODES = frozenset({0, 1, 2, 3, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26})
+_DIRECTION_BIN = math.pi / 4  # 8 movement directions, 45 degrees apart
 _CONTEXT_FRAMES = 4
 _QPOS_DIM = 36  # root xyz, quaternion wxyz, 29 joints (MuJoCo order)
 _NUM_JOINTS = 29
@@ -55,7 +62,7 @@ class KinematicPlannerInputs:
 
     mode: int
     movement_direction: np.ndarray  # [3] unit [cos, sin, 0], or zeros to stand
-    speed: float  # m/s; <= 0: the mode's default
+    speed: float  # m/s, clamped per mode; -1: the mode's default; 0: stopped in a ground mode
     facing_direction: np.ndarray  # [3] unit [cos, sin, 0]
     pelvis_height: float  # m; -1: the mode decides
     context_mujoco_qpos: np.ndarray  # [4, 36]
@@ -66,6 +73,12 @@ class KinematicPlannerInputs:
         for name, shape in (("movement_direction", (3,)), ("facing_direction", (3,)), ("context_mujoco_qpos", (_CONTEXT_FRAMES, _QPOS_DIM))):
             if np.shape(getattr(self, name)) != shape:
                 raise ValueError(f"{name} must have shape {shape}, got {np.shape(getattr(self, name))}")
+
+
+def _bin_direction(angle: float) -> float:
+    """`angle` snapped to the nearest of 8 directions 45 degrees apart, in [-pi, pi] (ros2_input_handler.hpp:1138-1150)."""
+    angle = math.atan2(math.sin(angle), math.cos(angle))  # normalise to [-pi, pi]
+    return round(angle / _DIRECTION_BIN) * _DIRECTION_BIN
 
 
 def model_feed(inputs: KinematicPlannerInputs) -> dict[str, np.ndarray]:
@@ -168,6 +181,7 @@ class KinematicPlanner:
         self._executor = None if synchronous else ThreadPoolExecutor(max_workers=1, thread_name_prefix="kplanner")
         self._cmd = (0.0, 0.0)  # latest /cmd_vel vx, vy
         self._wz = 0.0
+        self._cmd_age = math.inf  # s of sim time since the last /cmd_vel
         self._mode = IDLE
         self._pelvis_height = -1.0
         self._initialized = False
@@ -186,6 +200,7 @@ class KinematicPlanner:
     def set_cmd_vel(self, vx: float, vy: float, wz: float) -> None:
         self._cmd = (vx, vy)
         self._wz = wz
+        self._cmd_age = 0.0
 
     def set_mode(self, mode: int) -> None:
         if not 0 <= mode < NUM_MODES:
@@ -235,7 +250,9 @@ class KinematicPlanner:
         if not self._initialized:
             raise RuntimeError("KinematicPlanner.initialize() must run before step()")
         self._splice_finished()
-        self.facing_yaw += self._wz * dt
+        if not self._stale() and abs(self._wz) > MIN_TURN_RATE:
+            self.facing_yaw += self._wz * dt  # true rad/s; the reference adds wz * 0.02 per 100 Hz tick, about 2x wz
+        self._cmd_age += dt
         self._cursor = min(self._cursor + dt * MOTION_RATE, len(self._motion) - 1)
         self._elapsed += dt
         if self._elapsed >= PLANNER_PERIOD - 1e-9:  # float sums of dt fall just short of the period
@@ -284,14 +301,29 @@ class KinematicPlanner:
             self._motion = motion
             self._cursor -= base  # frame 0 is now the playback frame; the fraction stays
 
+    def _stale(self) -> bool:
+        """True when the last /cmd_vel is older than CMD_TIMEOUT; its vx, vy and wz then count as zero."""
+        return self._cmd_age > CMD_TIMEOUT
+
     def _build_inputs(self, context: np.ndarray) -> KinematicPlannerInputs:
-        vx, vy = self._cmd
+        vx, vy = (0.0, 0.0) if self._stale() else self._cmd
         speed = math.hypot(vx, vy)
-        if self._mode == IDLE or speed < MIN_SPEED:
-            movement, speed = np.zeros(3), -1.0
+        mode, height = self._mode, self._pelvis_height
+        movement = np.zeros(3)
+        if mode == IDLE:
+            speed = -1.0
+        elif speed < MIN_SPEED:  # stopped; self._mode keeps the user's mode, so moving again resumes it
+            if mode in STANDING_MODES:  # gamepad.hpp:697-702
+                mode, speed, height = IDLE, -1.0, -1.0
+            else:  # gamepad.hpp:703-707
+                speed = 0.0
         else:
-            yaw = math.atan2(vy, vx) + self.facing_yaw  # /cmd_vel is body-relative
+            yaw = _bin_direction(math.atan2(vy, vx) + self.facing_yaw)  # /cmd_vel is body-relative (:760-766)
             movement = np.array([math.cos(yaw), math.sin(yaw), 0.0])
+            if mode in SPEED_RANGES:
+                speed = min(max(speed, SPEED_RANGES[mode][0]), SPEED_RANGES[mode][1])
+            elif mode in DEFAULT_SPEED_MODES:
+                speed = -1.0
         facing = np.array([math.cos(self.facing_yaw), math.sin(self.facing_yaw), 0.0])
-        self.last_inputs = KinematicPlannerInputs(self._mode, movement, speed, facing, self._pelvis_height, context)
+        self.last_inputs = KinematicPlannerInputs(mode, movement, speed, facing, height, context)
         return self.last_inputs
