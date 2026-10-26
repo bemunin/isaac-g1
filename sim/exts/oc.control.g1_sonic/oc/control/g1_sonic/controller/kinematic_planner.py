@@ -5,7 +5,7 @@ Asynchronous like NVIDIA's deploy: every plan is resampled to a 50 Hz stored mot
 and a replan runs on one worker thread and is cross-faded into the stored motion when it lands, so the tick never waits
 (gear_sonic_deploy localmotion_kplanner.hpp:395-519 resample, :591-680 context; g1_deploy_onnx_ref.cpp:3184-3398 blend).
 
-Design: docs/adr/0003-kinematic-planner-inputs.md.
+Design: research/adr/0003-kinematic-planner-inputs.md.
 """
 
 import math
