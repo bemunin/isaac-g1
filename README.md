@@ -7,7 +7,6 @@ Connects to ROS 2 Jazzy over the DDS of your choice.
 
 ## Prerequisites
 
-- Isaac Sim 6.2.0. The project targets the newest Isaac Sim release first.
 - [Pixi](https://pixi.sh)
 - Linux (Ubuntu 22.04 / 24.04) or Windows
 - An NVIDIA RTX GPU that meets [Isaac Sim's requirements](https://docs.isaacsim.omniverse.nvidia.com/latest/installation/requirements.html)
@@ -21,7 +20,7 @@ Connects to ROS 2 Jazzy over the DDS of your choice.
    - Claude Code: type `/init`.
    - Codex: type `$oc-init-proj`.
 
-This installs the Pixi environments, downloads the SONIC weights, links the Isaac Sim package (`_isaacsim`), and loads the project's required skills from Isaac Sim Skills.
+This installs the Pixi environments including Isaac Sim 6.2, downloads the SONIC weights, links the Isaac Sim package (`_isaacsim`), and loads the project's required skills from Isaac Sim Skills.
 
 > [!NOTE]
 > - In Claude Code, `/init` follows `AGENTS.md`'s Init section: it sets up the project without
