@@ -24,15 +24,15 @@ Connects to ROS 2 Jazzy over the DDS of your choice.
 This installs the Pixi environments, downloads the SONIC weights, links the Isaac Sim package (`_isaacsim`), and loads the project's required skills from Isaac Sim Skills.
 
 > [!NOTE]
-> - In Claude Code, `/init` follows `AGENTS.md`'s Init section: it sets up the project without 
->   creating a `CLAUDE.md`. Howevery, Codex has no such hook, so run the skill directly.
+> - In Claude Code, `/init` follows `AGENTS.md`'s Init section: it sets up the project without
+>   creating a `CLAUDE.md`. However, Codex has no such hook, so run the skill directly.
 
 ## Getting started
 
 Run the warehouse example to see the G1 stand in the hall, and inspect its topics in Foxglove.
 
-1. Start the sim with ROS 2 on. Isaac Sim opens the warehouse and, with `-a`, plays it; the
-   G1 stands until a `/cmd_vel` arrives.
+1. Start the sim with ROS 2 on. Isaac Sim opens the warehouse and plays it (`-m` leaves it
+   stopped); the G1 stands until a `/cmd_vel` arrives.
 
    ```bash
    pixi run warehouse --ros
@@ -54,11 +54,9 @@ The sim uses the session's DDS (`pixi run dds` shows it). If it is `zenoh`, star
 
 ## Control
 
-Our project use **SONIC** ([`oc.control.g1_sonic`](sim/exts/oc.control.g1_sonic/docs/README.md)) to move the G1 with
-NVIDIA SONIC whole-body control: slow walk, walk, run, side steps and turns, plus lower-body ground
-moves — `squat`, `kneel`, `kneel_one_leg` and `crawl_hands`/`crawl_elbows`. Drive it one real-time
-command at a time (`command(LocomotionCommand)`, `walk(cmd_vel)`, ...).
-Download its weights once with `pixi run sonic-download`.
+This project uses **SONIC** ([`oc.control.g1_sonic`](sim/exts/oc.control.g1_sonic/docs/README.md)) to move the G1 with
+NVIDIA SONIC whole-body control: 27 motion modes, from walk and run to squat, kneel and hand or elbow crawl.
+Command it over ROS 2 (below); `/init` downloads its weights, or run `pixi run sonic-download`.
 
 ## Command over ROS
 
@@ -68,15 +66,17 @@ SONIC listens on these topics:
 | --- | --- | --- |
 | `/sonic/mode` | `std_msgs/Int32` | Motion mode Id 0–26, e.g. `2` WALK, `4` SQUAT, `8` hand crawl |
 | `/cmd_vel` | `geometry_msgs/Twist` | `linear.x` forward and `linear.y` left [m/s], `angular.z` turn [rad/s] |
-| `/sonic/pelvis_height` | `std_msgs/Float32` | Pelvis height [m] for ground poses; `-1` keeps the mode's default |
+| `/sonic/pelvis_height` | `std_msgs/Float32` | Pelvis height [m] for ground poses (0.2–0.8); `-1` for standing modes only |
 
 Example: make the G1 walk forward at 1 m/s:
 
 ```bash
 pixi run ros2 topic pub --once /sonic/mode std_msgs/msg/Int32 "{data: 2}"
+pixi run ros2 topic pub --once /sonic/pelvis_height std_msgs/msg/Float32 "{data: -1.0}"
 pixi run ros2 topic pub -r 100 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 1.0}}"
 ```
-The full ROS 2 command examples are in oc-sonic-cmd [SKILL.md](.agents/skills/oc-sonic-cmd/SKILL.md), and all 27 sonic motion mode details are in [GUIDE.md](.agents/skills/oc-sonic-cmd/GUIDE.md).
+
+The full ROS 2 command examples are in oc-sonic-cmd [SKILL.md](.agents/skills/oc-sonic-cmd/SKILL.md), and all 27 SONIC motion mode details are in [GUIDE.md](.agents/skills/oc-sonic-cmd/GUIDE.md).
 
 > [!IMPORTANT]
 > Your coding agent can drive the G1 too: load the `oc-sonic-cmd` skill in your coding agent and start asking it to walk, turn, squat or crawl.
@@ -86,16 +86,16 @@ The full ROS 2 command examples are in oc-sonic-cmd [SKILL.md](.agents/skills/oc
 The warehouse example can run in many configurations, such as a different physics engine, workflow or headless mode:
 
 ```bash
-pixi run warehouse                   # Extension workflow, Newton, SONIC, with a window
-pixi run warehouse -s                # Standalone workflow
-pixi run warehouse --physics physx   # PhysX instead of Newton
-pixi run warehouse --headless        # no window
-pixi run warehouse --ros             # publish the G1's ROS 2 topics and accept /cmd_vel (off by default)
-pixi run warehouse -o clutter,forklift # Show floor clutter (boxes, crates, cones, signs) and the forklift; both are hidden by default.
+pixi run warehouse                      # Extension workflow, Newton, SONIC, with a window
+pixi run warehouse -s                   # Standalone workflow
+pixi run warehouse --physics physx      # PhysX instead of Newton
+pixi run warehouse --headless           # no window
+pixi run warehouse -m                   # open stopped; press Play yourself (not with --headless)
+pixi run warehouse --ros                # publish the G1's ROS 2 topics and accept SONIC commands (off by default)
+pixi run warehouse -o clutter,forklift  # show floor clutter and the forklift (hidden by default)
 ```
 
-The G1 uses SONIC whole-body control by default; download its weights once with
-`pixi run sonic-download` first. `--dds fast|cyclone|zenoh` overrides the session's DDS. See
+The G1 uses SONIC whole-body control by default. `--dds fast|cyclone|zenoh` overrides the session's DDS. See
 [`sim/exts/oc.scenario.warehouse`](sim/exts/oc.scenario.warehouse/docs/README.md).
 
 ## DDS
@@ -111,7 +111,6 @@ Pick the ROS 2 middleware once; new Pixi sessions use it.
 | `pixi run foxglove` | Start the Foxglove bridge and the G1 robot description on `ws://localhost:8765` (`oc_foxglove_bridge`) |
 
 ![Foxglove showing the G1 lidar, camera, TF and IMU topics](docs/images/showcase_foxglove_panel.png)
-
 
 ## Skills
 
