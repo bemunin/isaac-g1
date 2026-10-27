@@ -74,7 +74,7 @@ Example: make the G1 walk forward at 1 m/s:
 
 ```bash
 pixi run ros2 topic pub --once /sonic/mode std_msgs/msg/Int32 "{data: 2}"
-pixi run ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 1.0}}"
+pixi run ros2 topic pub -r 100 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 1.0}}"
 ```
 The full ROS 2 command examples are in oc-sonic-cmd [SKILL.md](.agents/skills/oc-sonic-cmd/SKILL.md), and all 27 sonic motion mode details are in [GUIDE.md](.agents/skills/oc-sonic-cmd/GUIDE.md).
 
@@ -120,7 +120,7 @@ Ask your coding agent to use these (in Claude Code, `/<name>`):
 - `oc-init-proj`: install the Pixi envs and create the project symlinks; `/init` in Claude Code, `$oc-init-proj` in Codex.
 - `oc-add-ext`: scaffold a new Isaac Sim extension.
 - `oc-g1-ros`: add the G1 to a stage, work with its ROS 2 graphs, or add sensors.
-- `oc-sonic-cmd`: command the G1 with any of the 27 SONIC motion modes (walk, run, squat, kneel, crawl, ...) over ROS 2 or Python.
+- `oc-sonic-cmd`: command the G1 with any of the 27 SONIC motion modes (walk, run, squat, kneel, crawl, ...) over ROS 2.
 
 The other skills in `.agents/skills/` are third-party Isaac Sim references. Agent rules live in
 [`AGENTS.md`](AGENTS.md); project terms in [`GLOSSARY.md`](GLOSSARY.md).
